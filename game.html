@@ -1574,6 +1574,8 @@ const Sound = (() => {
     item(){ tone(988, .07, 'square', .07); tone(1319, .12, 'square', .07, 1, ac ? ac.currentTime + .07 : 0); },
     heal(){ [523,659,784,1047].forEach((f,i) => tone(f, .1, 'square', .06, 1, ac ? ac.currentTime + i * .07 : 0)); },
     puff(){ tone(180, .3, 'sine', .15, 1.6); },
+    land(){ noise(.3, .2, 120); tone(80, .3, 'sine', .3, .5); },
+    roar(){ tone(110, .6, 'sawtooth', .12, .5); noise(.5, .1, 200); },
     spit(){ noise(.12, .12, 300); tone(140, .12, 'square', .08, .5); },
     swing(){ noise(.18, .1, 500); },
     talk(){ tone(660 + Math.random() * 120, .025, 'square', .025); },
@@ -1865,7 +1867,7 @@ function enterBoss(fromRetry){
   if (fromRetry) camX = BOSS_COL * TS;
   const gy = 12 * TS;
   enemies = [];   // 道中の敵は連れて来ない
-  boss = {x: (COLS - 1) * TS - 98, y: gy - 70, face: -1, hp: 6, maxHp: 6, action: 'idle', t: 0, first: true, fired: false,
+  boss = {x: (COLS - 1) * TS - 98, y: gy - 70, face: -1, hp: 10, maxHp: 10, big: false, s: 1, bw: 96, chipT: 0, action: 'idle', t: 0, first: true, fired: false,
     flash: 0, dead: 0, idleFor: 1200, walkFor: 0, walkDir: -1, hitThisAction: false};
   mud = [];
   Sound.stop();
@@ -1875,8 +1877,30 @@ function enterBoss(fromRetry){
 const DP_R = Object.fromEntries(Object.entries(Dorotabo.poses).map(([k, r]) => [k, r.map(l => [...l].reverse().join(''))]));
 for (const p of Object.keys(Dorotabo.poses)) IMG['db_' + p + '_R'] = makeSprite(Dorotabo.poses[p], Dorotabo.palette, true);
 IMG.db_hurt_W_R = whiteOf(IMG.db_hurt_R);
-function bossPose(){ return boss.action === 'walk' ? Dorotabo.frameAt('idle', boss.t * 1.6) : Dorotabo.frameAt(boss.action, boss.t); }
-function bossRows(pose){ return boss.face < 0 ? Dorotabo.poses[pose] : DP_R[pose]; }
+const BIG = 1.15, BW_BIG = Math.round(96 * BIG), BH_BIG = Math.round(72 * BIG);
+function scaleRows(rows, s){
+  const h = Math.round(rows.length * s), w = Math.round(rows[0].length * s), out = [];
+  for (let y = 0; y < h; y++){ let l = ''; for (let x = 0; x < w; x++) l += rows[Math.min(rows.length - 1, Math.floor(y / s))][Math.min(rows[0].length - 1, Math.floor(x / s))]; out.push(l); }
+  return out;
+}
+function tinted(src){
+  const c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+  const g = c.getContext('2d'); g.drawImage(src, 0, 0);
+  g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(200,40,20,.22)'; g.fillRect(0, 0, c.width, c.height);
+  return c;
+}
+const DP_BIG = {}, DP_BIG_R = {};
+for (const p of Object.keys(Dorotabo.poses)){
+  DP_BIG[p] = scaleRows(Dorotabo.poses[p], BIG); DP_BIG_R[p] = DP_BIG[p].map(l => [...l].reverse().join(''));
+  IMG['dbB_' + p] = tinted(makeSprite(DP_BIG[p], Dorotabo.palette, false));
+  IMG['dbB_' + p + '_R'] = tinted(makeSprite(DP_BIG[p], Dorotabo.palette, true));
+}
+IMG.dbB_hurt_W = whiteOf(IMG.dbB_hurt); IMG.dbB_hurt_W_R = whiteOf(IMG.dbB_hurt_R);
+function bossPose(){
+  if (boss.action === 'rage') return (Math.floor(boss.t / 120) % 2) ? 'windup' : 'spitFull';   // 怒って膨れ上がる
+  return boss.action === 'walk' ? Dorotabo.frameAt('idle', boss.t * 1.6) : Dorotabo.frameAt(boss.action, boss.t);
+}
+function bossRows(pose){ return boss.big ? (boss.face < 0 ? DP_BIG[pose] : DP_BIG_R[pose]) : (boss.face < 0 ? Dorotabo.poses[pose] : DP_R[pose]); }
 function bossDo(action){
   if (action === 'spit' && boss.first){ action = 'spitFirst'; boss.first = false; }
   boss.action = action; boss.t = 0; boss.fired = false; boss.hitThisAction = false;
@@ -1897,10 +1921,17 @@ function updateBoss(){
   }
   if (b.flash > 0) b.flash--;
   b.t += FRAME_MS;
-  const angry = b.hp <= 3;
-  const pcx = P.x + P.w / 2, bcx = b.x + 48;
-  const above = P.y + P.h < b.y + 24;                       // 福丸が橋の上など、頭より上にいる
-  const front = b.face < 0 ? b.x + 6 - (P.x + P.w) : P.x - (b.x + 90);   // 腕の届く側との距離
+  const angry = b.big;
+  const bw = b.bw, pcx = P.x + P.w / 2, bcx = b.x + bw / 2;
+  const above = P.y + P.h < b.y + 24 * b.s;                 // 福丸が橋の上など、頭より上にいる
+  const front = b.face < 0 ? b.x + 6 * b.s - (P.x + P.w) : P.x - (b.x + bw - 6 * b.s);   // 腕の届く側との距離
+  if (b.chipT > 0) b.chipT--;
+  // 怒って大きくなる最中は動かない
+  if (b.action === 'rage'){
+    if (frame % 4 === 0){ shake = 3; steam(b.x + Math.random() * bw, b.y + 70 * b.s, 2); }
+    if (b.t >= 1200){ b.action = 'idle'; b.t = 0; b.idleFor = 300; }
+    return;
+  }
   // 動作の終わり
   const dur = b.action === 'walk' ? b.walkFor : Dorotabo.durations[b.action];
   if (b.action !== 'idle' && b.t >= dur){ b.action = 'idle'; b.t = 0; b.idleFor = angry ? 350 + Math.random() * 350 : 650 + Math.random() * 500; }
@@ -1925,13 +1956,13 @@ function updateBoss(){
     if (b.walkDir === b.face && front < 22){ b.action = 'idle'; b.t = 0; b.idleFor = 120; }   // 間合いに入ったらすぐ腕を振る
     if (frame % 14 === 0){ steam(b.x + (b.walkDir < 0 ? 80 : 16), b.y + 68, 1); }
   }
-  b.x = Math.max(ARENA_L(), Math.min(b.x, ARENA_R() - 96));
+  b.x = Math.max(ARENA_L(), Math.min(b.x, ARENA_R() - bw));
   const pose = bossPose(), rows = bossRows(pose);
   // 泥つぶて発射（向いている方へ）
   if (pose === 'spitRelease' && !b.fired){
     b.fired = true; Sound.spit();
-    const ox = b.face < 0 ? Dorotabo.mudShot.originX : 96 - Dorotabo.mudShot.originX - 9;
-    mud.push({x: b.x + ox, y: b.y + Dorotabo.mudShot.originY, vx: b.face * (Dorotabo.mudShot.speed / 60) * (angry ? 1.5 : 1.15)});
+    const ox = b.face < 0 ? Dorotabo.mudShot.originX * b.s : bw - Dorotabo.mudShot.originX * b.s - 9;
+    mud.push({x: b.x + ox, y: b.y + Math.round(Dorotabo.mudShot.originY * b.s), vx: b.face * (Dorotabo.mudShot.speed / 60) * (angry ? 1.5 : 1.15)});
   }
   const pp = playerPose(), d = playerDrawPos(pp), prow = playerRows(pp);
   // 腕振り
@@ -1955,17 +1986,23 @@ function updateBoss(){
     if (pixelHit(wr, s.x, s.y, rows, b.x, b.y)){
       s.dead = true;
       if (pose === 'spitRest'){
-        b.hp--; b.flash = 12; Sound.hit(); shake = 6; score += 500;
-        burst(s.x + 4, s.y, 12, ['#9fd8ff', '#fff', '#ee8544']); steam(bcx, b.y + 30, 6);
-        if (b.hp <= 0){ b.dead = 1; score += 3000; mud = []; enemies.forEach(e => { if (!e.dead){ e.dead = 1; steam(e.x + 11, e.y + 16, 8); } }); }
-        else {
-          bossDo('hurt');
-          // 半分まで削ったら、椿からの差し入れの茶碗が左の橋に置かれる
-          if (b.hp === 3 && !b.teaDropped){ b.teaDropped = true; const tx = (BOSS_COL + 3) * TS + 3; items.push({type: 'chawan', x: tx, y: 9 * TS - 12, w: 18, h: 12}); steam(tx + 9, 9 * TS - 12, 10); popText(tx - 30, 9 * TS - 34, '椿の差し入れ！'); Sound.item(); }
-        }
+        // 隙を突いた：大きく効く
+        b.hp = Math.max(0, b.hp - 2); b.flash = 12; Sound.hit(); shake = 6; score += 500;
+        burst(s.x + 4, s.y, 14, ['#9fd8ff', '#fff', '#ee8544']); steam(bcx, b.y + 30, 6); popText(s.x - 6, s.y - 16, '効いた！');
       } else {
-        Sound.clang(); burst(s.x + 4, s.y + 2, 6, ['#bd8040', '#9fd8ff']); popText(s.x - 10, s.y - 14, 'はじかれた');
+        // それ以外：泥に阻まれて少しだけ効く
+        b.hp = Math.max(0, b.hp - .25); b.flash = Math.max(b.flash, 3); Sound.clang(); score += 20;
+        burst(s.x + 4, s.y + 2, 5, ['#bd8040', '#9fd8ff']);
+        if (b.chipT <= 0){ popText(s.x - 10, s.y - 14, '少し効いた'); b.chipT = 40; }
       }
+      if (b.hp <= 0){ b.dead = 1; score += 3000; mud = []; enemies.forEach(e => { if (!e.dead){ e.dead = 1; steam(e.x + 11, e.y + 16, 8); } }); }
+      else if (!b.big && b.hp <= b.maxHp / 2){
+        // 体力が半分を切ったら怒って大きくなる（足元の位置と中心はそのまま）
+        b.big = true; b.s = BIG; b.x -= (BW_BIG - 96) / 2; b.bw = BW_BIG; b.y = 12 * TS - Math.round(70 * BIG);
+        b.action = 'rage'; b.t = 0; mud = []; Sound.land(); Sound.roar(); shake = 14;
+        popText(b.x + 10, b.y - 10, '大泥田坊が怒った！');
+        if (!b.teaDropped){ b.teaDropped = true; const tx = (BOSS_COL + 3) * TS + 3; items.push({type: 'chawan', x: tx, y: 9 * TS - 12, w: 18, h: 12}); steam(tx + 9, 9 * TS - 12, 10); popText(tx - 30, 9 * TS - 34, '椿の差し入れ！'); Sound.item(); }
+      } else if (pose === 'spitRest') bossDo('hurt');
     }
   }
 }
@@ -2050,11 +2087,15 @@ function drawWorld(){
   // ボス
   if (boss){
     const b = boss, pose = bossPose();
-    const R = b.face > 0 ? '_R' : '';
-    if (b.dead){ ctx.globalAlpha = Math.max(0, 1 - b.dead / 120); const sink = Math.round(b.dead / 6); ctx.drawImage(IMG['db_' + pose + R], Math.round(b.x) - cx, b.y + sink); ctx.globalAlpha = 1; }
-    else drawSprite(b.flash > 0 && (b.flash & 2) ? IMG['db_hurt_W' + R] : IMG['db_' + pose + R], b.x - cx, b.y);
+    const R = b.face > 0 ? '_R' : '', pre = b.big ? 'dbB_' : 'db_';
+    // 怒って大きくなる最中は、小さい姿と大きい姿を交互に見せる
+    const growing = b.action === 'rage' && b.t < 700 && (frame >> 2) % 2;
+    const img = growing ? IMG['db_' + pose + R] : IMG[pre + pose + R];
+    const ox = growing ? (b.bw - 96) / 2 : 0, oy = growing ? (Math.round(70 * b.s) - 70) : 0;
+    if (b.dead){ ctx.globalAlpha = Math.max(0, 1 - b.dead / 120); const sink = Math.round(b.dead / 6); ctx.drawImage(img, Math.round(b.x) - cx, b.y + sink); ctx.globalAlpha = 1; }
+    else drawSprite(b.flash > 0 && (b.flash & 2) ? IMG[pre + 'hurt_W' + R] : img, b.x + ox - cx, b.y + oy);
     // 隙のある時は舌の上に小さく光
-    if (!b.dead && pose === 'spitRest' && (frame >> 3) % 2) { ctx.fillStyle = '#fff6c0'; ctx.fillRect(Math.round(b.x) - cx + (b.face < 0 ? 14 : 80), b.y + 28, 2, 2); }
+    if (!b.dead && pose === 'spitRest' && (frame >> 3) % 2) { ctx.fillStyle = '#fff6c0'; ctx.fillRect(Math.round(b.x + (b.face < 0 ? 14 : 80) * b.s) - cx, Math.round(b.y + 28 * b.s), 2, 2); }
   }
   for (const m of mud) drawSprite(IMG.mud, m.x - cx, m.y);
   // 福丸
@@ -2150,9 +2191,11 @@ let last = 0, accT = 0;
 function loop(t){
   if (!last) last = t;
   accT += Math.min(100, t - last); last = t;
-  while (accT >= FRAME_MS){ update(); accT -= FRAME_MS; }
-  draw();
   requestAnimationFrame(loop);
+  try {
+    while (accT >= FRAME_MS){ update(); accT -= FRAME_MS; }
+    draw();
+  } catch (e){ accT = 0; console.error(e); }
 }
 // 自動テスト用
 window.__game = {get scene(){ return scene; }, get P(){ return P; }, get boss(){ return boss; }, key, pressed, setKey,

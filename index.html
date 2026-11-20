@@ -159,6 +159,13 @@
   .placeholder b{display:block;font-family:"Shippori Mincho B1",serif;font-size:20px;color:var(--brass);margin-bottom:6px;letter-spacing:.3em}
   .video-wrap.missing .placeholder{display:grid}
   .video-wrap.missing video{visibility:hidden}
+  .pv-list{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
+  .pv-item{background:var(--ink2);border:1px solid var(--line);padding:0;cursor:pointer;color:var(--paper-dim);
+    font:inherit;font-size:12.5px;letter-spacing:.12em;text-align:left;transition:border-color .3s,color .3s;display:block}
+  .pv-item img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;opacity:.7;transition:opacity .3s}
+  .pv-item span{display:block;padding:8px 10px;line-height:1.6}
+  .pv-item:hover img,.pv-item.on img{opacity:1}
+  .pv-item.on{border-color:var(--brass);color:var(--brass)}
   .pv-note{text-align:center;font-size:12px;color:var(--paper-dim);margin-top:16px;letter-spacing:.2em}
 
   /* ---------- あらすじ ---------- */
@@ -338,10 +345,19 @@
         <video id="pv-video" controls playsinline preload="metadata" poster="poster.jpg">
           <source src="pv.mp4" type="video/mp4">
         </video>
-        <div class="placeholder"><div><b>PV 公開準備中</b>pv.mp4 を配置すると再生されます</div></div>
+        <div class="placeholder"><div><b>PV 公開準備中</b>動画を読み込めませんでした</div></div>
       </div>
     </div>
-    <p class="pv-note reveal">第二部 イメージムービー</p>
+    <p class="pv-note reveal" id="pv-note">第二部 イメージムービー</p>
+    <!-- PVの一覧：増やす時はボタンを1つ足す（data-src・data-poster・data-title） -->
+    <div class="pv-list reveal" role="list">
+      <button class="pv-item on" type="button" role="listitem" data-src="pv.mp4" data-poster="poster.jpg" data-title="第二部 イメージムービー">
+        <img src="poster.jpg" alt="" loading="lazy"><span>第二部 イメージムービー</span>
+      </button>
+      <button class="pv-item" type="button" role="listitem" data-src="pv54.mp4" data-poster="poster54.jpg" data-title="第一部 第54話 イメージ映像">
+        <img src="poster54.jpg" alt="" loading="lazy"><span>第一部 第54話 イメージ映像</span>
+      </button>
+    </div>
   </section>
 
   <!-- あらすじ：仮の文章です。差し替えてください -->
@@ -470,15 +486,24 @@
 </footer>
 
 <script>
-  // 動画が見つからないときは「準備中」表示に切り替え
+  // PVの切り替え。動画が読み込めない時は「準備中」表示に
   (function(){
-    var v=document.getElementById('pv-video'),w=document.getElementById('vw');
-    var src=v.querySelector('source');
+    var v=document.getElementById('pv-video'),w=document.getElementById('vw'),note=document.getElementById('pv-note');
     function miss(){w.classList.add('missing')}
-    src.addEventListener('error',miss);
-    v.addEventListener('error',miss);
-    // ポスター画像がない場合は属性を外す
-    var img=new Image();img.onerror=function(){v.removeAttribute('poster')};img.src=v.getAttribute('poster');
+    v.addEventListener('error',miss,true);
+    document.querySelectorAll('.pv-item').forEach(function(b){
+      b.addEventListener('click',function(){
+        if(b.classList.contains('on')) return;
+        document.querySelectorAll('.pv-item').forEach(function(x){x.classList.remove('on')});
+        b.classList.add('on'); w.classList.remove('missing');
+        v.pause(); v.setAttribute('poster',b.dataset.poster);
+        v.innerHTML='<source src="'+b.dataset.src+'" type="video/mp4">';
+        v.querySelector('source').addEventListener('error',miss);
+        v.load(); note.textContent=b.dataset.title;
+        var p=v.play(); if(p&&p.catch) p.catch(function(){});
+        document.getElementById('pv').scrollIntoView({behavior:'smooth'});
+      });
+    });
   })();
 
   // 「動きを減らす」設定の端末ではアニメーションを止める
