@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>神宿りの傀儡 公式サイト</title>
+<meta name="description" content="大正×スチームパンク×陰陽道ファンタジー『神宿りの傀儡』公式サイト">
+<!-- SNSで共有したときの表示 -->
+<meta property="og:title" content="神宿りの傀儡">
+<meta property="og:description" content="大正×スチームパンク×陰陽道ファンタジー">
+<meta property="og:image" content="https://8rgfp9pjc9-ai.github.io/kamiyadori/ogp.jpg">
+<meta property="og:url" content="https://8rgfp9pjc9-ai.github.io/kamiyadori/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700;800&family=Zen+Old+Mincho:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0d0f17;
+    --ink2:#151a26;
+    --paper:#ece3cf;
+    --paper-dim:#b9ae96;
+    --brass:#c9a35a;
+    --brass-dim:#8a6d36;
+    --shu:#b8342a;
+    --line:rgba(201,163,90,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:"Zen Old Mincho",serif;
+    line-height:2;
+    letter-spacing:.06em;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  /* 和紙っぽいノイズ */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.07;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  a{color:inherit}
+  main,header,footer,nav{position:relative;z-index:1}
+
+  /* ---------- ナビ ---------- */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:10;
+    display:flex;justify-content:center;gap:clamp(12px,3.4vw,40px);
+    padding:14px 16px;
+    font-family:"Shippori Mincho B1",serif;font-size:13px;letter-spacing:.2em;
+    background:rgba(13,15,23,.88);
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    border-bottom:1px solid rgba(201,163,90,.12);
+  }
+  nav a{text-decoration:none;color:var(--paper-dim);transition:color .3s}
+  nav a:hover{color:var(--brass)}
+
+  /* ---------- ヒーロー ---------- */
+  .hero{
+    min-height:100svh;display:grid;place-items:center;position:relative;overflow:hidden;
+    background:
+      radial-gradient(ellipse at 50% 60%,rgba(184,52,42,.18),transparent 60%),
+      radial-gradient(ellipse at 50% 120%,rgba(201,163,90,.15),transparent 55%),
+      var(--ink);
+  }
+  .gear{position:absolute;opacity:.16;color:var(--brass);will-change:transform}
+  .gear.g1{width:min(70vw,520px);top:-12%;right:-18%}
+  .gear.g2{width:min(48vw,340px);bottom:-8%;left:-14%}
+  .gear.g3{width:min(22vw,150px);bottom:18%;right:6%;opacity:.12}
+
+  /* ---------- 背景の固定レイヤー（歯車・パイプ・蒸気） ---------- */
+  .bg-layer{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  #steam{position:absolute;inset:0;width:100%;height:100%}
+  .bg-gear{position:absolute;color:var(--brass);opacity:.09;will-change:transform}
+  .bg-gear.b1{width:300px;right:-150px;top:8%}
+  .bg-gear.b2{width:170px;right:60px;top:calc(8% + 205px);opacity:.07}
+  .bg-gear.b3{width:260px;left:-140px;bottom:-60px}
+  .bg-gear.b4{width:120px;left:90px;bottom:120px;opacity:.06}
+  .pipe{position:absolute;width:86px;height:40px;color:var(--brass);opacity:.55}
+  .pipe.p-left{left:0;top:34%}
+  .pipe.p-right{right:0;top:68%;transform:scaleX(-1)}
+  @media (min-width:900px){
+    .bg-gear{opacity:.12}
+    .bg-gear.b1{width:420px;right:-180px}
+    .bg-gear.b2{width:240px;right:110px;top:calc(8% + 290px)}
+    .pipe{width:120px;height:56px}
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .seal{
+    position:absolute;width:min(92vw,560px);opacity:.10;color:var(--shu);
+    animation:spin 240s linear infinite reverse;
+  }
+  .hero-inner{position:relative;display:flex;flex-direction:row-reverse;align-items:center;gap:clamp(20px,6vw,56px)}
+  .title{
+    writing-mode:vertical-rl;
+    font-family:"Shippori Mincho B1",serif;font-weight:800;
+    font-size:clamp(52px,13vw,104px);line-height:1.1;letter-spacing:.12em;
+    color:var(--paper);
+    text-shadow:0 0 40px rgba(201,163,90,.25);
+    opacity:0;animation:rise 1.6s .2s ease-out forwards;
+  }
+  .title .no{font-size:.55em;color:var(--brass);margin:.15em 0}
+  .tagline{
+    writing-mode:vertical-rl;
+    font-size:clamp(13px,3.4vw,16px);letter-spacing:.35em;color:var(--paper-dim);
+    border-right:1px solid var(--line);padding-right:clamp(14px,3vw,22px);
+    opacity:0;animation:rise 1.6s .9s ease-out forwards;
+  }
+  .tagline em{font-style:normal;color:var(--shu)}
+  .genre{
+    position:absolute;bottom:clamp(64px,10vh,96px);left:0;right:0;text-align:center;
+    font-size:12px;letter-spacing:.4em;color:var(--brass);
+    opacity:0;animation:rise 1.4s 1.4s ease-out forwards;
+  }
+  .scroll{
+    position:absolute;bottom:22px;left:50%;transform:translateX(-50%);
+    width:1px;height:40px;background:linear-gradient(var(--brass),transparent);
+    animation:drip 2.2s ease-in-out infinite;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  @keyframes drip{0%{transform:translateX(-50%) scaleY(0);transform-origin:top}50%{transform:translateX(-50%) scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:translateX(-50%) scaleY(0);transform-origin:bottom}}
+
+  /* ---------- 共通セクション ---------- */
+  section{padding:clamp(72px,12vw,120px) 20px;max-width:960px;margin:0 auto}
+  .head{text-align:center;margin-bottom:clamp(36px,6vw,56px)}
+  .head .en{display:block;font-size:11px;letter-spacing:.5em;color:var(--brass-dim);margin-bottom:6px}
+  .head h2{
+    font-family:"Shippori Mincho B1",serif;font-weight:700;
+    font-size:clamp(24px,5.5vw,34px);letter-spacing:.3em;
+    display:inline-flex;align-items:center;gap:16px;
+  }
+  .head h2::before,.head h2::after{content:"";width:28px;height:1px;background:var(--brass)}
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity 1s ease,transform 1s ease}
+  .reveal.on{opacity:1;transform:none}
+
+  /* ---------- PV ---------- */
+  .frame{
+    position:relative;padding:10px;
+    border:1px solid var(--line);
+    background:linear-gradient(135deg,rgba(201,163,90,.08),transparent 40%,rgba(184,52,42,.06));
+  }
+  .frame::before,.frame::after{
+    content:"";position:absolute;width:22px;height:22px;border:2px solid var(--brass);
+  }
+  .frame::before{top:-4px;left:-4px;border-right:none;border-bottom:none}
+  .frame::after{bottom:-4px;right:-4px;border-left:none;border-top:none}
+  .video-wrap{position:relative;aspect-ratio:16/9;background:#000;overflow:hidden}
+  .video-wrap video{width:100%;height:100%;display:block;object-fit:contain;background:#000}
+  .placeholder{
+    position:absolute;inset:0;display:none;place-items:center;text-align:center;
+    background:
+      repeating-linear-gradient(45deg,rgba(201,163,90,.04) 0 12px,transparent 12px 24px),
+      var(--ink2);
+    color:var(--paper-dim);font-size:14px;letter-spacing:.2em;
+  }
+  .placeholder b{display:block;font-family:"Shippori Mincho B1",serif;font-size:20px;color:var(--brass);margin-bottom:6px;letter-spacing:.3em}
+  .video-wrap.missing .placeholder{display:grid}
+  .video-wrap.missing video{visibility:hidden}
+  .pv-note{text-align:center;font-size:12px;color:var(--paper-dim);margin-top:16px;letter-spacing:.2em}
+
+  /* ---------- あらすじ ---------- */
+  .story{
+    max-width:640px;margin:0 auto;font-size:clamp(15px,3.8vw,17px);line-height:2.3;
+  }
+  .story p+p{margin-top:1.4em}
+  .story .lead{
+    font-family:"Shippori Mincho B1",serif;font-size:clamp(18px,4.6vw,22px);
+    color:var(--brass);text-align:center;margin-bottom:1.6em;line-height:1.9;
+  }
+
+  /* ---------- 世界観 ---------- */
+  .world{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+  .kw{
+    border:1px solid var(--line);padding:28px 22px;position:relative;
+    background:rgba(255,255,255,.015);
+  }
+  .kw .k{
+    font-family:"Shippori Mincho B1",serif;font-weight:800;font-size:40px;line-height:1;
+    color:var(--shu);opacity:.9;display:block;margin-bottom:12px;
+  }
+  .kw h3{font-family:"Shippori Mincho B1",serif;font-size:17px;letter-spacing:.2em;margin-bottom:8px}
+  .kw p{font-size:14px;color:var(--paper-dim);line-height:1.9}
+
+  /* ---------- 登場人物 ---------- */
+  /* 人物：画像を左、紹介文を右に並べる横長カード */
+  .chars{display:grid;gap:14px}
+  @media (min-width:760px){.chars{grid-template-columns:1fr 1fr;gap:18px}}
+  .card{
+    display:grid;grid-template-columns:104px 1fr;
+    border:1px solid var(--line);background:var(--ink2);overflow:hidden;transition:border-color .4s,transform .4s;
+  }
+  @media (min-width:760px){.card{grid-template-columns:150px 1fr}}
+  .card:hover{border-color:var(--brass);transform:translateY(-3px)}
+  .portrait{
+    display:grid;place-items:center;position:relative;min-height:150px;
+    background:radial-gradient(circle at 50% 35%,rgba(201,163,90,.12),transparent 65%),#10131c;
+    border-right:1px solid var(--line);
+  }
+  .portrait img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .portrait .ph{writing-mode:vertical-rl;font-family:"Shippori Mincho B1",serif;font-size:34px;color:rgba(236,227,207,.13);letter-spacing:.2em}
+  .card .body{padding:16px 16px 18px}
+  .ruby{display:block;font-size:11px;letter-spacing:.3em;color:var(--brass-dim)}
+  .card h3{font-family:"Shippori Mincho B1",serif;font-size:21px;letter-spacing:.18em;line-height:1.5}
+  .card p{font-size:13.5px;color:var(--paper-dim);line-height:1.95;margin-top:8px}
+
+  /* 宝具・妖：見出し字を大きく置いたカード */
+  .sec-lead{max-width:640px;margin:-12px auto 32px;text-align:center;font-size:14px;color:var(--paper-dim);line-height:2}
+  .items{display:grid;gap:16px}
+  @media (min-width:760px){.items{grid-template-columns:1fr 1fr;gap:18px}}
+  .item{border:1px solid var(--line);padding:26px 22px 24px;position:relative;background:rgba(255,255,255,.015);overflow:hidden}
+  .item .mark{
+    position:absolute;right:-6px;top:-14px;
+    font-family:"Shippori Mincho B1",serif;font-weight:800;font-size:110px;line-height:1;
+    color:var(--shu);opacity:.13;pointer-events:none;
+  }
+  .item h3{font-family:"Shippori Mincho B1",serif;font-size:22px;letter-spacing:.2em;line-height:1.5;color:var(--brass)}
+  .item p{font-size:14px;color:var(--paper-dim);line-height:1.95;margin-top:10px;position:relative}
+
+
+  /* ミニゲーム */
+  .game-card{display:grid;gap:0;text-decoration:none;border:1px solid var(--line);background:var(--ink2);overflow:hidden;transition:border-color .4s,transform .4s}
+  .game-card:hover{border-color:var(--brass);transform:translateY(-3px)}
+  .game-card img{width:100%;height:auto;display:block;image-rendering:pixelated;border-bottom:1px solid var(--line)}
+  @media (min-width:760px){.game-card{grid-template-columns:1.1fr 1fr}.game-card img{border-bottom:none;border-right:1px solid var(--line)}}
+  .gc-body{padding:22px 22px 24px;display:flex;flex-direction:column;justify-content:center}
+  .gc-body h3{font-family:"Shippori Mincho B1",serif;font-size:24px;letter-spacing:.18em;line-height:1.5;color:var(--brass)}
+  .gc-body h3 small{display:block;font-size:14px;letter-spacing:.2em;color:var(--paper)}
+  .gc-body p{font-size:14px;color:var(--paper-dim);line-height:1.95;margin-top:12px}
+  .gc-btn{align-self:flex-start;margin-top:18px;padding:12px 26px;background:var(--brass);color:var(--ink);
+    font-family:"Shippori Mincho B1",serif;letter-spacing:.25em;font-size:15px}
+
+  /* ---------- 読む ---------- */
+  .read{text-align:center}
+  .read p{color:var(--paper-dim);font-size:14px;margin-bottom:28px}
+  .btn{
+    display:inline-flex;align-items:center;gap:14px;
+    padding:18px 44px;text-decoration:none;
+    font-family:"Shippori Mincho B1",serif;font-size:17px;letter-spacing:.3em;
+    color:var(--ink);background:var(--brass);
+    position:relative;transition:background .3s,letter-spacing .3s;
+  }
+  .btn:hover{background:#dcb76c;letter-spacing:.36em}
+  .btn::after{content:"";position:absolute;inset:4px;border:1px solid rgba(13,15,23,.35);pointer-events:none}
+  .sub-links{margin-top:22px;display:flex;justify-content:center;gap:24px;font-size:13px;letter-spacing:.15em}
+  .sub-links a{color:var(--paper-dim);text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:2px}
+  .sub-links a:hover{color:var(--brass)}
+
+  /* ---------- フッター ---------- */
+  footer{text-align:center;padding:48px 20px 40px;border-top:1px solid var(--line);font-size:12px;color:var(--brass-dim);letter-spacing:.2em}
+  footer .mark{width:28px;margin:0 auto 14px;color:var(--shu);opacity:.8}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+    .title,.tagline,.genre,.reveal{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- 歯車と五芒星（使い回し用） -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="gear" viewBox="0 0 100 100">
+      <path fill="currentColor" d="M54.6 4h-9.2l-1.6 9.7a37 37 0 0 0-9.4 3.9l-8-5.7-6.5 6.5 5.7 8a37 37 0 0 0-3.9 9.4L12 37.4v9.2l9.7 1.6a37 37 0 0 0 3.9 9.4l-5.7 8 6.5 6.5 8-5.7a37 37 0 0 0 9.4 3.9l1.6 9.7h9.2l1.6-9.7a37 37 0 0 0 9.4-3.9l8 5.7 6.5-6.5-5.7-8a37 37 0 0 0 3.9-9.4l9.7-1.6v-9.2l-9.7-1.6a37 37 0 0 0-3.9-9.4l5.7-8-6.5-6.5-8 5.7a37 37 0 0 0-9.4-3.9zM50 28a14 14 0 1 1 0 28 14 14 0 0 1 0-28z" transform="translate(0 8)"/>
+    </symbol>
+    <symbol id="seimei" viewBox="0 0 100 100">
+      <g fill="none" stroke="currentColor" stroke-width="1.2">
+        <circle cx="50" cy="50" r="47"/>
+        <circle cx="50" cy="50" r="42"/>
+        <path d="M50 8 L74.7 84 L10 37 L90 37 L25.3 84 Z"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- 背景：スクロールで回る歯車と、蒸気を吹くパイプ -->
+<div class="bg-layer" aria-hidden="true">
+  <canvas id="steam"></canvas>
+  <svg class="bg-gear b1" data-gear data-scroll=".10" data-idle="1.5" viewBox="0 0 100 100"><use href="#gear"/></svg>
+  <svg class="bg-gear b2" data-gear data-scroll="-.18" data-idle="-2.7" viewBox="0 0 100 100"><use href="#gear"/></svg>
+  <svg class="bg-gear b3" data-gear data-scroll="-.12" data-idle="-1.8" viewBox="0 0 100 100"><use href="#gear"/></svg>
+  <svg class="bg-gear b4" data-gear data-scroll=".26" data-idle="3.9" viewBox="0 0 100 100"><use href="#gear"/></svg>
+  <!-- 左のパイプ（右のパイプは左右反転して使う） -->
+  <svg class="pipe p-left" data-pipe viewBox="0 0 120 56">
+    <g fill="currentColor">
+      <rect x="0" y="20" width="96" height="16" rx="2"/>
+      <rect x="18" y="14" width="10" height="28" rx="2"/>
+      <rect x="58" y="14" width="10" height="28" rx="2"/>
+      <path d="M96 16 h10 l8 6 v12 l-8 6 h-10 z"/>
+      <circle cx="42" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="3"/>
+      <rect x="40.5" y="10" width="3" height="10"/>
+    </g>
+  </svg>
+  <svg class="pipe p-right" data-pipe viewBox="0 0 120 56">
+    <g fill="currentColor">
+      <rect x="0" y="20" width="96" height="16" rx="2"/>
+      <rect x="30" y="14" width="10" height="28" rx="2"/>
+      <rect x="70" y="14" width="10" height="28" rx="2"/>
+      <path d="M96 16 h10 l8 6 v12 l-8 6 h-10 z"/>
+    </g>
+  </svg>
+</div>
+
+<nav>
+  <a href="#pv">PV</a>
+  <a href="#story">物語</a>
+  <a href="#chara">人物</a>
+  <a href="#hogu">宝具</a>
+  <a href="#ayakashi">妖</a>
+  <a href="#play">遊ぶ</a>
+  <a href="#read">読む</a>
+</nav>
+
+<header class="hero">
+  <svg class="seal"><use href="#seimei"/></svg>
+  <svg class="gear g1" data-gear data-scroll=".12" data-idle="2" viewBox="0 0 100 100"><use href="#gear"/></svg>
+  <svg class="gear g2" data-gear data-scroll="-.18" data-idle="-3" viewBox="0 0 100 100"><use href="#gear"/></svg>
+  <svg class="gear g3" data-gear data-scroll=".4" data-idle="6" viewBox="0 0 100 100"><use href="#gear"/></svg>
+
+  <div class="hero-inner">
+    <h1 class="title">神宿り<span class="no">の</span>傀儡</h1>
+    <p class="tagline">歯車の帝都に、<em>神</em>が宿る。</p>
+  </div>
+  <p class="genre">大正 × 機巧 × 陰陽道</p>
+  <div class="scroll"></div>
+</header>
+
+<main>
+
+  <!-- PV：同じフォルダに pv.mp4（と、あれば poster.jpg）を置けば再生されます -->
+  <section id="pv">
+    <div class="head reveal"><span class="en">PROMOTION VIDEO</span><h2>映像</h2></div>
+    <div class="frame reveal">
+      <div class="video-wrap" id="vw">
+        <video id="pv-video" controls playsinline preload="metadata" poster="poster.jpg">
+          <source src="pv.mp4" type="video/mp4">
+        </video>
+        <div class="placeholder"><div><b>PV 公開準備中</b>pv.mp4 を配置すると再生されます</div></div>
+      </div>
+    </div>
+    <p class="pv-note reveal">第二部 イメージムービー</p>
+  </section>
+
+  <!-- あらすじ：仮の文章です。差し替えてください -->
+  <section id="story">
+    <div class="head reveal"><span class="en">STORY</span><h2>物語</h2></div>
+    <div class="story reveal">
+      <p class="lead">蒸気と歯車が街を動かす、<br>もうひとつの大正。</p>
+      <p>帝都では、自律して働く機巧人形が人々の暮らしに溶け込んでいた。荷を運び、店に立ち、夕暮れの通りを行き交う傀儡たち。</p>
+      <p>だがその陰で、古より封じられてきたものが目を覚まし始める。神々の力を宿す宝具、陰陽の術、そして千年を超えて受け継がれた因縁——。</p>
+      <p>人形とともに生きる青年・灯真は、帝都を揺るがす事件の渦中へと踏み込んでいく。</p>
+    </div>
+  </section>
+
+  <section id="world">
+    <div class="head reveal"><span class="en">WORLD</span><h2>世界</h2></div>
+    <div class="world">
+      <div class="kw reveal"><span class="k">帝</span><h3>大正の帝都</h3><p>蒸気自動車が白い息を吐いて石畳を走り、瓦斯灯の下を人々が行き交う。煉瓦の銀行と古い店が肩を並べる、和洋折衷の街。</p></div>
+      <div class="kw reveal"><span class="k">巧</span><h3>自律人形</h3><p>身体に納めた式神札の命令どおりに動く、蒸気仕掛けの人形たち。煙草を売り、給仕をし、辻でからくり芝居を演じる。</p></div>
+      <div class="kw reveal"><span class="k">陰</span><h3>陰陽道と宝具</h3><p>機械文明の陰で、陰陽師は今も妖を祓い続けている。「謹請」の詞とともに、宝具は神仏の力を解き放つ。</p></div>
+    </div>
+  </section>
+
+  <!-- 登場人物：画像ができたら .portrait の中を <img src="chara/toma.jpg" alt="御影灯真"> に差し替え -->
+  <section id="chara">
+    <div class="head reveal"><span class="en">CHARACTERS</span><h2>人物</h2></div>
+    <div class="chars">
+      <article class="card reveal">
+        <div class="portrait"><span class="ph">灯真</span></div>
+        <div class="body">
+          <span class="ruby">みかげ とうま</span><h3>御影灯真</h3>
+          <p>帝都の北外れにある御影人形工房の若き人形職人。彼の作る自律人形は、街で「あれは、ほんとうに、生きておる」と囁かれている。安倍晴明の血を引く御影家の陰陽師でもあり、一族の誰も成し得なかった「十の宝具すべてを扱う」才を持つ。それでも本人にとっては、力よりも人形作りのほうが楽しい。自分の作った人形を、わが子のように大切にしている。</p>
+        </div>
+      </article>
+      <article class="card reveal">
+        <div class="portrait"><span class="ph">椿</span></div>
+        <div class="body">
+          <span class="ruby">つばき</span><h3>椿</h3>
+          <p>灯真が作った自律人形に宿る付喪神。正体は御影家に代々伝わる簪で、緋色の振袖をまとった幼い少女の姿をしている。主を「灯真様」と慕い、御影の宝物庫とつながる力で宝具を灯真のもとへ呼び寄せる。風を操る術と、簪や扇を使って戦う。舞も得意とする。</p>
+        </div>
+      </article>
+      <article class="card reveal">
+        <div class="portrait"><span class="ph">福丸</span></div>
+        <div class="body">
+          <span class="ruby">ふくまる</span><h3>福丸</h3>
+          <p>鷲尾侯爵家にあった茶釜の付喪神。狸の面に白装束の童子の姿で、一人称は「おら」。本当の銘は「文福」だが、幼い主の宗介が「まるまるして福が来そうだ」と付けた名を名乗っている。幻術でいたずらを仕掛けるにぎやかな性格だが、心根はとても優しい。ある事件をきっかけに、御影家で暮らすことになる。</p>
+        </div>
+      </article>
+      <article class="card reveal">
+        <div class="portrait"><span class="ph">巌</span></div>
+        <div class="body">
+          <span class="ruby">みかげ いわお</span><h3>御影巌</h3>
+          <p>灯真の祖父で、江戸末期生まれの老陰陽師。六十を過ぎても肩幅は厚く、徳利を手放さない。口は悪く圧も強いが、孫の才を誰よりも理解している。素手でも、腕に覚えのある男たちを寄せつけない。</p>
+        </div>
+      </article>
+      <article class="card reveal">
+        <div class="portrait"><span class="ph">詩乃舞</span></div>
+        <div class="body">
+          <span class="ruby">あまみや しのぶ</span><h3>雨宮詩乃舞</h3>
+          <p>灯真の幼馴染で、古物商「雨月堂」の若女将。雨宮家も御影家と同じく安倍晴明の宝具を預かる分家で、詩乃舞も宝弓・宝箭を操る陰陽師だ。帝都でも指折りの商魂の持ち主で、何でも入る「よろず巾着」を量産して売れないかと目論んでいる。</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="hogu">
+    <div class="head reveal"><span class="en">TREASURES</span><h2>宝具</h2></div>
+    <p class="sec-lead reveal">千手の宝具は、安倍晴明が千手観音から賜ったと伝わる十の宝具。御影家と雨宮家が代々預かってきたが、出自は謎に包まれている。</p>
+    <div class="items">
+      <article class="item reveal">
+        <span class="mark">剣</span>
+        <span class="ruby">はまのつるぎ</span><h3>破魔の剣</h3>
+        <p>五芒星が刻まれた黒い木刀。灯真が呼びかけると、皮が剥がれるように光り輝く刀身が現れ、焔を噴き上げる。その焔は、喰らった魂を引き剥がし、怨を祓い、魔を滅する。</p>
+      </article>
+      <article class="item reveal">
+        <span class="mark">弓</span>
+        <span class="ruby">ほうきゅう・ほうせん</span><h3>宝弓・宝箭</h3>
+        <p>詩乃舞が使う、飴色に光る一対の弓と矢。番えると白い雷をまとい、放った矢は数十の光に分かれて禍の源を穿つ。</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="ayakashi">
+    <div class="head reveal"><span class="en">SPIRITS</span><h2>妖と神</h2></div>
+    <p class="sec-lead reveal">機械文明が台頭し、人々の意識から薄れつつあっても、妖は今も帝都の闇に潜んでいる。</p>
+    <div class="items">
+      <article class="item reveal">
+        <span class="mark">簪</span>
+        <span class="ruby">つくもがみ</span><h3>付喪神</h3>
+        <p>長い年月を経て、物に宿った精霊のような存在。本来は、宿った物の置かれた場所から動くことができない。灯真の人形に魂を移せば、自らの足で歩けるようになる。</p>
+      </article>
+      <article class="item reveal">
+        <span class="mark">蜘</span>
+        <span class="ruby">つちぐも</span><h3>土蜘蛛</h3>
+        <p>古の時代、大和朝廷にすら従わなかった者たちの怨念が妖と化した大妖怪。八つの赤い眼をもつ虎のような面に、黒い剛毛の蜘蛛の体をしている。かつて安倍晴明に地の底へ封じられたが、千年の時を経て何者かに封印を解かれ、晴明の血を引く御影家へ牙を剥く。</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="play">
+    <div class="head reveal"><span class="en">MINI GAME</span><h2>遊ぶ</h2></div>
+    <a class="game-card reveal" href="game.html">
+      <img src="game_thumb.png" alt="福丸の術稽古のゲーム画面" width="384" height="336">
+      <div class="gc-body">
+        <span class="ruby">神宿りの傀儡 外伝</span>
+        <h3>福丸の術稽古<small>〜 裏山の泥田坊 〜</small></h3>
+        <p>灯真と椿から術の稽古を言い渡された福丸。湯鉄砲を手に、ひとりで裏山の泥田坊を祓いに行く。</p>
+        <span class="gc-btn">遊んでみる ▶</span>
+      </div>
+    </a>
+  </section>
+
+  <section id="read" class="read">
+    <div class="head reveal"><span class="en">READ</span><h2>読む</h2></div>
+    <p class="reveal">本編はカクヨムにて連載中</p>
+    <a class="btn reveal" href="https://kakuyomu.jp/works/2912051606250347865" target="_blank" rel="noopener">カクヨムで読む</a>
+    <div class="sub-links reveal">
+      <a href="https://www.youtube.com/channel/UCiVuU90rtSANd5q7rNpxiOw" target="_blank" rel="noopener">YouTube</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <svg class="mark" viewBox="0 0 100 100"><use href="#seimei"/></svg>
+  <div>© 竜田揚げ ／ 神宿りの傀儡</div>
+</footer>
+
+<script>
+  // 動画が見つからないときは「準備中」表示に切り替え
+  (function(){
+    var v=document.getElementById('pv-video'),w=document.getElementById('vw');
+    var src=v.querySelector('source');
+    function miss(){w.classList.add('missing')}
+    src.addEventListener('error',miss);
+    v.addEventListener('error',miss);
+    // ポスター画像がない場合は属性を外す
+    var img=new Image();img.onerror=function(){v.removeAttribute('poster')};img.src=v.getAttribute('poster');
+  })();
+
+  // 「動きを減らす」設定の端末ではアニメーションを止める
+  var REDUCE=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ===== 蒸気 =====
+  var Steam=(function(){
+    var cv=document.getElementById('steam'),ctx=cv.getContext('2d');
+    var W=0,H=0,dpr=Math.min(window.devicePixelRatio||1,2);
+    var parts=[],MAX=160;
+    // 柔らかい湯気の粒（あらかじめ1枚描いて使い回す）
+    var sp=document.createElement('canvas');sp.width=sp.height=64;
+    var sc=sp.getContext('2d'),g=sc.createRadialGradient(32,32,0,32,32,32);
+    g.addColorStop(0,'rgba(236,227,207,.55)');g.addColorStop(.45,'rgba(236,227,207,.22)');g.addColorStop(1,'rgba(236,227,207,0)');
+    sc.fillStyle=g;sc.fillRect(0,0,64,64);
+
+    function resize(){W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
+    resize();addEventListener('resize',resize);
+
+    // パイプの吹き出し口の位置と向き
+    var pipes=[].slice.call(document.querySelectorAll('[data-pipe]'));
+    function outlets(){
+      return pipes.map(function(p){
+        var r=p.getBoundingClientRect(),left=p.classList.contains('p-left');
+        return {x:left?r.right-2:r.left+2,y:r.top+r.height/2,dir:left?1:-1};
+      });
+    }
+    function emit(o,power){
+      if(parts.length>=MAX)return;
+      parts.push({
+        x:o.x,y:o.y+(Math.random()-.5)*6,
+        vx:o.dir*(0.6+Math.random()*1.4)*power,
+        vy:-(0.2+Math.random()*0.6),
+        r:6+Math.random()*6,
+        life:0,max:70+Math.random()*60,
+        a:.5+Math.random()*.4
+      });
+    }
+    function burst(n){
+      var os=outlets();
+      for(var i=0;i<n;i++)emit(os[i%os.length],1.8+Math.random()*1.4);
+    }
+    function step(vel){
+      var os=outlets();
+      // 止まっているときは細く、スクロールが速いほど勢いよく
+      var rate=0.08+Math.min(Math.abs(vel)*0.06,2.2);
+      os.forEach(function(o){
+        var n=rate;while(n>0){if(Math.random()<n)emit(o,1+Math.min(Math.abs(vel)*.05,2));n-=1}
+      });
+      ctx.clearRect(0,0,W,H);
+      for(var i=parts.length-1;i>=0;i--){
+        var p=parts[i];p.life++;
+        p.vx*=0.975;p.vy-=0.012;p.vy*=0.99;
+        p.x+=p.vx+Math.sin((p.life+i)*0.05)*0.25;p.y+=p.vy;p.r+=0.45;
+        var t=p.life/p.max;
+        if(t>=1){parts.splice(i,1);continue}
+        ctx.globalAlpha=p.a*(t<.15?t/.15:(1-t))*.45;
+        ctx.drawImage(sp,p.x-p.r,p.y-p.r,p.r*2,p.r*2);
+      }
+      ctx.globalAlpha=1;
+    }
+    return {step:step,burst:burst};
+  })();
+
+  // ===== 歯車：スクロール量に合わせて回転 =====
+  (function(){
+    if(REDUCE)return;
+    var gears=[].slice.call(document.querySelectorAll('[data-gear]')).map(function(el){
+      return {el:el,s:parseFloat(el.dataset.scroll)||0,i:parseFloat(el.dataset.idle)||0};
+    });
+    var smooth=scrollY,prev=scrollY;
+    function frame(now){
+      smooth+=(scrollY-smooth)*0.12;          // 慣性をつけて回す
+      var vel=smooth-prev;prev=smooth;
+      var t=now/1000;
+      for(var k=0;k<gears.length;k++){
+        var g=gears[k];
+        g.el.style.transform='rotate('+(smooth*g.s+t*g.i)+'deg)';
+      }
+      Steam.step(vel);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  })();
+
+  // スクロールでふわっと表示 ＋ 見出しが出たら蒸気をプシュッと
+  (function(){
+    var els=document.querySelectorAll('.reveal');
+    if(!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('on')});return}
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(e.isIntersecting){
+          e.target.classList.add('on');io.unobserve(e.target);
+          if(!REDUCE&&e.target.classList.contains('head'))Steam.burst(28);
+        }
+      });
+    },{threshold:.15});
+    els.forEach(function(e){io.observe(e)});
+  })();
+</script>
+</body>
+</html>

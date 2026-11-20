@@ -1,0 +1,2171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>福丸の術稽古 〜裏山の泥田坊〜 ｜ 神宿りの傀儡</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;background:#0b0c14;color:#ece3cf;font-family:"DotGothic16",monospace;overflow:hidden;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}
+  #wrap{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+  #bar{width:100%;display:flex;justify-content:space-between;align-items:center;padding:8px 12px 0;font-size:13px}
+  #bar a,#bar button{color:#c9a35a;text-decoration:none;background:none;border:1px solid rgba(201,163,90,.4);
+    font:inherit;padding:4px 10px;cursor:pointer}
+  #stage{position:relative;flex:1;width:100%;display:flex;align-items:center;justify-content:center;min-height:0}
+  canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block;background:#000;
+    box-shadow:0 0 0 2px #2a2216,0 0 0 4px #c9a35a33,0 10px 40px rgba(0,0,0,.6)}
+  #pad{width:100%;max-width:560px;display:none;justify-content:space-between;align-items:center;padding:6px 14px 22px}
+  .touch #pad{display:flex}
+  .dir,.act{display:flex;gap:10px;align-items:center}
+  .btn{width:62px;height:62px;border-radius:50%;border:2px solid #c9a35a88;background:#1a1a28;color:#ece3cf;
+    display:grid;place-items:center;font:inherit;font-size:18px;touch-action:none}
+  .btn.down{width:54px;height:54px;font-size:15px;transform:translateY(18px)}
+  .btn.on{background:#c9a35a;color:#14121c}
+  .btn.a{background:#6b2620;border-color:#e0705f}
+  .btn.b{background:#203a6b;border-color:#7fa8e8;font-size:15px}
+  .btn.a.on{background:#e0705f}.btn.b.on{background:#7fa8e8}
+  .act .btn.a{transform:translateY(-14px)}
+  @media (orientation:landscape) and (max-height:520px){
+    .touch #pad{position:fixed;left:0;right:0;bottom:0;max-width:none;padding:0 16px 14px;pointer-events:none}
+    .touch #pad .btn{pointer-events:auto;opacity:.75}
+    #bar{position:fixed;top:0;z-index:2}
+  }
+  #help{font-size:12px;color:#8f8672;text-align:center;padding-bottom:10px}
+  .touch #help{display:none}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="bar">
+    <a href="index.html">← 公式サイトへ</a>
+    <button id="mute" type="button">♪ 音：オン</button>
+  </div>
+  <div id="stage"><canvas id="cv" width="384" height="336"></canvas></div>
+  <div id="pad">
+    <div class="dir">
+      <button class="btn" data-k="left" type="button">◀</button>
+      <button class="btn down" data-k="down" type="button">▼</button>
+      <button class="btn" data-k="right" type="button">▶</button>
+    </div>
+    <div class="act">
+      <button class="btn b" data-k="b" type="button">湯</button>
+      <button class="btn a" data-k="a" type="button">跳</button>
+    </div>
+  </div>
+  <p id="help">←→ 移動　↓ しゃがむ　Z/スペース ジャンプ・会話送り　X 湯鉄砲・会話スキップ</p>
+</div>
+
+<!-- 福丸（26×40）と泥田坊（96×72）のドット絵：竜田揚げ 提供 -->
+<script>/**
+ * 福丸の26×40ドット絵
+ * 1文字が1ドット。「.」は透明。ポーズは front / side / run / crouch / attack / hurt。
+ *
+ * <canvas id="sprite" width="26" height="40"></canvas>
+ * <script src="fukumaru.js"><\/script>
+ * <script>
+ *   const ctx = document.getElementById("sprite").getContext("2d");
+ *   Fukumaru.draw(ctx, "front");
+ * <\/script>
+ */
+(() => {
+  "use strict";
+
+  const width = 26;
+  const height = 40;
+
+  const palette = Object.freeze({
+    K: "#361411",  // 輪郭
+    E: "#2d100f",  // 黒目・口元
+    D: "#6c291a",  // 髪の影
+    H: "#b14c29",  // 髪
+    M: "#65281b",  // 狸面の目の模様
+    A: "#e9933c",  // 狸面の縁
+    C: "#feeab8",  // 狸面の生成り
+    S: "#feca96",  // 肌
+    s: "#fa8c50",  // 肌の影
+    R: "#fc725d",  // 頬・舌
+    m: "#7b2420",  // 口の中
+    Y: "#fdcf63",  // 羽織
+    y: "#f9af42",  // 羽織の影
+    B: "#3b3990",  // 藍色の着物・面紐
+    I: "#241627",  // 袴のひだ・鼻緒
+    b: "#3f409c",  // 羽織の青い紋
+    W: "#fdfcfd",  // 白い襟
+    O: "#d3732f",  // 帯・草履
+    Q: "#227aaa",  // 水の影
+    U: "#4bc6eb",  // 水色
+    V: "#aef3ff",  // 水の光
+    F: "#efffff"   // 水の白いきらめき
+  });
+
+  const poses = Object.freeze({
+    // 正面
+    front: Object.freeze([
+      "..........................",
+      "..............KKK.........",
+      "........KKKK.KAAAKKKK.....",
+      ".......KKHHHKKARAKKKKK....",
+      ".....KKKKHHHHKARAACyRK....",
+      "....KKKHHHHHHKKACMMCCK....",
+      "...KKHHHHHHHKKKACMCMCKK...",
+      "..KKHHHHHHKKKBBBCMMMCCKK..",
+      "..KKKKHHHKKHHKKKyCCCCKCK..",
+      "...KKHHKKKHHHHDKKACCCCCK..",
+      "...KHHKKDHHHHHDKKKyAAAK...",
+      "..KHHKKHHHHKDHKSKKKKKKK...",
+      "..KKKKHHHDKKDKKSSKHKKKK...",
+      "..KKKKKHHKKSKKSSSKHHKKK...",
+      "...KKKKHKKESKSSESSKKKKK...",
+      "...KKKKKSSESSSSESSKKK.....",
+      "....KKSKSSESSSSESSKSK.....",
+      "....KKSSSRSMSSMSRSSSK.....",
+      "......KKSSSSEESSSSKK......",
+      ".......KKSSSSSSSSKK.......",
+      "........KKKKssKKKK........",
+      ".......KYYKWsKWKYYK.......",
+      "......KYYYKBWWBKYYK.......",
+      ".....KKYYYKBBBBKYYYK......",
+      ".....KYYbYKBIBBKYbYYK.....",
+      "....KYbbbYKKKKKKYbbYYK....",
+      "...KYYbbYYKOOOOKYYbYYKK...",
+      "...KKYYYYYKOOOOKYYYYYKK...",
+      "....KKKYYYKKKKKKYYYKKK....",
+      "....KSSKYYKBIBBKYYKSKK....",
+      "....KSSKKKKBIBBKYKKSSK....",
+      ".....KKKKIBBIBBBKKKKK.....",
+      "......KIBIBBIBBBIBIK......",
+      "......KBBIBBIBBBIBBK......",
+      "......KBBIBBKBBBIBBK......",
+      ".......KKKKKKKKKKKK.......",
+      "........KSsK..KSSK........",
+      ".......KSIIK..KIISK.......",
+      ".......KKOOK.KKOOKK.......",
+      "........KKKK..KKKK........"
+    ]),
+
+    // 右向き
+    side: Object.freeze([
+      "..........................",
+      "..............KKK.........",
+      ".........KKKKKKAAKKK......",
+      "........KHHHHKARRAKKK.....",
+      "......KKKKHHHKARAACCKK....",
+      ".....KKHHHHHHKKAAMMCCK....",
+      "....KKHHHHHHKKBBCMCMMKK...",
+      "...KKHHHHHHKKBBBCMMMCCKK..",
+      "...KKKKHHHKHHKKKyCCCCKCK..",
+      "....KKHHHKHHHHKKKACCCCCK..",
+      "....KHHHKHHHHKHHKKKKyKK...",
+      "...KHHHKKHHHKHHDKKSKKKK...",
+      "...KKKKKHHDKHHDDKSSSKDK...",
+      "...KKKKHHHKKHKKKSSSSKK....",
+      "....KKHHHDKKKKKSSESSK.....",
+      "...KKHHHKKKKSKKSSESSK.....",
+      "...KKKKKDDKSsSKSSESSK.....",
+      ".....KKDDDKSSSSSRSSSSK....",
+      ".....KKKKDDKKsSSSSSSK.....",
+      ".......KKKKKKKKSSSSK......",
+      "..........KKKWKsKKK.......",
+      "..........KYYKWWK.........",
+      ".........KYYYYKWK.........",
+      "........KKYYYYKBWK........",
+      "........KYYYYYKBBK........",
+      "........KYbbbYKKKK........",
+      ".......KYYbbYYKOOKK.......",
+      ".......KYYYbYYKKOKK.......",
+      ".......KYYYYYYKKKKK.......",
+      ".......KKKKKKYKBBKK.......",
+      "........KKSSSKKBBKK.......",
+      "........KKSSSKIBBKK.......",
+      "........KBIKKBIBBKK.......",
+      "........KBIBIBIBBKK.......",
+      "........KBIBIBIBBKK.......",
+      "........KKKKKKKKKK........",
+      "..........KsSSKKK.........",
+      "..........KSSIKSKK........",
+      "..........KOOOOOKK........",
+      "..........KKKKKKK........."
+    ]),
+
+    // 走り
+    run: Object.freeze([
+      "..........................",
+      "................KKK.......",
+      "................KAAK......",
+      "...........KKKKKARAKKKK...",
+      "........KKKKHHKKARAAAKKK..",
+      "........KKKKHHHKKAAMMCCK..",
+      ".......KKHHHHHHDKACMCMCKK.",
+      ".....KKHHHHHHHKBBBCMMMCCKK",
+      "......KKKHHKKKKKKKACCCCKCK",
+      ".....KKKKHHHHKHHHKKyCCCCCK",
+      "....KKHHHHHHKHHHKHKKAAAAK.",
+      "...KKHHHHHHKHHHHHHKSKKKK..",
+      "....KKKHHKKHHHHKHKKSSKHK..",
+      ".....KKKKHKHHHKDHKSKSKHK..",
+      ".....KKKHHHDKKKDKSSESKKK..",
+      "....KKHHHHDKKKKKSSSESKK...",
+      ".....KKKDKKKSsSKSSSESK....",
+      ".......KKKDKSsSSSRSSSSK...",
+      ".........KKDKSSSSSSmmSK...",
+      ".....KKKKKKKKKKSSSSRRK....",
+      "...KKKYYYYKKKKKKsSSSK.KK..",
+      "..KKSKYYYYYYYYKWsKKK.KSSK.",
+      "..KSSSYYbYYYYYKWKKK.KKSSK.",
+      "..KSSKKYbbbYYYKBKYYKKKsSK.",
+      "...KKKKYYbYYYKBIKYYYYKKK..",
+      ".....KyyyKKYKKBIKYYYYKK...",
+      "...KKKKKKYYYKKKKKyYYYDK...",
+      "..KYYYYYYYYKHOOOKyyyKK....",
+      ".KYYYYYYYKKKKKKKKKKK......",
+      "KYYYKKYYKKBBBKIBBBBK......",
+      "KKKKKKKKKBBBBKBBBBBBK.....",
+      ".....KBBBBBBBBBBIBBKK..K..",
+      "...K.KBBBBBBKKBBIBKsKKKKK.",
+      "..KOIYKIIBBKK.KBBKsSKISSK.",
+      "..KOISsKBBKK...KKKsSSIOOK.",
+      "..KAISK.KKK.......KSSOOK..",
+      "..KOIK.............KOOK...",
+      "..KOSK.............KKK....",
+      "...KK.....................",
+      ".........................."
+    ]),
+
+    // しゃがみ
+    crouch: Object.freeze([
+      "..........................",
+      "..........................",
+      "..........................",
+      "..........................",
+      "..........................",
+      "..........................",
+      "..........................",
+      "..........................",
+      "..........................",
+      "...............KKK........",
+      "..........KKKKKAAAK.......",
+      ".........KKKKKKARAKKKK....",
+      "........KKHHHKKARAAAARK...",
+      "......KKKKHHHHKAACMMCCK...",
+      ".....KKHHHHHHKKKACMCMCKK..",
+      "....KHHHHHHKKKBBBCMMMCCKK.",
+      "....KKKHHHKHHHKKKAMCCCKCK.",
+      ".....KHHHKKHHHHKKKACCCCCK.",
+      ".....KHHKKHHHHHHHKKAAAAK..",
+      "....KHHKKHHHHHHHHKKKKKKK..",
+      "....KDKKKHHHHHHHKKSSKHKK..",
+      "....KKKKHHHKHHKHKSSSSKK...",
+      ".....KKHHHKKHKKKSSESSK....",
+      "....KKDDDKKKKKKKSSESSK....",
+      "....KKKDDDKKSsSKSSESSK....",
+      "......KDDDDKSSSSSRSSSKK...",
+      "......KKKDDKKSSSSSSSSK....",
+      ".......KKKKKKKKsSSSSK.....",
+      ".......KKKKKKKKsSSKK......",
+      ".....KKYYKYYKBWWKKK.......",
+      ".....KYYbYKYYYKBKKK.......",
+      "....KYYbbYKYYYYKSSKK......",
+      "....KYbYYYKOKKYYKSSsK.....",
+      "...KYYYYKKKKIKKKKKBBBK....",
+      "....KIBBBBBBBBBIIBBBK.....",
+      "....KIBBBBBIIIIBBBBK......",
+      "....KKIIBBIKKK.KIBK.......",
+      "....KSsIKKK...KKSSIK......",
+      "....KSOOOOK...KOOISOK.....",
+      ".....KKKKK....KKKKKKK....."
+    ]),
+
+    // 湯鉄砲
+    attack: Object.freeze([
+      "..........................",
+      "............KK............",
+      "......KKKKKKAAKK..........",
+      ".....KKHHKKKRRAKKKK.......",
+      "...KKKKHHHKKAMAAAARK......",
+      "...KHHHHHHHKAAMMCCCK......",
+      ".KHHHHHHHKKKBCMCMMCKK.....",
+      ".KHHHHHHKKKBBCMMMCCKKK....",
+      ".KKHHHKHHHHKKACCCCKCKK....",
+      "..KHHKKHHHHHKKACCCCCKK....",
+      ".KHHKKKHHHHHHHKKAAAAK.....",
+      "KHHDKKHHHHHHHHKSKKKK......",
+      "KDKKKHHHHHHHHKSSSKHK......",
+      ".KKKKHHKHHKKKSSSSKK.......",
+      ".KKKHHKKKKKKKSSESK........",
+      "KKDDDKKKKSKKKSSESK........",
+      ".KKDDDDKSssKKSSESKK.......",
+      "...KDDDKSSSSSSRSSMK.......",
+      "...KKKDDKKsSSSSmRSK.......",
+      ".....KKKKKKKSSSSKK......U.",
+      ".....KKKKKKKKKKK..........",
+      ".....KYKYYKWBKK...KSK..VUU",
+      "....KKYKbbYYYYYYKSSSFVUUQ.",
+      "....KYYKYbbYYYYYKSsSUQQ..V",
+      "...KKYYKYbyyYYYKKSSK....U.",
+      "...KKYKKIBBIIKKKKKK.......",
+      "...KKSKKOOOOOK............",
+      "...KKSYKOOOIIK............",
+      "..KKyYYYKIKKKK............",
+      "..KKYKKKKKKKBK............",
+      "....KKKBBBIIBBK...........",
+      ".....KBBBBIIBBBK..........",
+      "....KKBBBIIBIBBK..........",
+      "....KBBBIKKKBBBBK.........",
+      "...KBBBBK...KBBBK.........",
+      "...KBBBI....KKIBK.........",
+      "...KKIIK.....KKKK.........",
+      "...KsSK......KSSIKK.......",
+      "..KOOOOK.....KOOOOKK......",
+      "...KKKK.......KKKK........"
+    ]),
+
+    // やられ
+    hurt: Object.freeze([
+      "..........................",
+      "...........KKK............",
+      ".....KKKK.KAAAKKKK........",
+      "....KKHHHKKARAKKKKK.......",
+      "..KKKKHHHHKARAACyRK.......",
+      ".KKKHHHHHHKKACMMCCK.......",
+      "KKHHHHHHHKKKACMCMCKK......",
+      "KKHHHHHHKKKBBBCMMMCCKK....",
+      "KKKKHHHKKHHKKKyCCCCKCK....",
+      ".KKHHKKKHHHHDKKACCCCCK....",
+      ".KHHKKDHHHHHDKKKyAAAK.....",
+      "KHHKKHHHHKDHKSKKKKKKK.....",
+      "KKKKHHHDKKDKKSSKHKKKK.....",
+      ".KKKKKHHKKSKKSSSKHHKKK....",
+      "..KKKKHKMESSSSSEMSKKKK....",
+      "..KKKKKSSSESSSESSSKK......",
+      "...KKSKSMESSSSSEMSSK......",
+      "...KKSSSRSSSmmmSSRSK......",
+      "......KKSSSmWWWmSSKK......",
+      ".......KKSSMmsSmSKK.......",
+      "......KKYYKKssKKYYK.......",
+      ".....KYYYKWssWKSSKYK......",
+      "....KYYYbKBWWKSSsKYK......",
+      "....KYbbYYKKSKKKYYYK......",
+      "....KYYbYYKSSSsKYYK.......",
+      ".....KYYYYYyKSSKYYK.......",
+      "......KKYYyKKKKKyyK.......",
+      "......KYYKKOOOOKYKK.......",
+      "......KYYKOOOOOKYYK.......",
+      "......KYYKBBIBBKYYKKKK....",
+      "......KKKIBBIBBBKKIBBBK...",
+      "......KIBBBIBBBBIIBBBBK...",
+      "......KBBBIBBBBKIBBBKK....",
+      "......KBBIBBBKK.KIIIKSK...",
+      "......KBBIBBK....KKKSISK..",
+      "......KBBIBBK.....KSOOOK..",
+      "......KKBBIKK......KKKK...",
+      ".......KSSIK..............",
+      "......KSIOSK..............",
+      "......KKOOKK.............."
+    ])
+  });
+
+  /**
+   * Canvas 2Dの指定位置に1ポーズを描く。x、yは左上の座標で、scaleは整数倍率。
+   * 透明部分は描き飛ばす。同じ位置でポーズを切り替えるときは、
+   * 呼び出し側で前の絵を消すか、背景を描き直す。
+   */
+  function draw(ctx, pose = "front", x = 0, y = 0, scale = 1) {
+    if (!Object.prototype.hasOwnProperty.call(poses, pose)) {
+      throw new RangeError("pose は front、side、run、crouch、attack、hurt のいずれかを指定してください。");
+    }
+    if (!Number.isInteger(x) || !Number.isInteger(y) ||
+        !Number.isInteger(scale) || scale < 1) {
+      throw new RangeError("x と y は整数、scale は1以上の整数で指定してください。");
+    }
+
+    const rows = poses[pose];
+    const previousFill = ctx.fillStyle;
+    try {
+      for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+          const key = rows[row][col];
+          if (key === ".") continue;
+          ctx.fillStyle = palette[key];
+          ctx.fillRect(x + col * scale, y + row * scale, scale, scale);
+        }
+      }
+    } finally {
+      ctx.fillStyle = previousFill;
+    }
+  }
+
+  globalThis.Fukumaru = Object.freeze({ width, height, palette, poses, draw });
+})();
+</script>
+<script>/**
+ * 泥田坊 — 左向き、各コマ96×72 px、背景透過。
+ * 1文字が1ドット。"." は透明。x・yはフレーム左上の座標。
+ * Dorotabo.draw(ctx, "idle", x, y);
+ * Dorotabo.draw(ctx, Dorotabo.frameAt("attack", elapsedMs), x, y);
+ * 泥つぶては初回 "spitFirst"、通常 "spit"。反撃可能なコマは "spitRest"。
+ * const shot = Dorotabo.mudShotAt("spit", elapsedMs);
+ * if (shot) Dorotabo.drawMudShot(ctx, x + shot.x, y + shot.y);
+ * 命中や画面外で弾を消す処理はゲーム側で行う。preview.html / demo.js に使用例がある。
+ * frameAt の elapsedMs はその動作を開始してからのミリ秒。
+ */
+(() => {
+  "use strict";
+  const width = 96;
+  const height = 72;
+  const palette = Object.freeze({
+    k: "#341717",
+    p: "#542d38",
+    d: "#704236",
+    b: "#84513c",
+    c: "#a3653d",
+    o: "#bd8040",
+    g: "#dea353",
+    h: "#ffe0a0",
+    e: "#fcebc6",
+    s: "#dbc396",
+    t: "#8f4233",
+    r: "#ce5f36",
+    u: "#ee8544",
+    j: "#606218",
+    v: "#9a9e26"
+  });
+  const poses = Object.freeze({
+    // 待機
+    idle: Object.freeze([
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................kkkkkkkkk.......................................",
+      ".............................................kkkocobbbbbbkk.....................................",
+      "...........................................kkoooohooooccbbbbkk..................................",
+      "..........................................koohhhhhooocccobbbbbk.................................",
+      ".........................................kooohhoooooocbbbbbbbbbk................................",
+      "........................................koooooooooobbccbbbbbbbbkk...............................",
+      ".......................................koohoooccccbbbbcccbbbbbbbkk..............................",
+      ".......................................kohoocbbbbbbbbbbcccccbbbbbk..............................",
+      "...................kkkk...............kchoocbkkssskkkbbbcccccbbbbbk.............................",
+      "..................koooock............kkoocckkeeeeesskkbbbcccccbbpbk....kkkk.....................",
+      ".................kohhoocck...........koocbkkeeeeeeesskkbbbbccccbpbkk..kkoook....................",
+      "................koohoooccck.........kkocbbkeeeeeeeeesskbbbbccccbbppk.kkccoook...................",
+      "................koocccbpbck.........koccbkeeeeeeeeeeeskbbbbcbbbbbbpkkkkbbbbbok..................",
+      "................kcccbbpppbbk........kocbbkeeeeeeeeeeesskbbbbbbbbbccdkkkkbbbbbk..................",
+      "..........kkkkk..kkkpppppbbk.......kbobbkeeeeekkeeeeesskbbbbbbbbohoookkkbbbbk...................",
+      ".........kohhookk..kkpppbbcck......kbbbbkeeeekekkeeeesskbbbbppbbooooookbbbbbk...................",
+      "........kohhhoook...kkbbbbcck......kbbbbkeeeekkkkeeeesskbbbbbpbboooboobbbcbk....................",
+      "........kooooobockkkkkbbbbcbk......kkpbbkeeeekkkkeeeesskbbcbbbpbbbbpbbbbbbbk.kkk................",
+      "........kooooobbbbcbkkbbccbkkck.....kpbckeeeeeeeeeeesskbbcccbbbppppppbbbbbbkkohhk...............",
+      "........kbbobbbbbbbccbbccbbohhokk..kkbockkeeeeeeeeessskbbccccbbbpppppbbbbbbkkooook..............",
+      "........kkdpkkkppbbbbbcccbhhooook..kdoocbkseeeeeeeessskbccccccbbbbppppbbbbbbbboock..............",
+      ".........kkkkkkkpbbbbbbbbooooocck..kbhcbbbksseeeesssskcccbbbccbbbbpppppbbbbbbbbbbbk.............",
+      "..........kk..kkkpbbbbbbbooobbbbk.kkoocbbbkkssssssskkccccbkbbbbbbbppppppppbbbbbbbbk.............",
+      "................kbbbbbbbbccbbbbbk.kooobbbbbbkkkkkkkkcccccbkbbbbbbbbbbbbbppppppbbbbk.............",
+      "..............kkbcbbbbbbbbbbbbbk..kocbbbbccbbckkkccccccckkkbbbbbbbbccbbbpppppppbbbk.............",
+      ".............kccocobbbbpkkbkkkkkkkbcbbbbccccccccccccccckkkbbbbbbbbcccbbbpppbbkppbkk.............",
+      "............kooohccbbbbpkkkkkppckkbbbbbccccccccccccckkkkkkbbbbbpbbcccbbbbppbbkpppk..............",
+      "............khhobbbbbbbppkkkpppcockkkkbcccccckkkkkkkkkkkkkbbbbppccoocccbbppbbbkkk...............",
+      "...........kohoobbbppppppppppppbcccbbkbbbbbccckkkkkkkrrkkbbbbbpcooooccbbbpppbbkk................",
+      "...........koooobbppppppkbbbbpbbbccbbbpbbbbcccckkrrtrrrkbbbbbppcohocccbbbbppbbkk................",
+      "...........kbccbbpkkkkkkpbbbbbbbbcbbbbpbbbbbcccckrrtrrkbbbbbbpcohocccccbbpbppbkk................",
+      "............kbbbkkk..kkppbbbpbbbbbbbbbpbbbbbccckrrtrrrkbbbbbbpcgoccbbcccbpbpppdk................",
+      ".............kkkk.....kppbbppbbbbbbbbppbbbbbbcckrrthrrkbbbbbppoccbbbbbccbbkpppbkk...............",
+      "......................kppbppppbbbpbbbppbbcbbbcckrrrhrkkbbbbbpohcbbbbbbbbbbbkppbbk...............",
+      "......................kpppppppppppbbpppbbbbbccckrrrrrkpbbbbbpccbbpbbppppbbbkppbbk...............",
+      "......................kpppppkkkpppppppbbbbbcccckkrrrkkpbbbbpccbkkbbbbbppppbkkppbbk..............",
+      "......................kpppppkkkkppppppbbbbccccbbkrrkppbbbbbpccpkbbbbbbbbppbkkpbbbkk.............",
+      ".......................kpppkk.kkkkkppbbbbbcccbbbbppppbbbbbpppbkbbooobbbbbpbkkkpbbbk.............",
+      ".......................kkkkk..kkkpppbbbbbccbbbbbbpppbbbbbbppkbkbcoooccbbbbpkkkpppbbk............",
+      "........................kkk...kkppppbbbbbbbbbbbbbbbbbbbbbpppkkkcohooccbbbbpkkpppppbk............",
+      ".............................kkpppbccbbbbbbpbbcbbbbbbbbbppppkkcohhocbbccbbpkkppppppbk...........",
+      "............................kppppbccccbbbpppbccbbbbbbbbppppkkkohhoocbbppbbbkkkppppbbk.....j.....",
+      "..........................kbbppbcccboccbbpbbbccbbbbbbppppppkkcoooocbbbbbkkbbkkppppbbk....j..j...",
+      ".........................kbbbpboccbbbccbpbbbbcbbbbbppccbppkkhcccccccccbbbkbbkkppppbbbk.jjj.j....",
+      "......................kkkbbppoccbbpbbbbpbbbbccbbbpbcccbbkoohooocccohhhhobbkbbkkpppppbbk.jjj.....",
+      "...................kkkcbbbppoocbbppkbbkkbbbbbbbbbbbbbbbkoohooocbbkohoocccckkbbkppppppbbkjjj.....",
+      ".................kkhhcbppppcocbpppppkkkbbbbbbbbbbbbbbbkkohocbbbbkoooobbbbcbkbbkppbbbppppjjk.....",
+      "................kbcbbbppppbbbbpppppppbbbbboooobbbbbbbbkoooocbbkkkooobbbbbbbkkpppppbbbbbbbbbkk...",
+      "...........kkkoobbbdppbbbbpppppppppbbbbccccbbbbbbbbppkcooocbbkkkooobbpkbccbbkpppppppocoobbbbbk..",
+      ".........kkooohhocbbbbbcccbpppppbbbbbbbbbbbbbbbbbbpppkcbcccbbkkcccbbbpkbcccbkppbcoooocboooobbk..",
+      ".........kboobbbccccccccccccbbbbbbcbbbbbbbbbbbbppppppkobbcbbbkkcccbbbkkbccbbkbbocbbbbbbbbobbkk..",
+      ".........kkbbbbbbbbpppppppcccoooocccooobbbbbpppbpppppkkbbbbbkkkcbbbbbkkbbbbbkppbbbbbkkpbbbkk....",
+      "...........kkkkkkkkkkkkbbccohhoocbbbbbbbbboooobbbbppbbkbbbbkkpkkbbbbkkkkbbbkkpppppkk..kkkk......",
+      ".....................kbbbbcbbbbbbbbbbbbbbobbooccbbbbbbbkkkkpppppkkkkkbppkkkbbbbbbbkk............",
+      "....................kbbbbbbbbbbbbbbkkkkkkkbbbbbcoobbbpppbbbbbbpppkkkkbbbbbbbbbbbbbk.............",
+      ".....................kkkkkbbbbbbbbpk......kkkbbbbbbbbbbbbbbbkkkkkk...kkkkkbbbbbbkk..............",
+      ".............................kkkkkk.............kkkkkkkkkk......................................",
+      "................................................................................................",
+      "................................................................................................"
+    ]),
+
+    // 待機・沈み
+    breathe: Object.freeze([
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "...............................................kkkkkkkkk........................................",
+      "............................................kkkocobbbbbbkk......................................",
+      "...........................................kkoooohooooccbbbbkk..................................",
+      "..........................................koohhhhhooocccobbbbbk.................................",
+      ".........................................kooohhoooooocbbbbbbbbbk................................",
+      "........................................koooooooooobbccbbbbbbbbkk...............................",
+      ".......................................koohoooccccbbbbcccbbbbbbbkk..............................",
+      ".......................................kohoocbbbbbbbbbbcccccbbbbbk..............................",
+      "...................kkkk...............kchoocbkkssskkkbbbcccccbbbbbk.............................",
+      "..................koooock............kkoocckkeeeeesskkbbbcccccbbpbk....kkkk.....................",
+      ".................kohhoocck...........koocbkkeeeeeeesskkbbbbccccbpbkk..kkoook....................",
+      "................koohoooccck.........kkocbbkeeeeeeeeesskbbbbccccbbppk.kkccoook...................",
+      "................koocccbpbck.........koccbkeeeeeeeeeeeskbbbbcbbbbbbpkkkkbbbbbok..................",
+      "................kcccbbpppbbk........kocbbkeeeeeeeeeeesskbbbbbbbbbccdkkkkbbbbbk..................",
+      "..........kkkkk..kkkpppppbbk.......kbobbkeeeekkeeeeeesskbbbbbbbbohoookkkbbbbk...................",
+      ".........kohhookk..kkpppbbcck......kbbbbkeeekekkeeeeesskbbbbppbbooooookbbbbbk...................",
+      "........kohhhoook...kkbbbbcck......kbbbbkeeekkkkeeeeesskbbbbbpbboooboobbbcbk....................",
+      "........kooooobockkkkkbbbbcbk......kkpbbkeeekkkkeeeeesskbbcbbbpbbbbpbbbbbbbk.kkk................",
+      "........kbbobbbbbbbccbbccbbohhokk..kkbockkeeeeeeeeessskbbccccbbbpppppbbbbbbkkooook..............",
+      "........kkdpkkkppbbbbbcccbhhooook..kdoocbkseeeeeeeessskbccccccbbbbppppbbbbbbbboock..............",
+      ".........kkkkkkkpbbbbbbbbooooocck..kbhcbbbksseeeesssskcccbbbccbbbbpppppbbbbbbbbbbbk.............",
+      "..........kk..kkkpbbbbbbbooobbbbk.kkoocbbbkkssssssskkccccbkbbbbbbbppppppppbbbbbbbbk.............",
+      "................kbbbbbbbbccbbbbbk.kooobbbbbbkkkkkkkkcccccbkbbbbbbbbbbbbbppppppbbbbk.............",
+      "..............kkbcbbbbbbbbbbbbbk..kocbbbbccbbckkkccccccckkkbbbbbbbbccbbbpppppppbbbk.............",
+      ".............kccocobbbbpkkbkkkkkkkbcbbbbccccccccccccccckkkbbbbbbbbcccbbbpppbbkppbkk.............",
+      "............kooohccbbbbpkkkkkppckkbbbbbccccccccccccckkkkkkbbbbbpbbcccbbbbppbbkpppk..............",
+      "............khhobbbbbbbppkkkpppcockkkkbcccccckkkkkkkkkkkkkbbbbppccoocccbbppbbbkkk...............",
+      "...........kohoobbbppppppppppppbcccbbkbbbbbccckkkkkkkrrkkbbbbbpcooooccbbbpppbbkk................",
+      "...........koooobbppppppkbbbbpbbbccbbbpbbbbcccckkrrtrrrkbbbbbppcohocccbbbbppbbkk................",
+      "...........kbccbbpkkkkkkpbbbbbbbbcbbbbpbbbbbcccckrrtrrkbbbbbbpcohocccccbbpbppbkk................",
+      "............kbbbkkk..kkppbbbpbbbbbbbbbpbbbbbccckrrtrrrkbbbbbbpcgoccbbcccbpbpppdk................",
+      ".............kkkk.....kppbbppbbbbbbbbppbbbbbbcckrrthrrkbbbbbppoccbbbbbccbbkpppbkk...............",
+      "......................kppbppppbbbpbbbppbbcbbbcckrrrhrkkbbbbbpohcbbbbbbbbbbbkppbbk...............",
+      "......................kpppppppppppbbpppbbbbbccckrrrrrkpbbbbbpccbbpbbppppbbbkppbbk...............",
+      "......................kpppppkkkpppppppbbbbbcccckkrrrkkpbbbbpccbkkbbbbbppppbkkppbbk..............",
+      "......................kpppppkkkkppppppbbbbccccbbkrrkppbbbbbpccpkbbbbbbbbppbkkpbbbkk.............",
+      ".......................kpppkk.kkkkkppbbbbbcccbbbbppppbbbbbpppbkbbooobbbbbpbkkkpbbbk.............",
+      ".......................kkkkk..kkkpppbbbbbccbbbbbbpppbbbbbbppkbkbcoooccbbbbpkkkpppbbk............",
+      "........................kkk...kkppppbbbbbbbbbbbbbbbbbbbbbpppkkkcohooccbbbbpkkpppppbk............",
+      ".............................kkpppbccbbbbbbpbbcbbbbbbbbbppppkkcohhocbbccbbpkkppppppbk...........",
+      "............................kppppbccccbbbpppbccbbbbbbbbppppkkkohhoocbbppbbbkkkppppbbk.....j.....",
+      "..........................kbbppbcccboccbbpbbbccbbbbbbppppppkkcoooocbbbbbkkbbkkppppbbk....j..j...",
+      "......................kkkbbppoccbbpbbbbpbbbbccbbbpbcccbbkoohooocccohhhhobbkbbkkpppppbbk.jjj.....",
+      "...................kkkcbbbppoocbbppkbbkkbbbbbbbbbbbbbbbkoohooocbbkohoocccckkbbkppppppbbkjjj.....",
+      ".................kkhhcbppppcocbpppppkkkbbbbbbbbbbbbbbbkkohocbbbbkoooobbbbcbkbbkppbbbppppjjk.....",
+      "................kbcbbbppppbbbbpppppppbbbbboooobbbbbbbbkoooocbbkkkooobbbbbbbkkpppppbbbbbbbbbkk...",
+      "...........kkkoobbbdppbbbbpppppppppbbbbccccbbbbbbbbppkcooocbbkkkooobbpkbccbbkpppppppocoobbbbbk..",
+      ".........kkooohhocbbbbbcccbpppppbbbbbbbbbbbbbbbbbbpppkcbcccbbkkcccbbbpkbcccbkppbcoooocboooobbk..",
+      ".........kboobbbccccccccccccbbbbbbcbbbbbbbbbbbbppppppkobbcbbbkkcccbbbkkbccbbkbbocbbbbbbbbobbkk..",
+      ".........kkbbbbbbbbpppppppcccoooocccooobbbbbpppbpppppkkbbbbbkkkcbbbbbkkbbbbbkppbbbbbkkpbbbkk....",
+      "...........kkkkkkkkkkkkbbccohhoocbbbbbbbbboooobbbbppbbkbbbbkkpkkbbbbkkkkbbbkkpppppkk..kkkk......",
+      ".....................kbbbbcbbbbbbbbbbbbbbobbooccbbbbbbbkkkkpppppkkkkkbppkkkbbbbbbbkk............",
+      "....................kbbbbbbbbbbbbbbkkkkkkkbbbbbcoobbbpppbbbbbbpppkkkkbbbbbbbbbbbbbk.............",
+      ".....................kkkkkbbbbbbbbpk......kkkbbbbbbbbbbbbbbbkkkkkk...kkkkkbbbbbbkk..............",
+      ".............................kkkkkk.............kkkkkkkkkk......................................",
+      "................................................................................................",
+      "................................................................................................"
+    ]),
+
+    // 攻撃の予備動作
+    windup: Object.freeze([
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "..................................................kkkkkkkkk.....................................",
+      "...............................................kkkocobbbbbbkk...................................",
+      "..............................kkokkk.........kkoooohooooccbbbbkk................................",
+      "......................k......kkohook........koohhhhhooocccobbbbbk...............................",
+      ".....................kokk...koohooooc......kooohhoooooocbbbbbbbbbk..............................",
+      "...................kohhhokk.kcocooocc.....koooooooooobbccbbbbbbbbkk.............................",
+      "...................koohhook.kkcbccocck...koohoooccccbbbbcccbbbbbbbkk............................",
+      "..................kooooooook.kkpbppbck...kohoocbbbbbbbbbbcccccbbbbbk............................",
+      "..................kbboooboc..kkpppppck..kchoocbkkssskkkbbbcccccbbbbbk...........................",
+      "..................kdpobbbbckk.kppppbbk.kkoocckkeeeeesskkbbbcccccbbpbk....kkkk...................",
+      "...................kkkkbbbbckkkkbpbbbk.koocbkkeeeeeeesskkbbbbccccbpbkk..kkoook..................",
+      "..................kkkkkkppbbbkkbbbbccckkocbbkeeeeeeeeesskbbbbccccbbppk.kkccoook.................",
+      "......................kkpbbbcckbbbbcckkoccbkeeeeeeeeeeeskbbbbcbbbbbbpkkkkbbbbbok................",
+      ".......................kkbbbbbbcccbcbkkocbbkeeeeeeeeeeesskbbbbbbbbbccdkkkkbbbbbk................",
+      ".....................k.kbpbbbbcccbbkk.kocbbkeeeeeeeeeeesskbbbbbbbbbccdkkkkbbbbbk................",
+      "...................kkckbbbbbbbbbbbbohckobbkeeeekkeeeeeesskbbbbbbbbohoookkkbbbbk.................",
+      "..................kooooocbbbbbbboohohokbbbkeeekekkeeeeesskbbbbppbbooooookbbbbbk.................",
+      ".................kohhohcobbbbbbboooooookbbkeeekkkkeeeeesskbbbbbpbboooboobbbcbk..................",
+      "................kooooobbcbbbbbbccobbccokbbkeeekkkkeeeeesskbbcbbbpbbbbpbbbbbbbk.kkk..............",
+      "................kbooobbbbbbbbpkbbbbbbbkpbckeeeeeeeeeeesskbbcccbbbppppppbbbbbbkkohhk.............",
+      "................kbccbbbbpbbbpkkbkbbbbbkbockkeeeeeeeeessskbbccccbbbpppppbbbbbbkkooook............",
+      ".................kbbbpkpppppppkkkkkbkkdoocbkseeeeeeeessskbccccccbbbbppppbbbbbbbboock............",
+      "..................kkkkkkkpppppkkkppkkkbhcbbbksseeeesssskcccbbbccbbbbpppppbbbbbbbbbbbk...........",
+      ".........................kkpkppppppckkbkbbbkkssssssskkccccbkbbbbbbbppppppppbbbbbbbbk............",
+      "........................kkppbbbbpppckkbckbbbbkkkkkkkkcccccbkbbbbbbbbbbbbbppppppbbbbk............",
+      ".........................kppbbbbpbbcckkbbbccbbckkkccccccckkkbbbbbbbbccbbbpppppppbbbk............",
+      "........................kppbbbbbbbbbcckkkkcccccccccccccckkkbbbbbbbbcccbbbpppbbkppbkk............",
+      "........................kppbbppbbbbccbbbkkccccccccccckkkkkkbbbbbpbbcccbbbbppbbkpppk.............",
+      ".......................kpppppppbbbbcbbbbbpkccckkkkkkkkkkkkkbbbbppccoocccbbppbbbkkk..............",
+      ".......................kpppppppbbbbbbbbbbbkbccckkkkkkkrrkkbbbbbpcooooccbbbpppbbkk...............",
+      ".......................kpppppkppbbpbbbbbbppkcccckkrrtrrrkbbbbbppcohocccbbbbppbbkk...............",
+      ".......................kkpppkkkppppbbbbbpppkbcccckrrtrrkbbbbbbpcohocccccbbpbppbkk...............",
+      "........................kkkkkkkkppbbbbbppppkbccckrrtrrrkbbbbbbpcgoccbbcccbpbpppdk...............",
+      "........................kk...kkkppppppppppkkbbcckrrthrrkbbbbbppoccbbbbbccbbkpppbkk..............",
+      ".............................k.k.kkkppppppkkbbcckrrrhrkkbbbbbpohcbbbbbbbbbbbkppbbk..............",
+      "...................................kkpppkkkbbccckrrrrrkpbbbbbpccbbpbbppppbbbkppbbk..............",
+      "....................................kkkkkbbbcccckkrrrkkpbbbbpccbkkbbbbbppppbkkppbbk.............",
+      "...................................kpkkbbbbccccbbkrrkppbbbbbpccpkbbbbbbbbppbkkpbbbkk............",
+      "..................................kkppbbbbbcccbbbbppppbbbbbpppbkbbooobbbbbpbkkkpbbbk............",
+      "................................kkpppbbbbbccbbbbbbpppbbbbbbppkbkbcoooccbbbbpkkkpppbbk...........",
+      "...............................kkppppbbbbbbbbbbbbbbbbbbbbbpppkkkcohooccbbbbpkkpppppbk...........",
+      "..............................kkpppbccbbbbbbpbbcbbbbbbbbbppppkkcohhocbbccbbpkkppppppbk..........",
+      ".............................kppppbccccbbbpppbccbbbbbbbbppppkkkohhoocbbppbbbkkkppppbbk.....j....",
+      "...........................kbbppbcccboccbbpbbbccbbbbbbppppppkkcoooocbbbbbkkbbkkppppbbk....j..j..",
+      "...........................kbbppbcccboccbbpbbbccbbbbbbppppppkkcoooocbbbbbkkbbkkppppbbk....j..j..",
+      "..........................kbbbpboccbbbccbpbbbbcbbbbbppccbppkkhcccccccccbbbkbbkkppppbbbk.jjj.j...",
+      ".......................kkkbbppoccbbpbbbbpbbbbccbbbpbcccbbkoohooocccohhhhobbkbbkkpppppbbk.jjj....",
+      "...................kkkcbbbppoocbbppkbbkkbbbbbbbbbbbbbbbkoohooocbbkohoocccckkbbkppppppbbkjjj.....",
+      ".................kkhhcbppppcocbpppppkkkbbbbbbbbbbbbbbbkkohocbbbbkoooobbbbcbkbbkppbbbppppjjk.....",
+      "................kbcbbbppppbbbbpppppppbbbbboooobbbbbbbbkoooocbbkkkooobbbbbbbkkpppppbbbbbbbbbkk...",
+      "...........kkkoobbbdppbbbbpppppppppbbbbccccbbbbbbbbppkcooocbbkkkooobbpkbccbbkpppppppocoobbbbbk..",
+      ".........kkooohhocbbbbbcccbpppppbbbbbbbbbbbbbbbbbbpppkcbcccbbkkcccbbbpkbcccbkppbcoooocboooobbk..",
+      ".........kboobbbccccccccccccbbbbbbcbbbbbbbbbbbbppppppkobbcbbbkkcccbbbkkbccbbkbbocbbbbbbbbobbkk..",
+      ".........kkbbbbbbbbpppppppcccoooocccooobbbbbpppbpppppkkbbbbbkkkcbbbbbkkbbbbbkppbbbbbkkpbbbkk....",
+      "...........kkkkkkkkkkkkbbccohhoocbbbbbbbbboooobbbbppbbkbbbbkkpkkbbbbkkkkbbbkkpppppkk..kkkk......",
+      ".....................kbbbbcbbbbbbbbbbbbbbobbooccbbbbbbbkkkkpppppkkkkkbppkkkbbbbbbbkk............",
+      "....................kbbbbbbbbbbbbbbkkkkkkkbbbbbcoobbbpppbbbbbbpppkkkkbbbbbbbbbbbbbk.............",
+      ".....................kkkkkbbbbbbbbpk......kkkbbbbbbbbbbbbbbbkkkkkk...kkkkkbbbbbbkk..............",
+      ".............................kkkkkk.............kkkkkkkkkk......................................",
+      "................................................................................................",
+      "................................................................................................"
+    ]),
+
+    // 振り下ろし
+    swing: Object.freeze([
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "..............................................kkkkkkkkk.........................................",
+      "...........................................kkkocobbbbbbkk.......................................",
+      "..........................................kkoooohooooccbbbbkk...................................",
+      ".........................................koohhhhhooocccobbbbbk..................................",
+      "........................................kooohhoooooocbbbbbbbbbk.................................",
+      ".......................................koooooooooobbccbbbbbbbbkk................................",
+      "......................................koohoooccccbbbbcccbbbbbbbkk...............................",
+      "......................................kohoocbbbbbbbbbbcccccbbbbbk...............................",
+      ".....................................kchoocbkkssskkkbbbcccccbbbbbk..............................",
+      "....................................kkoocckkeeeeesskkbbbcccccbbpbk....kkkk......................",
+      "....................................koocbkkeeeeeeesskkbbbbccccbpbkk..kkoook.....................",
+      "...................................koccbkeeeeeeeeeeeskbbbbcbbbbbbpkkkkbbbbbok...................",
+      "..........kkkcckk..................kocbbkeeeeeeeeeeesskbbbbbbbbbccdkkkkbbbbbk...................",
+      ".........kooooccck................kbobbkeeeeeeeeeeeesskbbbbbbbbohoookkkbbbbk....................",
+      ".........khhooccckkk..............kbbbbkeekkeeeeeeeesskbbbbppbbooooookbbbbbk....................",
+      "........kohoooppbbbk..............kbbbbkekekkeeeeeeesskbbbbbpbboooboobbbcbk.....................",
+      "........oohcccpppbbkk.............kkpbbkekkkkeeeeeeesskbbcbbbpbbbbpbbbbbbbk.kkk.................",
+      "........koocbbpppbccck.............kpbckekkkkeeeeeesskbbcccbbbppppppbbbbbbkkohhk................",
+      "........kcckpppppbbcbk.k..........kkbockkeeeeeeeeessskbbccccbbbpppppbbbbbbkkooook...............",
+      ".........kk.kkkbbbbckkcookk.......kdoocbkseeeeeeeessskbccccccbbbbppppbbbbbbbboock...............",
+      ".....kkkkk...kkbbccbbohoook.......kbhcbbbksseeeesssskcccbbbccbbbbpppppbbbbbbbbbbbk..............",
+      "..kkkhoook.kkkkbbccbhhoocck......kkoocbbbkkssssssskkccccbkbbbbbbbppppppppbbbbbbbbk..............",
+      "..kohhooockccbcbbccbooobbbbk...kkkkkkbbbbbbkkkkkkkkcccccbkbbbbbbbbbbbbbppppppbbbbk..............",
+      "..ohhoobbbbbbcbbcbboooobbbkkkbcbbbbbkkkbccbbckkkccccccckkkbbbbbbbbccbbbpppppppbbbk..............",
+      ".koooooobbbbbbbbbbbbocbbbbkkkkbbbkbbbbpkkccccccccccccckkkbbbbbbbbcccbbbpppbbkppbkk..............",
+      "..kooobbbppbbbbbbbbbcbbbkkkckkkkkkbbbbbbppkcccccccckkkkkkbbbbbpbbcccbbbbppbbkpppk...............",
+      "..kbbokkkkkppbbbbbbbbkbkkppcoccbbbbbbbbbbppkkkkkkkkkkkkkkbbbbppccoocccbbppbbbkkk................",
+      "..kkddkkkkkkbbbbbbbpkkkkpppbccccbbbbbbbbppkcckkkkkkkrrkkbbbbbpcooooccbbbpppbbkk.................",
+      "....kkk....kccbbbbbpkkkkpppbbbcbbbbbbbbppkkcccckrrtrrkbbbbbbpcohocccccbbpbppbkk.................",
+      ".....k....kkocobbbbpppppbbpbbbbbbbbbbbpppkbccckrrtrrrkbbbbbbpcgoccbbcccbpbpppdk.................",
+      ".........kcchccbbbpppkbbbbbbbbbbbbbpppppkkbbcckrrthrrkbbbbbppoccbbbbbccbbkpppbkk................",
+      ".........ooobbbbppppppbbbppbbbbpbbpppppkkkbbcckrrrhrkkbbbbbpohcbbbbbbbbbbbkppbbk................",
+      "........khhhobbpppkkkppbbpppbbppbppppkkkkbbccckrrrrrkpbbbbbpccbbpbbppppbbbkppbbk................",
+      ".........ohoobbkkk.kkppbbpppppppppkkkkkbbbcccckkrrrkkpbbbbpccbkkbbbbbppppbkkppbbk...............",
+      "........koooobbpk...kppbppppkkpppkkppbbbbccccbbkrrkppbbbbbpccpkbbbbbbbbppbkkpbbbkk..............",
+      "........kocccbkk....kppppppkkkkkkkppbbbbbcccbbbbppppbbbbbpppbkbbooobbbbbpbkkkpbbbk..............",
+      ".........kkbbkk......kpppppk.kkkkpppbbbbbccbbbbbbpppbbbbbbppkbkbcoooccbbbbpkkkpppbbk............",
+      "...........kk........kppppkk..kkppppbbbbbbbbbbbbbbbbbbbbbpppkkkcohooccbbbbpkkpppppbk............",
+      ".....................kkkpkkk.kkpppbccbbbbbbpbbcbbbbbbbbbppppkkcohhocbbccbbpkkppppppbk...........",
+      ".......................kkkk.kppppbccccbbbpppbccbbbbbbbbppppkkkohhoocbbppbbbkkkppppbbk.....j.....",
+      "........................k.kbbppbcccboccbbpbbbccbbbbbbppppppkkcoooocbbbbbkkbbkkppppbbk....j..j...",
+      ".........................kbbbpboccbbbccbpbbbbcbbbbbppccbppkkhcccccccccbbbkbbkkppppbbbk.jjj.j....",
+      "......................kkkbbppoccbbpbbbbpbbbbccbbbpbcccbbkoohooocccohhhhobbkbbkkpppppbbk.jjj.....",
+      "...................kkkcbbbppoocbbppkbbkkbbbbbbbbbbbbbbbkoohooocbbkohoocccckkbbkppppppbbkjjj.....",
+      ".................kkhhcbppppcocbpppppkkkbbbbbbbbbbbbbbbkkohocbbbbkoooobbbbcbkbbkppbbbppppjjk.....",
+      "...........kkkoobbbdppbbbbpppppppppbbbbccccbbbbbbbbppkcooocbbkkkooobbpkbccbbkpppppppocoobbbbbk..",
+      ".........kkooohhocbbbbbcccbpppppbbbbbbbbbbbbbbbbbbpppkcbcccbbkkcccbbbpkbcccbkppbcoooocboooobbk..",
+      ".........kboobbbccccccccccccbbbbbbcbbbbbbbbbbbbppppppkobbcbbbkkcccbbbkkbccbbkbbocbbbbbbbbobbkk..",
+      ".........kkbbbbbbbbpppppppcccoooocccooobbbbbpppbpppppkkbbbbbkkkcbbbbbkkbbbbbkppbbbbbkkpbbbkk....",
+      "...........kkkkkkkkkkkkbbccohhoocbbbbbbbbboooobbbbppbbkbbbbkkpkkbbbbkkkkbbbkkpppppkk..kkkk......",
+      ".....................kbbbbcbbbbbbbbbbbbbbobbooccbbbbbbbkkkkpppppkkkkkbppkkkbbbbbbbkk............",
+      "....................kbbbbbbbbbbbbbbkkkkkkkbbbbbcoobbbpppbbbbbbpppkkkkbbbbbbbbbbbbbk.............",
+      ".....................kkkkkbbbbbbbbpk......kkkbbbbbbbbbbbbbbbkkkkkk...kkkkkbbbbbbkk..............",
+      ".............................kkkkkk.............kkkkkkkkkk......................................",
+      "................................................................................................",
+      "................................................................................................"
+    ]),
+
+    // 攻撃
+    attack: Object.freeze([
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "...........................................kkkkkkkkk............................................",
+      "........................................kkkocobbbbbbkk..........................................",
+      "......................................kkoooohooooccbbbbkk.......................................",
+      ".....................................koohhhhhooocccobbbbbk......................................",
+      "....................................kooohhoooooocbbbbbbbbbk.....................................",
+      "...................................koooooooooobbccbbbbbbbbkk....................................",
+      "...................................kohoocbbbbbbbbbbcccccbbbbbk..................................",
+      "..................................kchoocbkkssskkkbbbcccccbbbbbk.................................",
+      ".................................kkoocckkeeeeesskkbbbcccccbbpbk....kkkk.........................",
+      ".................................koocbkkeeeeeeesskkbbbbccccbpbkk..kkoook........................",
+      "................................kkocbbkeeeeeeeeesskbbbbccccbbppk.kkccoook.......................",
+      "................................koccbkeeeeeeeeeeeskbbbbcbbbbbbpkkkkbbbbbok......................",
+      "................................kocbbkeeeeeeeeeeesskbbbbbbbbbccdkkkkbbbbbk......................",
+      "...............................kbobbkeeeeeeeeeeeesskbbbbbbbbohoookkkbbbbk.......................",
+      "...............................kbbbbkekekkeeeeeeesskbbbbbpbboooboobbbcbk........................",
+      "...............................kkpbbkekkkkeeeeeeesskbbcbbbpbbbbpbbbbbbbk.kkk....................",
+      ".................................kpbckekkkkeeeeeesskbbcccbbbppppppbbbbbbkkohhk..................",
+      "................................kkbockkeeeeeeeeessskbbccccbbbpppppbbbbbbkkooook.................",
+      "................................kdoocbkseeeeeeeessskbccccccbbbbppppbbbbbbbboock.................",
+      "................................kbhcbbbksseeeesssskcccbbbccbbbbpppppbbbbbbbbbbbk................",
+      "...............................kkoocbbbkkssssssskkccccbkbbbbbbbppppppppbbbbbbbbk................",
+      "...............................kkkkkkbbbbkkkkkkkkcccccbkbbbbbbbbbbbbbppppppbbbbk................",
+      "............................kkbbbbpkkkkkkccccccccccckkkbbbbbbbbcccbbbpppbbkppbkk................",
+      ".........................kkbbbbcccccbbpkkkccccccckkkkkkbbbbbpbbcccbbbbppbbkpppk.................",
+      "...........k..........kkbbbbcoooocccccbbkkkkkkkkkkkkkkkbbbbppccoocccbbppbbbkkk..................",
+      "........kcckkkkk....kkkbbcoobkocccccbbbbpkkkkkkkkkrrkkbbbbbpcooooccbbbpppbbkk...................",
+      "......koccccbbcck.coockkoobbkbbbbbbbbbbbppkkckkrrtrrrkbbbbbppcohocccbbbbppbbkk..................",
+      ".....kooocppbbccbkhocbbkokbkbbbbbbbbbbpppkkccckrrtrrkbbbbbbpcohocccccbbpbppbkk..................",
+      "....kkooobpppbbckoooobbkkkcccbbbbbppppppkkccckrrtrrrkbbbbbbpcgoccbbcccbpbpppdk..................",
+      ".....ohocbpppbbcbhhobbbkccoccbbbbppppppkkkbcckrrthrrkbbbbbppoccbbbbbccbbkpppbkk.................",
+      "....kohcbbppbbccbhoobbkppcbbcbbbbppppkkkkbccckrrrrrkpbbbbbpccbbpbbppppbbbkppbbk.................",
+      "....kooccppkbbbccoocbkkpppbbbbbbbkkkkkbbbcccckkrrrkkpbbbbpccbkkbbbbbppppbkkppbbk................",
+      "....koockkkkkbbcbbcbbkkpppbbbbbpppppbbbbccccbbkrrkppbbbbbpccpkbbbbbbbbppbkkpbbbkk...............",
+      ".....kck..kkkbcbbbbbkkkpbbbbbbpppppbbbbbcccbbbbppppbbbbbpppbkbbooobbbbbpbkkkpbbbk...............",
+      ".......k..kbcbbbbbbkkkpbbbpbbpppppbbbbbccbbbbbbpppbbbbbbppkbkbcoooccbbbbpkkkpppbbk..............",
+      "......kkkkcbbbbbbbpppppbbbpppkkkkpbbbbbbbbbbbbbbbbbbbbbpppkkkcohooccbbbbpkkpppppbk..............",
+      "....kkoocbbbbbbbbbbpppbbbbpppkkkpbccbbbbbbpbbcbbbbbbbbbppppkkcohhocbbccbbpkkppppppbk............",
+      "....koobbbpbbbbbbbbbppppbpppkkppbccccbbbpppbccbbbbbbbbppppkkkohhoocbbppbbbkkkppppbbk.....j......",
+      "...khhobbbpppbbbbbbppkpppbpppkoccbbbccbpbbbbcbbbbbppccbppkkhcccccccccbbbkbbkkppppbbbk.jjj.j.....",
+      "..kohooobkkkkccobbppkkkppppppkkbbpbbbbpbbbbccbbbpbcccbbkoohooocccohhhhobbkbbkkpppppbbk.jjj......",
+      "..khooobkkk.kbccbbpkkkkkpppppkbbppkbbkkbbbbbbbbbbbbbbbkoohooocbbkohoocccckkbbkppppppbbkjjj......",
+      "..koooopk...kchbbpkkcbpkkpppkkpppppkkkbbbbbbbbbbbbbbbkkohocbbbbkoooobbbbcbkbbkppbbbppppjjk......",
+      "..kkobdkk...coobbbkkbppppkkkkpppppppbbbbboooobbbbbbbbkoooocbbkkkooobbbbbbbkkpppppbbbbbbbbbkk....",
+      "....kkkkk.kkohoobbkppbbbbpppppppppbbbbccccbbbbbbbbppkcooocbbkkkooobbpkbccbbkpppppppocoobbbbbk...",
+      ".....kk.kkokkhoobkkbbbcccbpppppbbbbbbbbbbbbbbbbbbpppkcbcccbbkkcccbbbpkbcccbkppbcoooocboooobbk...",
+      "........kbookoocbkcccccccccbbbbbbcbbbbbbbbbbbbppppppkobbcbbbkkcccbbbkkbccbbkbbocbbbbbbbbobbkk...",
+      "...........kkobbkkkkkkkbbccohhoocbbbbbbbbboooobbbbppbbkbbbbkkpkkbbbbkkkkbbbkkpppppkk..kkkk......",
+      ".............k.kk....kbbbbcbbbbbbbbbbbbbbobbooccbbbbbbbkkkkpppppkkkkkbppkkkbbbbbbbkk............",
+      "....................kbbbbbbbbbbbbbbkkkkkkkbbbbbcoobbbpppbbbbbbpppkkkkbbbbbbbbbbbbbk.............",
+      ".....................kkkkkbbbbbbbbpk......kkkbbbbbbbbbbbbbbbkkkkkk...kkkkkbbbbbbkk..............",
+      ".............................kkkkkk.............kkkkkkkkkk......................................",
+      "................................................................................................",
+      "................................................................................................"
+    ]),
+
+    // やられ
+    hurt: Object.freeze([
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "...................po...........................................................................",
+      "...................ppo..........................................................................",
+      "....................ppo..............................kkkkkkkkk..................................",
+      ".....................ppp..........................kkkocobbbbbbkk................................",
+      "......................p.......................koohhhhhooocccobbbbbk.............................",
+      ".............................................kooohhoooooocbbbbbbbbbk............................",
+      "...............o............................koooooooooobbccbbbbbbbbkk...........................",
+      "...........................................koohoooccccbbbbcccbbbbbbbkk..........................",
+      "...........................................kohoocbbbbbbbbbbcccccbbbbbk..........................",
+      ".......................kkkk...............kchoocbkkccckkkbbbcccccbbbbbk.........................",
+      "......................koooock............kkoocckkccccccckkbbbcccccbbpbk....kkkk.................",
+      "....................koohoooccck.........kkocbbkccccccccccckbbbbccccbbppk.kkccoook...............",
+      "....................koocccbpbck.........koccbkbccccccccccckbbbbcbbbbbbpkkkkbbbbbok..............",
+      "....................kcccbbpppbbk........kocbbkbbbbbcccccccckbbbbbbbbbccdkkkkbbbbbk..............",
+      "..............kkkkk..kkkpppppbbk.......kbobbkbbbbbbbbbbbbbbkbbbbbbbbohoookkkbbbbk...............",
+      "............kohhookk..kkpppbbcck......kbbbbkkkbbbbbbbbbbbbkbbbbppbbooooookbbbbbk................",
+      "...........kohhhoook...kkbbbbcck......kbbbbkpkkkkbbbbbbbbbkbbbbbpbboooboobbbcbk.................",
+      "...........kooooobockkkkkbbbbcbk......kkpbbkopppkkkkkkkkkbkbbcbbbpbbbbpbbbbbbbk.kkk.............",
+      "...........kbbobbbbbbbccbbccbbohhokk..kkbockkbbbbboooooopkbbccccbbbpppppbbbbbbkkooook...........",
+      "...........kkdpkkkppbbbbbcccbhhooook..kdoocbkbbbbbbbbbbbbkbccccccbbbbppppbbbbbbbboock...........",
+      "............kkkkkkkpbbbbbbbbooooocck..kbhcbbbkbbbbbbbbbbkcccbbbccbbbbpppppbbbbbbbbbbbk..........",
+      ".............kk..kkkpbbbbbbbooobbbbk.kkoocbbbkkbbbbbbbkkccccbkbbbbbbbppppppppbbbbbbbbk..........",
+      "...................kbbbbbbbbccbbbbbk.kooobbbbbbkkkkkkkkcccccbkbbbbbbbbbbbbbppppppbbbbk..........",
+      ".................kkbcbbbbbbbbbbbbbk..kocbbbbccbbckkkccccccckkkbbbbbbbbccbbbpppppppbbbk..........",
+      "................kccocobbbbpkkbkkkkkkkbcbbbbccccccccccccccckkkbbbbbbbbcccbbbpppbbkppbkk..........",
+      "..............kooohccbbbbpkkkkkppckkbbbbbccccccccccccckkkkkkbbbbbpbbcccbbbbppbbkpppk............",
+      ".............kohoobbbppppppppppppbcccbbkbbbbbccckkkkkkkrrkkbbbbbpcooooccbbbpppbbkk..............",
+      ".............koooobbppppppkbbbbpbbbccbbbpbbbbcccckkrrtrrrkbbbbbppcohocccbbbbppbbkk..............",
+      ".............kbccbbpkkkkkkpbbbbbbbbcbbbbpbbbbbcccckrrtrrkbbbbbbpcohocccccbbpbppbkk..............",
+      "..............kbbbkkk..kkppbbbpbbbbbbbbbpbbbbbccckrrtrrrkbbbbbbpcgoccbbcccbpbpppdk..............",
+      "...............kkkk.....kppbbppbbbbbbbbppbbbbbbcckrrthrrkbbbbbppoccbbbbbccbbkpppbkk.............",
+      "........................kppbppppbbbpbbbppbbcbbbcckrrrhrkkbbbbbpohcbbbbbbbbbbbkppbbk.............",
+      "........................kpppppppppppbbpppbbbbbccckrrrrrkpbbbbbpccbbpbbppppbbbkppbbk.............",
+      "........................kpppppkkkkppppppbbbbccccbbkrrkppbbbbbpccpkbbbbbbbbppbkkpbbbkk...........",
+      ".........................kpppkk.kkkkkppbbbbbcccbbbbppppbbbbbpppbkbbooobbbbbpbkkkpbbbk...........",
+      ".........................kkkkk..kkkpppbbbbbccbbbbbbpppbbbbbbppkbkbcoooccbbbbpkkkpppbbk..........",
+      ".........................kkk...kkppppbbbbbbbbbbbbbbbbbbbbbpppkkkcohooccbbbbpkkpppppbk...........",
+      "..............................kkpppbccbbbbbbpbbcbbbbbbbbbppppkkcohhocbbccbbpkkppppppbk..........",
+      ".............................kppppbccccbbbpppbccbbbbbbbbppppkkkohhoocbbppbbbkkkppppbbk.....j....",
+      "...........................kbbppbcccboccbbpbbbccbbbbbbppppppkkcoooocbbbbbkkbbkkppppbbk....j..j..",
+      ".......................kkkbbppoccbbpbbbbpbbbbccbbbpbcccbbkoohooocccohhhhobbkbbkkpppppbbk.jjj....",
+      "....................kkkcbbbppoocbbppkbbkkbbbbbbbbbbbbbbbkoohooocbbkohoocccckkbbkppppppbbkjjj....",
+      "..................kkhhcbppppcocbpppppkkkbbbbbbbbbbbbbbbkkohocbbbbkoooobbbbcbkbbkppbbbppppjjk....",
+      ".................kbcbbbppppbbbbpppppppbbbbboooobbbbbbbbkoooocbbkkkooobbbbbbbkkpppppbbbbbbbbbkk..",
+      "............kkkoobbbdppbbbbpppppppppbbbbccccbbbbbbbbppkcooocbbkkkooobbpkbccbbkpppppppocoobbbbbk.",
+      "..........kkooohhocbbbbbcccbpppppbbbbbbbbbbbbbbbbbbpppkcbcccbbkkcccbbbpkbcccbkppbcoooocboooobbk.",
+      ".........kboobbbccccccccccccbbbbbbcbbbbbbbbbbbbppppppkobbcbbbkkcccbbbkkbccbbkbbocbbbbbbbbobbkk..",
+      ".........kkbbbbbbbbpppppppcccoooocccooobbbbbpppbpppppkkbbbbbkkkcbbbbbkkbbbbbkppbbbbbkkpbbbkk....",
+      ".....................kbbbbcbbbbbbbbbbbbbbobbooccbbbbbbbkkkkpppppkkkkkbppkkkbbbbbbbkk............",
+      "....................kbbbbbbbbbbbbbbkkkkkkkbbbbbcoobbbpppbbbbbbpppkkkkbbbbbbbbbbbbbk.............",
+      ".....................kkkkkbbbbbbbbpk......kkkbbbbbbbbbbbbbbbkkkkkk...kkkkkbbbbbbkk..............",
+      ".............................kkkkkk.............kkkkkkkkkk......................................",
+      "................................................................................................",
+      "................................................................................................"
+    ]),
+    // 福丸を見て頬を膨らませる
+    spitPuff: Object.freeze([
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................kkkkkkkkk.......................................",
+      ".............................................kkkocobbbbbbkk.....................................",
+      "...........................................kkoooohooooccbbbbkk..................................",
+      "..........................................koohhhhhooocccobbbbbk.................................",
+      ".........................................kooohhoooooocbbbbbbbbbk................................",
+      "........................................koooooooooobbccbbbbbbbbkk...............................",
+      ".......................................koohoooccccbbbbcccbbbbbbbkk..............................",
+      ".......................................kohoocbbbbbbbbbbcccccbbbbbk..............................",
+      "......................................kchoocbkkssskkkbbbcccccbbbbbk.............................",
+      ".....................................kkoocckkeeeeesskkbbbcccccbbpbk....kkkk.....................",
+      ".....................................koocbkkeeeeeeesskkbbbbccccbpbkk..kkoook....................",
+      "....................................kkocbbkeeeeeeeeesskbbbbccccbbppk.kkccoook...................",
+      "....................................koccbkeeeeeeeeeeeskbbbbcbbbbbbpkkkkbbbbbok..................",
+      "....................................kocbbkeeeeeeeeeeesskbbbbbbbbbccdkkkkbbbbbk..................",
+      "...................................kbobbkeekkeeeeeeeesskbbbbbbbbohoookkkbbbbk...................",
+      "...................................kbbbbkekekkeeeeeeesskbbbbppbbooooookbbbbbk...................",
+      "...................................kbbbbkekkkkeeeeeeesskbbbbbpbboooboobbbcbk....................",
+      "...................................kkpbbkekkkkeeeeeeesskbbcbbbpbbbbpbbbbbbbk.kkk................",
+      "....................................kpbckeeeeeeeeeeesskbbcccbbbppppppbbbbbbkkohhk...............",
+      "...................................kkbockkeeeeeeeeessskbbccccbbbpppppbbbbbbkkooook..............",
+      "...................................kdoocbkseeeeeeeessskbccccccbbbbppppbbbbbbbboock..............",
+      "...................................kbhkbbbksseeeesssskcccbbbccbbbbpppppbbbbbbbbbbbk.............",
+      "..................................kkkpbbbkkkssssssskkccccbbbbbbbbbppppppppbbbbbbbbk.............",
+      "..............kkockk............kkggcccccbbbkkkkkkkkcccccbbbbbbbbbbbbbbbppppppbbbbk.............",
+      "..............oooccck..........kkghooooocccbbkkkkkkkcccccbbbbbbbbbbbbbbbppppppbbbbk.............",
+      ".............ohhoopbbbk.......kkcoooooooccccbbkkkbbcccccbbbbbbbbbbbccbbbpppppppbbbk.............",
+      "............kohccpppbbck......kpcoooooooccccbbbbbbbbcccbbbbbbbbbbbcccbbbpppbbkppbkk.............",
+      "............koocbpppbcck......kpcccooocccccbbbbbbbbbbbbbbbbbbbbpbbcccbbbbppbbkpppk..............",
+      "............kckkkppbbbckkcokkkkpccccccccccccbbbbbbbbbbbbbbbbbbppccoocccbbppbbbkkk...............",
+      "...........k...kkkbbbcbohoock.kpbcccccccccbbbbbbbbbbpbbbbbbbbbpcooooccbbbpppbbkk................",
+      ".........kkokk.kkkkbccbhoocbkkkpkbbcccccbbbbbbbbbbbppbbbbbbbbppcohocccbbbbppbbkk................",
+      "........ohooockcbcbbccooobbbbpkkpkkbbbbbbbbbbbbbbbpppbbbbbbbbpcohocccccbbpbppbkk................",
+      ".......khhoobbbbbbbbbboobbbbkkkkkppppppppppbbbbpppppbbbbbbbbbpcgoccbbcccbpbpppdk................",
+      "......kooooobbpbbbbbbbbbbkkkckckkkkpppppppbbppppppbbbbbbbbbbppoccbbbbbccbbkpppbkk...............",
+      ".......kobokkppbbbbbbbbkbkkppccccbkkkkkkkkkppppppbbbbbbbbbbbpohcbbbbbbbbbbbkppbbk...............",
+      ".......kbdpkkkkkbbbbbpkkkkpppbbcbbbbbpkkbbbbcccccbbbbbbbbbbbpccbbpbbppppbbbkppbbk...............",
+      ".......kkkk....bcobbbbppppbbpbbbbbbbppkkbbbccccbbbbbbbbbbbbbccbkkbbbbbppppbkkppbbk..............",
+      "..............kcccbbbpppbbbbbbbbbbbpppkkbbccccbbbbbbbbbbbbbbccpkbbbbbbbbppbkkpbbbkk.............",
+      ".............koobbbppppkbbbpbbbbpbbppkkbbbcccbbbbbbbbbbbbbbbpbkbbooobbbbbpbkkkpbbbk.............",
+      "............kohobbppkkkppbbppppppppkkkbbbccbbbbbbbbbbbbbbbbbkbkbcoooccbbbbpkkkpppbbk............",
+      ".............ohoobpk.kkppbpppkkkppkkbbbbbbbbbbbbbbbbbbbbbpppkkkcohooccbbbbpkkpppppbk............",
+      "............koocbkk....kppppkkkkkkkccbbbbbbpbbcbbbbbbbbbppppkkcohhocbbccbbpkkppppppbk...........",
+      ".............bbbbk.....kppppkkpkpbccccbbbpppbccbbbbbbbbppppkkkohhoocbbppbbbkkkppppbbk.....j.....",
+      "...............k.......kppppkppbcccboccbbpbbbccbbbbbbppppppkkcoooocbbbbbkkbbkkppppbbk....j..j...",
+      ".........................kkkkpboccbbbccbpbbbbcbbbbbppccbppkkhcccccccccbbbkbbkkppppbbbk.jjj.j....",
+      "......................kkkbkppoccbbpbbbbpbbbbccbbbpbcccbbkoohooocccohhhhobbkbbkkpppppbbk.jjj.....",
+      "...................kkkcbbbppoocbbppkbbkkbbbbbbbbbbbbbbbkoohooocbbkohoocccckkbbkppppppbbkjjj.....",
+      ".................kkhhcbppppcocbpppppkkkbbbbbbbbbbbbbbbkkohocbbbbkoooobbbbcbkbbkppbbbppppjjk.....",
+      "................kbcbbbppppbbbbpppppppbbbbboooobbbbbbbbkoooocbbkkkooobbbbbbbkkpppppbbbbbbbbbkk...",
+      "...........kkkoobbbdppbbbbpppppppppbbbbccccbbbbbbbbppkcooocbbkkkooobbpkbccbbkpppppppocoobbbbbk..",
+      ".........kkooohhocbbbbbcccbpppppbbbbbbbbbbbbbbbbbbpppkcbcccbbkkcccbbbpkbcccbkppbcoooocboooobbk..",
+      ".........kboobbbccccccccccccbbbbbbcbbbbbbbbbbbbppppppkobbcbbbkkcccbbbkkbccbbkbbocbbbbbbbbobbkk..",
+      ".........kkbbbbbbbbpppppppcccoooocccooobbbbbpppbpppppkkbbbbbkkkcbbbbbkkbbbbbkppbbbbbkkpbbbkk....",
+      "...........kkkkkkkkkkkkbbccohhoocbbbbbbbbboooobbbbppbbkbbbbkkpkkbbbbkkkkbbbkkpppppkk..kkkk......",
+      ".....................kbbbbcbbbbbbbbbbbbbbobbooccbbbbbbbkkkkpppppkkkkkbppkkkbbbbbbbkk............",
+      "....................kbbbbbbbbbbbbbbkkkkkkkbbbbbcoobbbpppbbbbbbpppkkkkbbbbbbbbbbbbbk.............",
+      ".....................kkkkkbbbbbbbbpk......kkkbbbbbbbbbbbbbbbkkkkkk...kkkkkbbbbbbkk..............",
+      ".............................kkkkkk.............kkkkkkkkkk......................................",
+      "................................................................................................",
+      "................................................................................................"
+    ]),
+    // 泥玉をためて構える
+    spitFull: Object.freeze([
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      ".................................................kkkkkkkkk......................................",
+      "..............................................kkkocobbbbbbkk....................................",
+      "............................................kkoooohooooccbbbbkk.................................",
+      "...........................................koohhhhhooocccobbbbbk................................",
+      "..........................................kooohhoooooocbbbbbbbbbk...............................",
+      ".........................................koooooooooobbccbbbbbbbbkk..............................",
+      "........................................koohoooccccbbbbcccbbbbbbbkk.............................",
+      "........................................kohoocbbbbbbbbbbcccccbbbbbk.............................",
+      ".......................................kchoocbkkssskkkbbbcccccbbbbbk............................",
+      "......................................kkoocckkeeeeesskkbbbcccccbbpbk....kkkk....................",
+      "......................................koocbkkeeeeeeesskkbbbbccccbpbkk..kkoook...................",
+      ".....................................kkocbbkeeeeeeeeesskbbbbccccbbppk.kkccoook..................",
+      ".....................................kkocbbkeeeeeeeeesskbbbbccccbbppk.kkccoook..................",
+      ".....................................koccbkeeeeeeeeeeeskbbbbcbbbbbbpkkkkbbbbbok.................",
+      ".....................................kocbbkeeeeeeeeeeesskbbbbbbbbbccdkkkkbbbbbk.................",
+      "....................................kbobbkeekkeeeeeeeesskbbbbbbbbohoookkkbbbbk..................",
+      "....................................kbbbbkekekkeeeeeeesskbbbbppbbooooookbbbbbk..................",
+      "....................................kbbbbkekkkkeeeeeeesskbbbbbpbboooboobbbcbk...................",
+      "....................................kkpbbkekkkkeeeeeeesskbbcbbbpbbbbpbbbbbbbk.kkk...............",
+      "..................................k..kpbckeeeeeeeeeeesskbbcccbbbppppppbbbbbbkkohhk..............",
+      ".............................kkkkbbbbkkkckkeeeeeeeeessskbbccccbbbpppppbbbbbbkkooook.............",
+      "...........................kkcccccccccbbbkkseeeeeeeessskbccccccbbbbppppbbbbbbbboock.............",
+      "..........................kcooooooooocccbbbksseeeesssskcccbbbccbbbbpppppbbbbbbbbbbbk............",
+      ".........................kcoooggooooooccccbbkssssssskkccccbbbbbbbbbppppppppbbbbbbbbk............",
+      "........................kcoooghoooooooocccbbbkkkkkkkkcccccbbbbbbbbbbbbbbbppppppbbbbk............",
+      ".......................kkcoooooooooooooccccbbbbbbbcccccccbbbbbbbbbbbccbbbpppppppbbbk............",
+      ".......................kpcooooooooooooocbbbbbbbbbbbcccccbbbbbbbbbbbcccbbbpppbbkppbkk............",
+      "..............kkockk...kpcoooooooooooooccbbbbbbbbbbbcbbbbbbbbbbbpbbcccbbbbppbbkpppk.............",
+      "..............oooccck.kkpcccoooooooooccccbbbbbbbbbbbbbbbbbbbbbbppccoocccbbppbbbkkk..............",
+      ".............ohhoopbbbkkpcccccoooooccccccbbbbbbbbbbbbbbbbbbbbbbpcooooccbbbpppbbkk...............",
+      "............kohccpppbbckppkccccccccccccccbbbbbbbbbbbpbbbbbbbbbppcohocccbbbbppbbkk...............",
+      "............koocbpppbcckkppkkcccccccccccbbbbbbbbbbppbbbbbbbbbppcohocccbbbbppbbkk................",
+      "............kckkkppbbbckkkpppbbccccccbbbbbbbbbbbbpppbbbbbbbbbpcohocccccbbpbppbkk................",
+      "...........k...kkkbbbcbohkkpppbbbbbbbbbbbbbbbbpppppbbbbbbbbbbpcgoccbbcccbpbpppdk................",
+      ".........kkokk.kkkkbccbhookkpppppppppppbbbbpppppppbbbbbbbbbbppoccbbbbbccbbkpppbkk...............",
+      "........ohooockcbcbbccooobbkkkppppppppppkkpppppppbbbbbbbbbbbpohcbbbbbbbbbbbkppbbk...............",
+      ".......khhoobbbbbbbbbboobbbbkkkkkkkkkkkkbbbppccccbbbbbbbbbbbpccbbpbbppppbbbkppbbk...............",
+      "......kooooobbpbbbbbbbbbbkkkckckbbkbbpkkbbbccccbbbbbbbbbbbbbccbkkbbbbbppppbkkppbbk..............",
+      ".......kobokkppbbbbbbbbkbkkppccccbbbppkkbbccccbbbbbbbbbbbbbbccpkbbbbbbbbppbkkpbbbkk.............",
+      ".......kbdpkkkkkbbbbbpkkkkpppbbcbbbbppkkbbcccbbbbbbbbbbbbbbbpbkbbooobbbbbpbkkkpbbbk.............",
+      ".......kkkk....bcobbbbppppbbpbbbbbbppkkbbccbbbbbbbbbbbbbbbbbkbkbcoooccbbbbpkkkpppbbk............",
+      "..............kcccbbbpppbbbbbbbbbbbkkkbbbbbbbbbbbbbbbbbbbpppkkkcohooccbbbbpkkpppppbk............",
+      ".............koobbbppppkbbbpbbbbpbbkcbbbbbbpbbcbbbbbbbbbppppkkcohhocbbccbbpkkppppppbk...........",
+      "............kohobbppkkkppbbpppppppkcccbbbpppbccbbbbbbbbppppkkkohhoocbbppbbbkkkppppbbk.....j.....",
+      ".............ohoobpk.kkppbpppkkkppcboccbbpbbbccbbbbbbppppppkkcoooocbbbbbkkbbkkppppbbk....j..j...",
+      "............koocbkk....kppppkkkkkcbbbccbpbbbbcbbbbbppccbppkkhcccccccccbbbkbbkkppppbbbk.jjj.j....",
+      ".............bbbbk....kkppppkkckbbpbbbbpbbbbccbbbpbcccbbkoohooocccohhhhobbkbbkkpppppbbk.jjj.....",
+      "...............k...kkkckppppkocbbppkbbkkbbbbbbbbbbbbbbbkoohooocbbkohoocccckkbbkppppppbbkjjj.....",
+      ".................kkhhcbppkkkkcbpppppkkkbbbbbbbbbbbbbbbkkohocbbbbkoooobbbbcbkbbkppbbbppppjjk.....",
+      "................kbcbbbppppkbbbpppppppbbbbboooobbbbbbbbkoooocbbkkkooobbbbbbbkkpppppbbbbbbbbbkk...",
+      "................kbcbbbppppbbbbpppppppbbbbboooobbbbbbbbkoooocbbkkkooobbbbbbbkkpppppbbbbbbbbbkk...",
+      "...........kkkoobbbdppbbbbpppppppppbbbbccccbbbbbbbbppkcooocbbkkkooobbpkbccbbkpppppppocoobbbbbk..",
+      ".........kkooohhocbbbbbcccbpppppbbbbbbbbbbbbbbbbbbpppkcbcccbbkkcccbbbpkbcccbkppbcoooocboooobbk..",
+      ".........kboobbbccccccccccccbbbbbbcbbbbbbbbbbbbppppppkobbcbbbkkcccbbbkkbccbbkbbocbbbbbbbbobbkk..",
+      ".........kkbbbbbbbbpppppppcccoooocccooobbbbbpppbpppppkkbbbbbkkkcbbbbbkkbbbbbkppbbbbbkkpbbbkk....",
+      "...........kkkkkkkkkkkkbbccohhoocbbbbbbbbboooobbbbppbbkbbbbkkpkkbbbbkkkkbbbkkpppppkk..kkkk......",
+      ".....................kbbbbcbbbbbbbbbbbbbbobbooccbbbbbbbkkkkpppppkkkkkbppkkkbbbbbbbkk............",
+      "....................kbbbbbbbbbbbbbbkkkkkkkbbbbbcoobbbpppbbbbbbpppkkkkbbbbbbbbbbbbbk.............",
+      ".....................kkkkkbbbbbbbbpk......kkkbbbbbbbbbbbbbbbkkkkkk...kkkkkbbbbbbkk..............",
+      ".............................kkkkkk.............kkkkkkkkkk......................................",
+      "................................................................................................",
+      "................................................................................................"
+    ]),
+    // 舌で泥玉を弾く
+    spitRelease: Object.freeze([
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "..............................................kkkkkkkkk.........................................",
+      "...........................................kkkocobbbbbbkk.......................................",
+      ".........................................kkoooohooooccbbbbkk....................................",
+      "........................................koohhhhhooocccobbbbbk...................................",
+      ".......................................kooohhoooooocbbbbbbbbbk..................................",
+      "......................................koooooooooobbccbbbbbbbbkk.................................",
+      ".....................................koohoooccccbbbbcccbbbbbbbkk................................",
+      ".....................................kohoocbbbbbbbbbbcccccbbbbbk................................",
+      "....................................kchoocbkkssskkkbbbcccccbbbbbk...............................",
+      "...................................kkoocckkeeeeesskkbbbcccccbbpbk....kkkk.......................",
+      "...................................koocbkkeeeeeeesskkbbbbccccbpbkk..kkoook......................",
+      "..................................kkocbbkeeeeeeeeesskbbbbccccbbppk.kkccoook.....................",
+      "..................................koccbkeeeeeeeeeeeskbbbbcbbbbbbpkkkkbbbbbok....................",
+      "..................................kocbbkeeeeeeeeeeesskbbbbbbbbbccdkkkkbbbbbk....................",
+      ".................................kbobbkeekkeeeeeeeesskbbbbbbbbohoookkkbbbbk.....................",
+      ".................................kbobbkeekkeeeeeeeesskbbbbbbbbohoookkkbbbbk.....................",
+      ".................................kbbbbkekekkeeeeeeesskbbbbppbbooooookbbbbbk.....................",
+      "..................................kbbbbkekkkkeeeeeeesskbbbbbpbboooboobbbcbk.....................",
+      "..................................kkpbbkekkkkeeeeeeesskbbcbbbpbbbbpbbbbbbbk.kkk.................",
+      "...................................kpbckeeeeeeeeeeesskbbcccbbbppppppbbbbbbkkohhk................",
+      "..................................kkbockkeeeeeeeeessskbbccccbbbpppppbbbbbbkkooook...............",
+      "...............................kkkkkoocbkseeeeeeeessskbccccccbbbbppppbbbbbbbboock...............",
+      "...........................kkkkcccckkkkbbksseeeesssskcccbbbccbbbbpppppbbbbbbbbbbbk..............",
+      ".......................rtttkccccccccccckkkkkkbbbkkkkccccbbbbbbbbbppppppppbbbbbbbbk..............",
+      ".......................turrtccccccccccbkkkbbbbbbbbbkkcccbbbbbbbbbbbbbbbppppppbbbbk..............",
+      "........................turrrtttkkkkbbbbbbbbbbbbbbbbkkcbbbbbbbbbbbccbbbpppppppbbbk..............",
+      "........................ktrrrrrrrrrtkkkbbbbkkbbbbbbkkcbbbbbbbbbbbcccbbbpppbbkppbkk..............",
+      ".........................kkttttrrrttttkkkkkkbbbbbbkkbbbbbbbbbbpbbcccbbbbppbbkpppk...............",
+      "...........................kkbttttttkkkkkkkbbbbbbkkkbbbbbbbbbppccoocccbbppbbbkkk................",
+      "..............kkockk........kkbbbbkkkkkbbbbbbbbkkkkbbbbbbbbbbpcooooccbbbpppbbkk.................",
+      "..............oooccck.........kkkbbbbbbbbbbbkkkkkkbbbbbbbbbbppcohocccbbbbppbbkk.................",
+      ".............ohhoopbbbk.......kkkkkkkkkkkkkkkkkkbbbbbbbbbbbbpcohocccccbbpbppbkk.................",
+      "............kohccpppbbck...kkkkppbkkkkkkkkkkkkccbbbbbbbbbbbbpcgoccbbcccbpbpppdk.................",
+      "............koocbpppbcck.kkkppbbbbbbbpkkkbbcccccbbbbbbbbbbbbpcgoccbbcccbpbpppdk.................",
+      "............kckkkppbbbckkcokkbbbbbbbbbpkkbbbccccbbbbbbbbbbbppoccbbbbbccbbkpppbkk................",
+      "...........k...kkkbbbcbohoockbbbbbbbbppkkbbbccccbbbbbbbbbbbpohcbbbbbbbbbbbkppbbk................",
+      ".........kkokk.kkkkbccbhoocbkbbbbbbbbppkbbbcccccbbbbbbbbbbbpccbbpbbppppbbbkppbbk................",
+      "........ohooockcbcbbccooobbbbbbbbbbbbpkkbbccccbbbbbbbbbbbbbccbkkbbbbbppppbkkppbbk...............",
+      ".......khhoobbbbbbbbbboobbbbkkkbbkkbppkkbccccbbbbbbbbbbbbbbccpkbbbbbbbbppbkkpbbbkk..............",
+      "......kooooobbpbbbbbbbbbbkkkckckbbkpppkkbcccbbbbbbbbbbbbbbbpbkbbooobbbbbpbkkkpbbbk..............",
+      ".......kobokkppbbbbbbbbkbkkppccccbbppkkbccbbbbbbbbbbbbbbbbbkbkbcoooccbbbbpkkkpppbbk.............",
+      ".......kbdpkkkkkbbbbbpkkkkpppbbcbbbbkkbbbbbbbbbbbbbbbbbbpppkkkcohooccbbbbpkkpppppbk.............",
+      ".......kkkk....bcobbbbppppbbpbbbbbbkbbbbbbpbbcbbbbbbbbbppppkkcohhocbbccbbpkkppppppbk............",
+      "..............kcccbbbpppbbbbbbbbbbbccbbbpppbccbbbbbbbbppppkkkohhoocbbppbbbkkkppppbbk.....j......",
+      ".............koobbbppppkbbbpbbbbpbboccbbpbbbccbbbbbbppppppkkcoooocbbbbbkkbbkkppppbbk....j..j....",
+      "............kohobbppkkkppbbpppppppbbbccbpbbbbcbbbbbppccbppkkhcccccccccbbbkbbkkppppbbbk.jjj.j....",
+      ".............ohoobpk.kkppbpppkkkpppbbbbpbbbbccbbbpbcccbbkoohooocccohhhhobbkbbkkpppppbbk.jjj.....",
+      "............koocbkkkkkckppppkkkkkppkbbkkbbbbbbbbbbbbbbbkoohooocbbkohoocccckkbbkppppppbbkjjj.....",
+      ".............bbbbkkhhcbkppppkkbkppppkkkbbbbbbbbbbbbbbbkkohocbbbbkoooobbbbcbkbbkppbbbppppjjk.....",
+      "...............kkbcbbbpkppppkbpppppppbbbbboooobbbbbbbbkoooocbbkkkooobbbbbbbkkpppppbbbbbbbbbkk...",
+      "...........kkkoobbbdppbbbkkkkppppppbbbbccccbbbbbbbbppkcooocbbkkkooobbpkbccbbkpppppppocoobbbbbk..",
+      "...........kkkoobbbdppbbbbkppppppppbbbbccccbbbbbbbbppkcooocbbkkkooobbpkbccbbkpppppppocoobbbbbk..",
+      ".........kkooohhocbbbbbcccbpppppbbbbbbbbbbbbbbbbbbpppkcbcccbbkkcccbbbpkbcccbkppbcoooocboooobbk..",
+      ".........kboobbbccccccccccccbbbbbbcbbbbbbbbbbbbppppppkobbcbbbkkcccbbbkkbccbbkbbocbbbbbbbbobbkk..",
+      ".........kkbbbbbbbbpppppppcccoooocccooobbbbbpppbpppppkkbbbbbkkkcbbbbbkkbbbbbkppbbbbbkkpbbbkk....",
+      "...........kkkkkkkkkkkkbbccohhoocbbbbbbbbboooobbbbppbbkbbbbkkpkkbbbbkkkkbbbkkpppppkk..kkkk......",
+      ".....................kbbbbcbbbbbbbbbbbbbbobbooccbbbbbbbkkkkpppppkkkkkbppkkkbbbbbbbkk............",
+      "....................kbbbbbbbbbbbbbbkkkkkkkbbbbbcoobbbpppbbbbbbpppkkkkbbbbbbbbbbbbbk.............",
+      ".....................kkkkkbbbbbbbbpk......kkkbbbbbbbbbbbbbbbkkkkkk...kkkkkbbbbbbkk..............",
+      ".............................kkkkkk.............kkkkkkkkkk......................................",
+      "................................................................................................",
+      "................................................................................................"
+    ]),
+    // 舌を垂らした反撃の隙
+    spitRest: Object.freeze([
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      "................................................................................................",
+      ".............................................kkkocobbbbbbkk.....................................",
+      "...........................................kkoooohooooccbbbbkk..................................",
+      "..........................................koohhhhhooocccobbbbbk.................................",
+      ".........................................kooohhoooooocbbbbbbbbbk................................",
+      "........................................koooooooooobbccbbbbbbbbkk...............................",
+      ".......................................koohoooccccbbbbcccbbbbbbbkk..............................",
+      ".......................................kohoocbbbbbbbbbbcccccbbbbbk..............................",
+      "......................................kchoocbkkssskkkbbbcccccbbbbbk.............................",
+      ".....................................kkoocckkeeeeesskkbbbcccccbbpbk....kkkk.....................",
+      ".....................................koocbkkeeeeeeesskkbbbbccccbpbkk..kkoook....................",
+      "....................................kkocbbkeeeeeeeeesskbbbbccccbbppk.kkccoook...................",
+      "....................................koccbkeeeeeeeeeeeskbbbbcbbbbbbpkkkkbbbbbok..................",
+      "....................................kocbbkeeeeeeeeeeesskbbbbbbbbbccdkkkkbbbbbk..................",
+      "...................................kbobbkeeeeeeeeeeeesskbbbbbbbbohoookkkbbbbk...................",
+      "...................................kbbbbkeeeekkeeeeeesskbbbbppbbooooookbbbbbk...................",
+      "...................................kbbbbkeeekekkeeeeesskbbbbbpbboooboobbbcbk....................",
+      "...................................kkpbbkeeekkkkeeeeesskbbcbbbpbbbbpbbbbbbbk.kkk................",
+      "....................................kpbckeeekkkkeeeesskbbcccbbbppppppbbbbbbkkohhk...............",
+      "...................................kkbockkeeeeeeeeessskbbccccbbbpppppbbbbbbkkooook..............",
+      "...................................kdoocbkseeeeeeeessskbccccccbbbbppppbbbbbbbboock..............",
+      "...................................kbhcbbbksseeeesssskcccbbbccbbbbpppppbbbbbbbbbbbk.............",
+      "..............kkockk..............kkoocbbbkkssssssskkccccbbbbbbbbbppppppppbbbbbbbbk.............",
+      "..............oooccck.............kocbbbbccbbckkkcccccccbbkbbbbbbbbccbbbpppppppbbbk.............",
+      ".............ohhoopbbbk.............kbbbccckcccccccccccbbkkbbbbbbbcccbbbpppbbkppbkk.............",
+      "............kohccpppbbck..........kkkkbcccckkkccccccbbbbkkbbbbbpbbcccbbbbppbbkpppk..............",
+      "............koocbpppbcck......kkkkppkkkcccckkkkkcbbbbbbkkkbbbbppccoocccbbppbbbkkk...............",
+      "............kckkkppbbbckkcokkkkppbbppkkkbbbkkkkkkkkkkkkkkkbbbbpcooooccbbbpppbbkk................",
+      "...........k...kkkbbbcbohoockpbbbbbbbpkkkbbckkkkkkkkkttkkbbbbppcohocccbbbbppbbkk................",
+      ".........kkokk.kkkkbccbhoocbkbbbbbbbbbpkkbbbcckkkkttrtkkbbbbbpcohocccccbbpbppbkk................",
+      "........ohooockcbcbbccooobbbbbbbbbbbbppkkbbbccckktrrttkbbbbbbpcgoccbbcccbpbpppdk................",
+      ".......khhoobbbbbbbbbboobbbbkkkbbkkbbppkbbbbbccctrrrtkbbbbbbppoccbbbbbccbbkpppbkk...............",
+      "......kooooobbpbbbbbbbbbbkkkckckbbkbbpkkbcbbbcctrrrtkbbbbbbbpohcbbbbbbbbbbbkppbbk...............",
+      ".......kobokkppbbbbbbbbkbkkppccccbbbppkkbbbbccttrrrkbbbbbbbbpccbbpbbppppbbbkppbbk...............",
+      ".......kbdpkkkkkbbbbbpkkkkpppbbcbbbbppkkbbbccttrrrkbbbbbbbbbccbkkbbbbbppppbkkppbbk..............",
+      ".......kkkk....bcobbbbppppbbpbbbbbbppkkbbbccttrrrtbbbbbbbbbbccpkbbbbbbbbppbkkpbbbkk.............",
+      "..............kcccbbbpppbbbbbbbbbbbkkkbbkkkttrurrkbbbbbbbbbbpbkbbooobbbbbpbkkkpbbbk.............",
+      ".............koobbbppppkbbbpbbbbpbbkbbbkkttrrrurtbbbbbbbbbbbkbkbcoooccbbbbpkkkpppbbk............",
+      "............kohobbppkkkppbbpppppppkpbbktttrrrrttbbbbbbbbbpppkkkcohooccbbbbpkkpppppbk............",
+      ".............ohoobpk.kkppbpppkkkppbccbbttttttttbbbbbbbbbppppkkcohhocbbccbbpkkppppppbk...........",
+      "............koocbkk....kppppkkkkkbccccbbbttttccbbbbbbbbppppkkkohhoocbbppbbbkkkppppbbk.....j.....",
+      ".............bbbbk.....kppppkkpkcccboccbbpbbbccbbbbbbppppppkkcoooocbbbbbkkbbkkppppbbk....j..j...",
+      "...............k.......kppppkpboccbbbccbpbbbbcbbbbbppccbppkkhcccccccccbbbkbbkkppppbbbk.jjj.j....",
+      "......................kkkkkkkoccbbpbbbbpbbbbccbbbpbcccbbkoohooocccohhhhobbkbbkkpppppbbk.jjj.....",
+      ".................kkhhcbpppkcocbpppppkkkbbbbbbbbbbbbbbbkkohocbbbbkoooobbbbcbkbbkppbbbppppjjk.....",
+      "................kbcbbbppppbbbbpppppppbbbbboooobbbbbbbbkoooocbbkkkooobbbbbbbkkpppppbbbbbbbbbkk...",
+      "...........kkkoobbbdppbbbbpppppppppbbbbccccbbbbbbbbppkcooocbbkkkooobbpkbccbbkpppppppocoobbbbbk..",
+      ".........kkooohhocbbbbbcccbpppppbbbbbbbbbbbbbbbbbbpppkcbcccbbkkcccbbbpkbcccbkppbcoooocboooobbk..",
+      ".........kboobbbccccccccccccbbbbbbcbbbbbbbbbbbbppppppkobbcbbbkkcccbbbkkbccbbkbbocbbbbbbbbobbkk..",
+      ".........kkbbbbbbbbpppppppcccoooocccooobbbbbpppbpppppkkbbbbbkkkcbbbbbkkbbbbbkppbbbbbkkpbbbkk....",
+      "...........kkkkkkkkkkkkbbccohhoocbbbbbbbbboooobbbbppbbkbbbbkkpkkbbbbkkkkbbbkkpppppkk..kkkk......",
+      ".....................kbbbbcbbbbbbbbbbbbbbobbooccbbbbbbbkkkkpppppkkkkkbppkkkbbbbbbbkk............",
+      "....................kbbbbbbbbbbbbbbkkkkkkkbbbbbcoobbbpppbbbbbbpppkkkkbbbbbbbbbbbbbk.............",
+      ".....................kkkkkbbbbbbbbpk......kkkbbbbbbbbbbbbbbbkkkkkk...kkkkkbbbbbbkk..............",
+      ".............................kkkkkk.............kkkkkkkkkk......................................",
+      "................................................................................................",
+      "................................................................................................"
+    ])
+  });
+  const clips = {
+    idle: [["idle", 500], ["breathe", 420]],
+    attack: [["windup", 340], ["swing", 75], ["attack", 175], ["swing", 80], ["breathe", 130]],
+    hurt: [["hurt", 225], ["breathe", 120]],
+    spit: [["spitPuff", 310], ["spitFull", 350], ["spitRelease", 140], ["spitRest", 1600]],
+    spitFirst: [["spitPuff", 520], ["spitFull", 600], ["spitRelease", 140], ["spitRest", 1600]]
+  };
+  const durations = Object.freeze(Object.fromEntries(Object.entries(clips).map(
+    ([key, frames]) => [key, frames.reduce((total, frame) => total + frame[1], 0)]
+  )));
+  function frameAt(action = "idle", elapsedMs = 0) {
+    if (!Object.prototype.hasOwnProperty.call(clips, action)) throw new RangeError("不明な動作です。");
+    if (!Number.isFinite(elapsedMs)) throw new RangeError("経過時間には有限の数値を指定してください。");
+    let time = Math.max(0, elapsedMs);
+    if (action !== "idle" && time >= durations[action]) {
+      time -= durations[action];
+      action = "idle";
+    }
+    time %= durations[action];
+    for (const [pose, ms] of clips[action]) {
+      if (time < ms) return pose;
+      time -= ms;
+    }
+    return "idle";
+  }
+  function draw(ctx, pose = "idle", x = 0, y = 0, scale = 1) {
+    if (!Object.prototype.hasOwnProperty.call(poses, pose)) throw new RangeError("不明なポーズです。");
+    drawRows(ctx, poses[pose], x, y, scale);
+  }
+
+  function drawRows(ctx, rows, x, y, scale) {
+    if (!Number.isInteger(x) || !Number.isInteger(y) || !Number.isInteger(scale) || scale < 1) {
+      throw new RangeError("x・yは整数、scaleは1以上の整数で指定してください。");
+    }
+    const height = rows.length, width = rows[0].length;
+    const oldFill = ctx.fillStyle;
+    try {
+      for (let row = 0; row < height; row++) {
+        const line = rows[row];
+        let start = 0;
+        while (start < width) {
+          const color = line[start];
+          let end = start + 1;
+          while (end < width && line[end] === color) end++;
+          if (color !== ".") {
+            ctx.fillStyle = palette[color];
+            ctx.fillRect(x + start * scale, y + row * scale, (end - start) * scale, scale);
+          }
+          start = end;
+        }
+      }
+    } finally {
+      ctx.fillStyle = oldFill;
+    }
+  }
+  const mudRows = Object.freeze([
+    "...kkk...",
+    ".kkcogkk.",
+    "kbcohocck",
+    "kbcooccok",
+    "kpbbcbbbk",
+    ".kppbbpk.",
+    "..kkkkk.."
+  ]);
+  const releaseMs = {};
+  for (const action of ["spit", "spitFirst"]) {
+    let elapsed = 0;
+    for (const [pose, duration] of clips[action]) {
+      if (pose === "spitRelease") break;
+      elapsed += duration;
+    }
+    releaseMs[action] = elapsed;
+  }
+  // 本体左上を原点とする発射位置。速度は等倍のドット数／秒。
+  const mudShot = Object.freeze({
+    width: mudRows[0].length, height: mudRows.length, rows: mudRows,
+    originX: 16, originY: 31, speed: 100, releaseMs: Object.freeze(releaseMs)
+  });
+  function mudShotAt(action, elapsedMs) {
+    if (!Number.isFinite(elapsedMs)) throw new RangeError("経過時間には有限の数値を指定してください。");
+    const release = mudShot.releaseMs[action];
+    if (typeof release !== "number" || elapsedMs < release) return null;
+    return {x: mudShot.originX - Math.floor((elapsedMs - release) * mudShot.speed / 1000), y: mudShot.originY};
+  }
+  function drawMudShot(ctx, x = 0, y = 0, scale = 1) {
+    drawRows(ctx, mudRows, x, y, scale);
+  }
+  globalThis.Dorotabo = Object.freeze({
+    width, height, palette, poses, durations, frameAt, draw, mudShot, mudShotAt, drawMudShot
+  });
+})();
+</script>
+<script>
+"use strict";
+/* ==================================================================
+   福丸の術稽古 〜裏山の泥田坊〜（1.5倍版）
+   画面は384×336ドット（スーファミの1.5倍）で描いて拡大表示する
+   ================================================================== */
+const OLD = {"pal": {"k": "#1a1420", "h": "#2a2234", "H": "#4e4664", "s": "#f6dec6", "S": "#dcb6a0", "r": "#ec8c82", "g": "#e8c058", "G": "#b08430", "y": "#fff0a8", "i": "#34489a", "I": "#1e2a60", "w": "#f4eee0", "b": "#7a5232", "B": "#4e3420", "m": "#2c2a24", "M": "#4a4436", "n": "#14120e", "u": "#d8d4c0", "U": "#9a9684", "p": "#6a6250", "f": "#7fd8ff", "F": "#2f7ad8", "c": "#e8fbff", "v": "#f2e6c4", "V": "#c8b890", "R": "#c8342a", "t": "#5a8a4a", "T": "#e0e0d0", "o": "#e04030", "O": "#ffb050"}, "sp": {"onibi1": [".....F......", "....FfF.....", "...FffF.F...", "...FfffFfF..", "..FffcfffF..", "..FfcccffF..", ".FffcccfffF.", ".FffccccffF.", ".FfcccccffF.", "..FffcccfF..", "...FfffffF..", "....FFFFF..."], "onibi2": ["......F.....", ".F...FfF....", ".FF.FffF....", "..FfFfffF...", "..FffcfffF..", "..FfcccffF..", ".FffcccfffF.", ".FffccccffF.", ".FfcccccffF.", "..FffcccfF..", "...FfffffF..", "....FFFFF..."], "fuda": [".kkkkkk.", ".kvvvvk.", ".kvRRvk.", ".kvvRvk.", ".kvRRvk.", ".kvvvvk.", ".kvRvvk.", ".kvRRvk.", ".kvvRvk.", ".kvvvvk.", ".kVVVVk.", ".kkkkkk."], "chawan": ["..tttttt....", ".tTTTTTTt...", "kkkkkkkkkk..", "kttttttttk..", "kttTTTTttk..", ".kttttttk...", "..kkkkkk....", "...kBBk....."], "tama": ["..kkkk..", ".koOOok.", "koOyOOok", "kOyOOOok", "kOOOOOok", "kooOOook", ".koooOk.", "..kkkk.."], "tama_empty": ["..kkkk..", ".kIIIIk.", "kIIIIIIk", "kIIIIIIk", "kIIIIIIk", "kIIIIIIk", ".kIIIIk.", "..kkkk.."]}};     // 鬼火・札・茶碗・魂玉（旧サイズ。1.5倍に拡大して使う）
+const MINI = {"a": ["........................", ".........kkkkkk.........", ".......kkoooggokk.......", "......kooggggoocbk......", ".....kocgkkeeekcbbk.....", ".....kcgkeeeeeekbbk.....", "....kocgkeekkeeekbbk....", "....kocgkeekkeeekbbk....", "...kkocckeeeeeeekbbbk...", "..kcokcbbkeeeeekbbbbk...", ".kcokcbbbbkkkkkbbbbbbk..", ".kokcbbbbbbrrbbbbpbbbk..", "..kkcbbbbbbrrbbbbpbbbbk.", "...kbbbbbbbtrbbbpbbbbbk.", "..kcbbpbbbbbbbbbpbbbbbbk", ".kcbbbpbbbpbbbbpbbbpbbbk", ".kkbbbkkbbbkkbbbkkbbbkk.", "...kkk..kkk..kkk..kkk..."], "b": ["........................", "........................", ".........kkkkkk.........", ".......kkoooggokk.......", "......kooggggoocbk......", ".....kocgkkeeekcbbk.....", ".....kcgkeeeeeekbbk.....", "....kocgkeekkeeekbbk....", "....kocgkeekkeeekbbk....", "...kkocckeeeeeeekbbbk...", "..kcokcbbkeeeeekbbbbk...", ".kcokcbbbbkkkkkbbbbbbk..", ".kokcbbbbbbrrbbbbpbbbk..", "..kkcbbbbbbrrbbbbpbbbbk.", "...kbbbbbbbtrbbbpbbbbbk.", "..kcbbpbbbbbbbbbpbbbbbbk", ".kcbbbpbbbpbbbbpbbbpbbbk", ".kkkkkkkkkkkkkkkkkkkkkk."], "pal": {"k": "#341717", "p": "#542d38", "d": "#704236", "b": "#84513c", "c": "#a3653d", "o": "#bd8040", "g": "#dea353", "h": "#ffe0a0", "e": "#fcebc6", "s": "#dbc396", "t": "#8f4233", "r": "#ce5f36", "u": "#ee8544", "j": "#606218", "v": "#9a9e26"}};      // 小さな泥田坊（24×18）
+
+const W = 384, H = 336, TS = 24;
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+function fit(){
+  const st = document.getElementById('stage').getBoundingClientRect();
+  let s = Math.min(st.width / W, st.height / H);
+  if (s >= 2) s = Math.floor(s);
+  cv.style.width = Math.floor(W * s) + 'px';
+  cv.style.height = Math.floor(H * s) + 'px';
+}
+const isTouch = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
+if (isTouch) document.documentElement.classList.add('touch');
+addEventListener('resize', fit);
+
+/* ---------- ドット絵の準備 ---------- */
+const IMG = {};
+function makeSprite(rows, pal, flip, scale = 1){
+  const h = rows.length, w = rows[0].length;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+    const ch = rows[y][flip ? w - 1 - x : x];
+    if (ch !== '.'){ g.fillStyle = pal[ch]; g.fillRect(x, y, 1, 1); }
+  }
+  if (scale === 1) return c;
+  const s = document.createElement('canvas'); s.width = Math.round(w * scale); s.height = Math.round(h * scale);
+  const sg = s.getContext('2d'); sg.imageSmoothingEnabled = false; sg.drawImage(c, 0, 0, s.width, s.height);
+  return s;
+}
+function whiteOf(src){
+  const c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+  const g = c.getContext('2d'); g.drawImage(src, 0, 0);
+  g.globalCompositeOperation = 'source-in'; g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+  return c;
+}
+// 福丸
+const FP = Fukumaru.poses;
+for (const p of Object.keys(FP)){
+  IMG['fk_' + p] = makeSprite(FP[p], Fukumaru.palette, false);
+  IMG['fk_' + p + '_L'] = makeSprite(FP[p], Fukumaru.palette, true);
+}
+// 泥田坊（ボス・左向き）
+for (const p of Object.keys(Dorotabo.poses)){
+  IMG['db_' + p] = makeSprite(Dorotabo.poses[p], Dorotabo.palette, false);
+}
+IMG.db_hurt_W = whiteOf(IMG.db_hurt);
+IMG.mud = makeSprite(Dorotabo.mudShot.rows, Dorotabo.palette, false);
+// 小泥田坊（左向き。右へ歩く時は反転）
+IMG.mini1 = makeSprite(MINI.a, MINI.pal, false); IMG.mini1_R = makeSprite(MINI.a, MINI.pal, true);
+IMG.mini2 = makeSprite(MINI.b, MINI.pal, false); IMG.mini2_R = makeSprite(MINI.b, MINI.pal, true);
+IMG.mini_W = whiteOf(IMG.mini1);
+// 旧サイズの小物は1.5倍に
+for (const n of ['onibi1', 'onibi2', 'fuda', 'chawan', 'tama', 'tama_empty']) IMG[n] = makeSprite(OLD.sp[n], OLD.pal, false, 1.5);
+IMG.onibi1_W = whiteOf(IMG.onibi1);
+// 湯鉄砲の弾（9×4）
+const WATER = ["......UU.", ".V.UUVVVU", "UUUUUUVVQ", "..QQQQQQ."];
+IMG.water = makeSprite(WATER, {Q: '#227aaa', U: '#4bc6eb', V: '#c1faff'}, false);
+IMG.water_L = makeSprite(WATER, {Q: '#227aaa', U: '#4bc6eb', V: '#c1faff'}, true);
+
+/* 走り・しゃがみ等は、右向きの絵と頭（狸面の模様）の位置がずれているので、
+   描く位置をずらして頭がぶれないようにする（右向き基準のずれ量） */
+const FK_SHIFT = {side: 0, front: 0, run: 2, crouch: 1, attack: -4, hurt: -6};
+
+/* ---------- タイル（24×24） ---------- */
+function tileCanvas(draw){ const c = document.createElement('canvas'); c.width = c.height = TS; draw(c.getContext('2d')); return c; }
+function px(g, col, x, y, w = 1, h = 1){ g.fillStyle = col; g.fillRect(x, y, w, h); }
+let seed = 7; function rnd(){ seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+const TILE = {};
+function dirt(g){
+  px(g, '#5a3c2a', 0, 0, TS, TS);
+  for (let i = 0; i < 26; i++) px(g, rnd() < .5 ? '#6e4a34' : '#4a3022', (rnd() * 23) | 0, (rnd() * 24) | 0, 2 + ((rnd() * 2) | 0), 1);
+  if (rnd() < .7){ const x = (rnd() * 17) | 0, y = 8 + ((rnd() * 12) | 0); px(g, '#4a3a30', x, y + 1, 5, 3); px(g, '#7a7064', x, y, 5, 3); px(g, '#9a907e', x + 1, y, 2, 1); }
+}
+TILE['#'] = tileCanvas(g => {
+  dirt(g);
+  px(g, '#3f7a3a', 0, 0, TS, 7);
+  px(g, '#5a9a48', 0, 0, TS, 4);
+  px(g, '#7cba5a', 0, 0, TS, 2);
+  for (let x = 0; x < TS; x += 3) px(g, '#3f7a3a', x + 1, 7, 1, 1 + ((x / 3) % 2));
+  px(g, '#b4e07c', 3, 0, 4, 1); px(g, '#b4e07c', 14, 0, 3, 1); px(g, '#2f5a2c', 0, 6, TS, 1);
+});
+TILE['d'] = tileCanvas(dirt);
+TILE['d2'] = tileCanvas(dirt);
+TILE['d3'] = tileCanvas(dirt);
+TILE['='] = tileCanvas(g => {
+  px(g, '#2a1a10', 0, 0, TS, 10);
+  px(g, '#9a6a3c', 0, 1, TS, 7);
+  px(g, '#c8925a', 0, 1, TS, 2);
+  px(g, '#6a4424', 0, 7, TS, 2);
+  px(g, '#7a5030', 0, 4, TS, 1);
+  px(g, '#2a1a10', 11, 1, 1, 7);
+  px(g, '#f0dca8', 4, 4, 2, 2); px(g, '#f0dca8', 17, 4, 2, 2);
+  px(g, '#5a3a1c', 5, 5, 1, 1); px(g, '#5a3a1c', 18, 5, 1, 1);
+});
+TILE['G'] = tileCanvas(g => {
+  px(g, '#2a2014', 0, 0, TS, TS);
+  px(g, '#b08430', 1, 1, 22, 22);
+  px(g, '#e8c058', 1, 1, 22, 2); px(g, '#e8c058', 1, 1, 2, 22);
+  px(g, '#6a4c1c', 1, 21, 22, 2); px(g, '#6a4c1c', 21, 1, 2, 22);
+  // 歯車（8枚歯）
+  const c = '#6a4c1c', cx = 12, cy = 12;
+  for (let y = 0; y < TS; y++) for (let x = 0; x < TS; x++){
+    const dx = x - cx + .5, dy = y - cy + .5, r = Math.hypot(dx, dy), a = Math.atan2(dy, dx);
+    const tooth = Math.cos(a * 8) > .3 ? 8 : 6.5;
+    if (r < tooth && r > 2.5) px(g, c, x, y);
+  }
+  px(g, '#2a2014', 10, 10, 4, 4); px(g, '#fff0a8', 10, 10, 2, 2);
+  px(g, '#fff0a8', 3, 3, 2, 1);
+});
+
+/* ---------- 背景 ---------- */
+const BG = {};
+(function buildBG(){
+  const sky = document.createElement('canvas'); sky.width = W; sky.height = H;
+  const g = sky.getContext('2d');
+  const bands = ['#141230','#1a1638','#1e1840','#251b48','#2c1e4e','#382354','#45285a','#552d5c','#66325e','#7a385c','#8e3e5a','#a3485a','#b85250','#c8604c','#d8704a','#e2824e','#eb9452','#efa65c','#f4b866'];
+  const bh = 12;
+  for (let i = 0; i < bands.length; i++){
+    px(g, bands[i], 0, i * bh, W, bh);
+    if (i < bands.length - 1) for (let y = 0; y < 3; y++) for (let x = (y % 2); x < W; x += 2) px(g, bands[i + 1], x, i * bh + bh - 3 + y, 1, 1);
+  }
+  px(g, bands[bands.length - 1], 0, bands.length * bh, W, H);
+  for (let i = 0; i < 70; i++) px(g, rnd() < .3 ? '#fff0c8' : '#9a90c8', (rnd() * W) | 0, (rnd() * 90) | 0, 1, 1);
+  BG.sky = sky;
+
+  const mt = document.createElement('canvas'); mt.width = 768; mt.height = H;
+  const m = mt.getContext('2d');
+  for (let x = 0; x < 768; x++){
+    const y = 180 + Math.sin(x / 60) * 21 + Math.sin(x / 25) * 8 + Math.sin(x / 137 + 1) * 15;
+    px(m, '#5a2c52', x, y | 0, 1, H);
+    px(m, '#7a3a5a', x, y | 0, 1, 1);
+    if (x % 3 === 0) px(m, '#4e2648', x, (y | 0) + 20 + ((x * 7) % 9), 1, 1);
+  }
+  BG.mt = mt;
+
+  const city = document.createElement('canvas'); city.width = 768; city.height = H;
+  const c = city.getContext('2d');
+  const base = 225, col = '#2c1c3c', lit = '#ffcf6a';
+  let x = 0;
+  while (x < 768){
+    const w = 27 + (rnd() * 39 | 0), h = 21 + (rnd() * 39 | 0), top = base - h;
+    px(c, col, x, top, w, H);
+    if (rnd() < .6) for (let i = 0; i < 8; i++) px(c, col, x - 3 + i, top - 8 + i, w + 6 - i * 2, 1);
+    for (let wy = top + 6; wy < base - 3; wy += 8) for (let wx = x + 4; wx < x + w - 4; wx += 7)
+      if (rnd() < .35){ px(c, lit, wx, wy, 3, 3); px(c, '#c88a40', wx, wy + 2, 3, 1); }
+    if (rnd() < .3) px(c, col, x + w - 9, top - 18, 4, 18);
+    x += w + (rnd() * 9 | 0);
+  }
+  px(c, col, 450, 138, 27, 105); px(c, col, 456, 120, 15, 18); px(c, col, 462, 105, 3, 15);
+  px(c, '#e8d8a8', 457, 150, 13, 13); px(c, col, 463, 153, 1, 6); px(c, col, 464, 157, 3, 1);
+  BG.city = city;
+
+  const bam = document.createElement('canvas'); bam.width = 768; bam.height = H;
+  const b = bam.getContext('2d');
+  for (let i = 0; i < 28; i++){
+    const bx = (rnd() * 768) | 0, bw = 4 + (rnd() * 4 | 0);
+    px(b, '#16201c', bx, 60 + (rnd() * 60 | 0), bw, H);
+    px(b, '#1e2c24', bx + 1, 60, 1, H);
+    for (let yy = 90; yy < H; yy += 27 + (rnd() * 12 | 0)) px(b, '#24342a', bx - 1, yy, bw + 2, 2);
+    for (let k = 0; k < 3; k++){ const ly = 75 + (rnd() * 150 | 0); px(b, '#1c2a22', bx + bw, ly, 12, 3); px(b, '#1c2a22', bx + bw + 9, ly - 2, 6, 2); }
+  }
+  BG.bam = bam;
+})();
+
+/* ---------- ステージ ---------- */
+const COLS = 158, ROWS = 14;
+let map, items, spawns, BOSS_COL = 141;
+function buildLevel(){
+  map = Array.from({length: ROWS}, () => Array(COLS).fill('.'));
+  items = []; spawns = [];
+  const ground = (x0, x1, top = 12) => { for (let x = x0; x <= x1; x++){ map[top][x] = '#'; for (let y = top + 1; y < ROWS; y++) map[y][x] = 'd'; } };
+  const plank = (x0, x1, y) => { for (let x = x0; x <= x1; x++) map[y][x] = '='; };
+  const gear = (x, y0, y1 = y0) => { for (let y = y0; y <= y1; y++) map[y][x] = 'G'; };
+  const fuda = (x, y) => items.push({type: 'fuda', x: x * TS + 6, y: y * TS + 3, w: 12, h: 18});
+  const tea = (x, y) => items.push({type: 'chawan', x: x * TS + 3, y: y * TS + 12, w: 18, h: 12});
+  const doro = (x) => spawns.push({type: 'doro', x: x * TS});
+  const onibi = (x, y) => spawns.push({type: 'onibi', x: x * TS, y: y * TS});
+
+  ground(0, 24); fuda(8, 9); fuda(10, 9); doro(18);
+  ground(25, 40, 11); doro(31); fuda(34, 8); fuda(36, 8);
+  ground(44, 60);
+  // 地面から2段で上れる橋（低い橋→高い橋）
+  plank(46, 48, 10); plank(50, 54, 8); fuda(51, 7); fuda(53, 7); onibi(57, 7); doro(59);
+  ground(61, 80); gear(63, 10, 11); tea(67, 11); doro(71); doro(77);
+  gear(83, 10); gear(84, 10); gear(86, 9); gear(87, 9);
+  ground(89, 110); onibi(92, 6); gear(97, 11); gear(98, 10, 11); gear(99, 9, 11); fuda(99, 7); onibi(102, 8); doro(105); doro(108);
+  ground(114, 114); fuda(114, 9);
+  ground(118, 140);
+  // 高い橋の手前に踏み台を足した
+  plank(119, 120, 10); plank(122, 126, 8); fuda(122, 7); fuda(126, 7); tea(124, 7); doro(129); doro(133); onibi(137, 7);
+  ground(BOSS_COL, COLS - 1);
+  for (let y = 0; y < 12; y++) map[y][COLS - 1] = 'G';
+  // ボスの間の橋：泥田坊の頭の上を通り抜けられる高さ。左右に1本ずつ
+  plank(BOSS_COL + 2, BOSS_COL + 4, 9); plank(BOSS_COL + 10, BOSS_COL + 12, 9);
+}
+const isSolid = ch => ch === '#' || ch === 'd' || ch === 'G';
+function tileAt(tx, ty){ if (tx < 0 || tx >= COLS) return 'G'; if (ty < 0 || ty >= ROWS) return '.'; return map[ty][tx]; }
+
+/* ---------- 入力 ---------- */
+const key = {left: false, right: false, down: false, a: false, b: false};
+const pressed = {a: false, b: false, left: false, right: false, down: false};
+function setKey(k, v){ if (v && !key[k]) pressed[k] = true; key[k] = v; }
+const KEYMAP = {ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowDown: 'down', KeyS: 'down',
+  KeyZ: 'a', Space: 'a', ArrowUp: 'a', KeyW: 'a', Enter: 'a', KeyX: 'b', KeyC: 'b', KeyJ: 'b'};
+addEventListener('keydown', e => { const k = KEYMAP[e.code]; if (k){ e.preventDefault(); if (!e.repeat) setKey(k, true); Sound.unlock(); } });
+addEventListener('keyup', e => { const k = KEYMAP[e.code]; if (k){ e.preventDefault(); setKey(k, false); } });
+addEventListener('blur', () => { for (const k in key) key[k] = false; document.querySelectorAll('#pad .btn').forEach(b => b.classList.remove('on')); });
+document.querySelectorAll('#pad .btn').forEach(btn => {
+  const k = btn.dataset.k;
+  const on = e => { e.preventDefault(); btn.setPointerCapture && btn.setPointerCapture(e.pointerId); btn.classList.add('on'); setKey(k, true); Sound.unlock(); };
+  const off = e => { e.preventDefault(); btn.classList.remove('on'); setKey(k, false); };
+  btn.addEventListener('pointerdown', on);
+  btn.addEventListener('pointerup', off); btn.addEventListener('pointercancel', off); btn.addEventListener('lostpointercapture', off);
+  btn.addEventListener('contextmenu', e => e.preventDefault());
+});
+let skipTap = false;
+cv.addEventListener('pointerdown', e => {
+  if (scene === 'play') return;
+  e.preventDefault(); Sound.unlock();
+  const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H;
+  if (scene === 'talk' && x > 264 && y < 60) skipTap = true; else pressed.a = true;
+});
+
+/* ---------- 音 ---------- */
+const Sound = (() => {
+  let ac = null, master = null, muted = false, bgmTimer = null, step = 0, nextT = 0, bgmOn = false, song = 'field';
+  try { muted = localStorage.getItem('fukumaru_mute') === '1'; } catch(e){}
+  function unlock(){
+    if (ac){ if (ac.state === 'suspended') ac.resume(); return; }
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return; }
+    master = ac.createGain(); master.gain.value = muted ? 0 : .5; master.connect(ac.destination);
+  }
+  function tone(freq, dur, type = 'square', vol = .12, slide = 0, when = 0){
+    if (!ac) return;
+    const t = (when || ac.currentTime);
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq * slide), t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .02);
+  }
+  function noise(dur, vol = .15, hp = 800){
+    if (!ac) return;
+    const n = ac.sampleRate * dur, buf = ac.createBuffer(1, n, ac.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const s = ac.createBufferSource(); s.buffer = buf;
+    const f = ac.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ac.createGain(); g.gain.value = vol;
+    s.connect(f); f.connect(g); g.connect(master); s.start();
+  }
+  const N = {C4:261.6,D4:293.7,E4:329.6,G4:392,A4:440,C5:523.3,D5:587.3,E5:659.3,G5:784,A3:220,G3:196,C3:130.8,D3:146.8,E3:164.8,A2:110,G2:98};
+  const SONG = {
+    field: {tempo: .16,
+      mel: ['A4','.','C5','D5','E5','.','D5','C5','A4','.','G4','A4','C5','.','.','.','D5','.','E5','G5','E5','.','D5','C5','D5','.','C5','A4','G4','.','A4','.'],
+      bas: ['A2','.','A3','.','A2','.','A3','.','G2','.','G3','.','G2','.','G3','.','D3','.','D3','.','E3','.','E3','.','A2','.','A3','.','A2','.','E3','.']},
+    boss: {tempo: .12,
+      mel: ['E5','.','E5','D5','E5','.','G5','.','E5','D5','C5','.','D5','.','A4','.','E5','.','E5','D5','E5','.','A4','.','C5','D5','E5','.','D5','.','C5','.'],
+      bas: ['A2','A2','A3','A2','A2','A2','A3','A2','G2','G2','G3','G2','G2','G2','G3','G2','A2','A2','A3','A2','A2','A2','A3','A2','E3','E3','E3','D3','C3','C3','D3','E3']}
+  };
+  function schedule(){
+    if (!ac || !bgmOn) return;
+    const S = SONG[song];
+    while (nextT < ac.currentTime + .25){
+      const m = S.mel[step % S.mel.length], b = S.bas[step % S.bas.length];
+      if (m !== '.') tone(N[m], S.tempo * 1.6, 'square', .045, 0, nextT);
+      if (b !== '.') tone(N[b], S.tempo * 1.2, 'triangle', .11, 0, nextT);
+      nextT += S.tempo; step++;
+    }
+  }
+  return {
+    unlock,
+    jump(){ tone(330, .14, 'square', .08, 2.2); },
+    shot(){ tone(900, .08, 'triangle', .1, .5); noise(.06, .05, 3000); },
+    splash(){ noise(.08, .06, 2000); },
+    hit(){ tone(220, .08, 'square', .1, .6); },
+    clang(){ tone(1200, .05, 'square', .05, .7); noise(.05, .05, 4000); },
+    kill(){ noise(.25, .12, 600); tone(520, .12, 'square', .06, 1.8); },
+    hurt(){ tone(300, .3, 'sawtooth', .1, .3); },
+    item(){ tone(988, .07, 'square', .07); tone(1319, .12, 'square', .07, 1, ac ? ac.currentTime + .07 : 0); },
+    heal(){ [523,659,784,1047].forEach((f,i) => tone(f, .1, 'square', .06, 1, ac ? ac.currentTime + i * .07 : 0)); },
+    puff(){ tone(180, .3, 'sine', .15, 1.6); },
+    spit(){ noise(.12, .12, 300); tone(140, .12, 'square', .08, .5); },
+    swing(){ noise(.18, .1, 500); },
+    talk(){ tone(660 + Math.random() * 120, .025, 'square', .025); },
+    clear(){ [523,659,784,1047,784,1047].forEach((f,i) => tone(f, .16, 'square', .07, 1, ac ? ac.currentTime + i * .12 : 0)); },
+    bgm(name){ if (!ac) return; song = name; if (!bgmOn){ bgmOn = true; nextT = ac.currentTime + .05; step = 0; bgmTimer = setInterval(schedule, 60); } else { step = 0; } },
+    stop(){ bgmOn = false; clearInterval(bgmTimer); },
+    toggle(){ unlock(); muted = !muted; if (master) master.gain.value = muted ? 0 : .5; try { localStorage.setItem('fukumaru_mute', muted ? '1' : '0'); } catch(e){} return muted; },
+    get muted(){ return muted; }
+  };
+})();
+const muteBtn = document.getElementById('mute');
+function muteLabel(){ muteBtn.textContent = Sound.muted ? '♪ 音：オフ' : '♪ 音：オン'; }
+muteLabel();
+muteBtn.addEventListener('click', () => { Sound.toggle(); muteLabel(); });
+
+/* ---------- 会話 ---------- */
+const TALK = {
+  intro: [
+    ['椿', '福丸。灯真様から、術の稽古のお申し付けです。'],
+    ['灯真', '裏山に泥田坊が湧いてる。小物だけど数が多い。今日は一人で祓ってこい。'],
+    ['福丸', 'お、おら一人でか！？'],
+    ['灯真', '湯鉄砲があるだろ。この前のは幻だったからな、今日は本物の湯でやってみろ。泥田坊は熱と光に弱い。'],
+    ['椿', '途中で茶碗を見つけたら、一服なさってくださいね。'],
+    ['福丸', 'よ、よぉし……！おらに任せとけ！'],
+  ],
+  boss: [
+    ['福丸', 'な、なんじゃこのでっかいのは！？'],
+    ['大泥田坊', 'ニンゲン……ノ……ニオイ……'],
+    ['福丸', 'おらは人間じゃない！人形じゃ！かかってこい！'],
+    ['椿', '福丸、頬が膨らんだら泥を吐きます。しゃがんでかわして、舌が垂れた隙を狙いなさい。'],
+    ['椿', '近づかれたら、橋に跳び乗って頭の上をやり過ごすのですよ。'],
+  ],
+  ending: [
+    ['灯真', 'お見事。一人でよくやったな、福丸。'],
+    ['福丸', 'かかか！おらにかかれば、こんなもんじゃ！'],
+    ['椿', 'お見事でした。……では、次の稽古も考えておきますね。'],
+    ['福丸', 'つ、次もあるんか！？'],
+    ['灯真', 'はは。帰ったら一級品の茶を淹れてやるよ。'],
+  ],
+};
+const NAMECOL = {'椿': '#f08c8c', '灯真': '#8fb4ff', '福丸': '#ffd36a', '大泥田坊': '#d8a868'};
+
+/* ---------- 状態 ---------- */
+const FRAME_MS = 1000 / 60;
+let scene = 'loading';
+let talk = null, talkNext = null;
+let P, shots, enemies, parts, boss, mud, camX, shake, timer, score, fudaGot, fudaTotal, bossReached, frame = 0, lockCam = false, lookX = 24;
+let overT = 0, resultT = 0, titleT = 0, thanksT = 0, overSel = 0, thanksKind = 'quit';
+
+function newPlayer(x, y){
+  return {x, y, w: 14, h: 36, vx: 0, vy: 0, ground: false, face: 1, hp: 3, inv: 0, cool: 0, anim: 0, shootT: 0,
+    safeX: x, safeY: y, coyote: 0, jumpBuf: 0, crouch: false};
+}
+function startGame(fromBoss){
+  buildLevel();
+  shots = []; enemies = []; parts = []; mud = []; boss = null; shake = 0; lockCam = false; lookX = 24;
+  fudaTotal = items.filter(i => i.type === 'fuda').length;
+  if (!fromBoss){ timer = 0; score = 0; fudaGot = 0; bossReached = false; }
+  for (const s of spawns) spawnEnemy(s);
+  if (fromBoss){
+    P = newPlayer((BOSS_COL - 3) * TS, 10 * TS - 4);
+    enemies = enemies.filter(e => e.x > (BOSS_COL - 6) * TS);
+    items = items.filter(i => i.x > (BOSS_COL - 6) * TS);
+  } else P = newPlayer(2 * TS, 10 * TS);
+  camX = Math.max(0, P.x - 150);
+}
+function groundTopAt(px){ const tx = Math.floor(px / TS); for (let y = 0; y < ROWS; y++) if (isSolid(tileAt(tx, y))) return y * TS; return 12 * TS; }
+function spawnEnemy(s){
+  if (s.type === 'doro') enemies.push({type: 'doro', x: s.x, y: groundTopAt(s.x + 12) - 16, w: 22, h: 16, vx: -.55, vy: 0, hp: 2, flash: 0, anim: (Math.random() * 40) | 0, dead: 0});
+  if (s.type === 'onibi') enemies.push({type: 'onibi', x: s.x, y: s.y, by: s.y, w: 15, h: 15, vx: 0, vy: 0, hp: 1, flash: 0, anim: (Math.random() * 60) | 0, dead: 0});
+}
+function startTalk(lines, then){ talk = {lines, i: 0, chars: 0}; talkNext = then; scene = 'talk'; }
+
+/* ---------- 当たり判定・移動 ---------- */
+function overlap(a, b){ return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
+// ドット単位の当たり判定（透明は除く。ignoreは当たらない色）
+function pixelHit(ra, ax, ay, rb, bx, by, ignore = ''){
+  ax = Math.round(ax); ay = Math.round(ay); bx = Math.round(bx); by = Math.round(by);
+  const l = Math.max(ax, bx), t = Math.max(ay, by), r = Math.min(ax + ra[0].length, bx + rb[0].length), b = Math.min(ay + ra.length, by + rb.length);
+  for (let y = t; y < b; y++) for (let x = l; x < r; x++)
+    if (ra[y - ay][x - ax] !== '.' && rb[y - by][x - bx] !== '.' && !ignore.includes(rb[y - by][x - bx])) return true;
+  return false;
+}
+function moveBody(o, oneWay = true){
+  o.x += o.vx;
+  let hitWall = false;
+  const t0 = Math.floor(o.y / TS), t1 = Math.floor((o.y + o.h - 1) / TS);
+  if (o.vx > 0){ const tx = Math.floor((o.x + o.w - 1) / TS); for (let ty = t0; ty <= t1; ty++) if (isSolid(tileAt(tx, ty))){ o.x = tx * TS - o.w; o.vx = 0; hitWall = true; break; } }
+  if (o.vx < 0){ const tx = Math.floor(o.x / TS); for (let ty = t0; ty <= t1; ty++) if (isSolid(tileAt(tx, ty))){ o.x = (tx + 1) * TS; o.vx = 0; hitWall = true; break; } }
+  const prevBottom = o.y + o.h;
+  o.y += o.vy; o.ground = false;
+  const l0 = Math.floor(o.x / TS), l1 = Math.floor((o.x + o.w - 1) / TS);
+  if (o.vy > 0){
+    // 足の裏（y+h）が少しでもタイルに入ったら着地
+    const ty = Math.floor((o.y + o.h) / TS);
+    for (let tx = l0; tx <= l1; tx++){
+      const ch = tileAt(tx, ty);
+      if (isSolid(ch) || (oneWay && ch === '=' && prevBottom <= ty * TS + 1)){ o.y = ty * TS - o.h; o.vy = 0; o.ground = true; break; }
+    }
+  } else if (o.vy < 0){
+    const ty = Math.floor(o.y / TS);
+    for (let tx = l0; tx <= l1; tx++) if (isSolid(tileAt(tx, ty))){ o.y = (ty + 1) * TS; o.vy = 0; break; }
+  }
+  return hitWall;
+}
+function burst(x, y, n, colors, sp = 2.2, up = 1.5){
+  for (let i = 0; i < n; i++){ const a = Math.random() * Math.PI * 2, s = Math.random() * sp;
+    parts.push({x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - up, life: 20 + (Math.random() * 20 | 0), col: colors[(Math.random() * colors.length) | 0], g: .08, size: 1 + (Math.random() < .4 ? 1 : 0)}); }
+}
+function steam(x, y, n){
+  for (let i = 0; i < n; i++) parts.push({x: x + (Math.random() - .5) * 15, y, vx: (Math.random() - .5) * .7, vy: -.6 - Math.random() * .9, life: 30 + (Math.random() * 20 | 0), col: Math.random() < .5 ? '#e8e4d8' : '#b8b4a8', g: -.008, size: 3});
+}
+function hurtPlayer(fromX){
+  if (P.inv > 0) return;
+  P.hp--; P.inv = 90; P.vy = -3.9; P.vx = (P.x + P.w / 2 < fromX ? -2.4 : 2.4); P.crouch = false; shake = 6; Sound.hurt();
+  burst(P.x + 7, P.y + 15, 10, ['#ffd36a', '#fff']);
+  if (P.hp <= 0) gameOver();
+}
+function gameOver(){ scene = 'over'; Sound.stop(); overT = 0; overSel = 0; }
+
+/* 福丸の今の絵の名前と、描く左上の座標 */
+const FP_L = Object.fromEntries(Object.entries(FP).map(([k, r]) => [k, r.map(l => [...l].reverse().join(''))]));
+function playerRows(pose){ return P.face > 0 ? FP[pose] : FP_L[pose]; }
+function playerPose(){
+  if (P.inv > 60) return 'hurt';
+  if (P.crouch) return 'crouch';
+  if (P.shootT > 0) return 'attack';
+  if (!P.ground) return 'run';
+  if (Math.abs(P.vx) > .3) return (Math.floor(P.anim) % 2) ? 'run' : 'side';
+  return 'side';
+}
+function playerDrawPos(pose){
+  const sh = FK_SHIFT[pose] || 0;
+  // 右向きの絵：足元（40ドット目）を当たり判定の下端に、体の中心を判定の中心に
+  const x = P.face > 0 ? Math.round(P.x) - 7 - sh : Math.round(P.x) + P.w - 19 + sh;
+  return {x, y: Math.round(P.y + P.h) - 40};
+}
+
+/* ---------- 更新 ---------- */
+function update(){
+  frame++;
+  if (scene === 'title'){
+    titleT++;
+    if (pressed.a || pressed.b){ Sound.unlock(); startGame(false); startTalk(TALK.intro, () => { scene = 'play'; Sound.bgm('field'); }); }
+  }
+  else if (scene === 'talk'){
+    const line = talk.lines[talk.i][1];
+    if (pressed.b || skipTap){ skipTap = false; const f = talkNext; talk = null; f(); clearPressed(); return; }
+    if (talk.chars < line.length){ talk.chars += .5; if (frame % 4 === 0) Sound.talk(); }
+    if (pressed.a){
+      if (talk.chars < line.length) talk.chars = line.length;
+      else { talk.i++; talk.chars = 0; if (talk.i >= talk.lines.length){ const f = talkNext; talk = null; f(); } }
+    }
+    updateParts();
+  }
+  else if (scene === 'play') updatePlay();
+  else if (scene === 'over'){
+    overT++;
+    if (overT > 40){
+      if (pressed.left){ overSel = 0; Sound.talk(); }
+      if (pressed.right){ overSel = 1; Sound.talk(); }
+      if (pressed.a || pressed.b){
+        if (overSel === 0){ startGame(bossReached); if (bossReached) enterBoss(true); else { scene = 'play'; Sound.bgm('field'); } }
+        else { scene = 'thanks'; thanksKind = 'quit'; thanksT = 0; }
+      }
+    }
+  }
+  else if (scene === 'result'){
+    resultT++; updateParts();
+    if (resultT > 60 && (pressed.a || pressed.b)){ scene = 'thanks'; thanksKind = 'clear'; thanksT = 0; }
+  }
+  else if (scene === 'thanks'){
+    thanksT++;
+    if (thanksT > 60 && (pressed.a || pressed.b)){ scene = 'title'; titleT = 0; }
+  }
+  clearPressed();
+}
+function clearPressed(){ for (const k in pressed) pressed[k] = false; }
+
+function updatePlay(){
+  timer++;
+  // --- 福丸 ---
+  P.crouch = key.down && P.ground && P.inv <= 60;
+  const acc = P.ground ? .42 : .27, max = 2.55;
+  if (P.crouch){ P.vx *= .6; if (Math.abs(P.vx) < .05) P.vx = 0; }
+  else if (key.left && !key.right){ P.vx = Math.max(P.vx - acc, -max); P.face = -1; }
+  else if (key.right && !key.left){ P.vx = Math.min(P.vx + acc, max); P.face = 1; }
+  else { P.vx *= P.ground ? .7 : .92; if (Math.abs(P.vx) < .05) P.vx = 0; }
+  if (P.ground) P.coyote = 6; else if (P.coyote > 0) P.coyote--;
+  if (pressed.a) P.jumpBuf = 6; else if (P.jumpBuf > 0) P.jumpBuf--;
+  if (P.jumpBuf > 0 && P.coyote > 0 && !P.crouch){ P.vy = -7.5; P.coyote = 0; P.jumpBuf = 0; Sound.jump(); }
+  if (!key.a && P.vy < -2.4) P.vy = -2.4;
+  P.vy = Math.min(P.vy + .36, 7.5);
+  moveBody(P);
+  if (P.ground && isSolid(tileAt(Math.floor((P.x + 7) / TS), Math.floor((P.y + P.h + 2) / TS))) && P.inv < 60){ P.safeX = P.x; P.safeY = P.y; }
+  if (lockCam) P.x = Math.max(BOSS_COL * TS, Math.min(P.x, (COLS - 1) * TS - P.w));
+  if (P.y > H + 30){
+    P.hp--; shake = 4; Sound.hurt();
+    if (P.hp <= 0){ gameOver(); return; }
+    P.x = P.safeX; P.y = P.safeY - 6; P.vx = P.vy = 0; P.inv = 90;
+  }
+  if (P.inv > 0) P.inv--;
+  P.anim += Math.abs(P.vx) > .3 && P.ground ? Math.abs(P.vx) * .09 : 0;
+  // 湯鉄砲（しゃがみ中は撃てない）
+  if (P.cool > 0) P.cool--;
+  if (P.shootT > 0) P.shootT--;
+  if (pressed.b && P.cool === 0 && shots.length < 3 && !P.crouch && P.inv <= 60){
+    P.shootT = 14;
+    const d = playerDrawPos('attack');
+    const sx = P.face > 0 ? d.x + 23 : d.x + 26 - 23 - 9;
+    shots.push({x: sx, y: d.y + 20, w: 9, h: 4, vx: 4.6 * P.face, vy: 0, life: 70});
+    P.cool = 14; Sound.shot();
+  }
+  // --- 弾 ---
+  for (const s of shots){
+    s.x += s.vx; s.life--;
+    if (frame % 3 === 0) parts.push({x: s.x + 4, y: s.y, vx: 0, vy: -.4, life: 14, col: '#f0f0ff', g: -.01});
+    const ch = tileAt(Math.floor((s.x + (s.vx > 0 ? 8 : 0)) / TS), Math.floor((s.y + 2) / TS));
+    if (isSolid(ch) || s.life <= 0){ s.dead = true; splash(s); }
+  }
+  // --- 敵 ---
+  for (const e of enemies){
+    e.anim++;
+    if (e.dead){ e.dead++; continue; }
+    if (e.flash > 0) e.flash--;
+    if (e.type === 'doro'){
+      if (e.still){ e.vy = 0; }
+      else if (Math.abs(e.x - P.x) < 450){
+        const wall = moveBody(e);
+        e.vy = Math.min(e.vy + .3, 6);
+        if (e.ground){
+          if (e.vx === 0) e.vx = e.dir || -.55;
+          const ahead = Math.floor((e.x + (e.vx > 0 ? e.w + 1 : -1)) / TS), below = Math.floor((e.y + e.h + 2) / TS);
+          const t = tileAt(ahead, below);
+          if (wall || !(isSolid(t) || t === '=')) e.vx = -(e.dir || e.vx || -.55);
+          e.dir = e.vx;
+        }
+        if (e.y > H + 60) e.gone = true;
+      }
+    } else if (e.type === 'onibi'){
+      const dx = P.x - e.x;
+      if (Math.abs(dx) < 180) e.x += Math.sign(dx) * .5;
+      e.y = e.by + Math.sin(e.anim / 20) * 15;
+    }
+    if (overlap(P, e)) hurtPlayer(e.x + e.w / 2);
+    // 敵の当たり判定は絵の頭の先まで広げる
+    const hb = {x: e.x - 1, y: e.y - 5, w: e.w + 2, h: e.h + 5};
+    for (const s of shots) if (!s.dead && overlap(s, hb)){
+      s.dead = true; e.hp--; e.flash = 8; Sound.hit(); burst(s.x, s.y, 5, ['#9fd8ff', '#fff']);
+      if (e.hp <= 0){ e.dead = 1; score += e.type === 'doro' ? 200 : 300; Sound.kill(); steam(e.x + e.w / 2, e.y + e.h, 12); burst(e.x + e.w / 2, e.y + e.h / 2, 12, e.type === 'doro' ? ['#84513c', '#bd8040', '#341717'] : ['#7fd8ff', '#e8fbff']); }
+    }
+  }
+  enemies = enemies.filter(e => !(e.dead > 24) && !e.gone);
+  // --- アイテム ---
+  for (const it of items){
+    if (!it.got && overlap(P, it)){
+      it.got = true;
+      if (it.type === 'fuda'){ fudaGot++; score += 100; Sound.item(); burst(it.x + 6, it.y + 9, 8, ['#f2e6c4', '#c8342a']); }
+      if (it.type === 'chawan'){ if (P.hp < 3) P.hp++; score += 50; Sound.heal(); steam(it.x + 9, it.y, 10); }
+    }
+  }
+  items = items.filter(i => !i.got);
+  // --- ボス ---
+  if (!lockCam && P.x > (BOSS_COL + 3) * TS) enterBoss(false);
+  if (boss) updateBoss();
+  shots = shots.filter(s => !s.dead);
+  // --- カメラ（福丸の整数位置にくっつける） ---
+  if (lockCam){ camX += (BOSS_COL * TS - camX) * .1; if (Math.abs(BOSS_COL * TS - camX) < .5) camX = BOSS_COL * TS; }
+  else {
+    lookX += (P.face * 24 - lookX) * .08;
+    camX = Math.round(P.x) + 7 - 168 + Math.round(lookX);
+    camX = Math.max(0, Math.min(camX, (BOSS_COL - 2) * TS));
+  }
+  if (shake > 0) shake--;
+  updateParts();
+}
+function splash(s){ burst(s.x + 4, s.y + 2, 6, ['#9fd8ff', '#ffffff', '#4bc6eb']); steam(s.x + 4, s.y, 2); Sound.splash(); }
+function updateParts(){
+  for (const p of parts){ p.vy += p.g; p.x += p.vx; p.y += p.vy; p.life--; }
+  parts = parts.filter(p => p.life > 0);
+}
+
+/* ---------- ボス：大泥田坊 ----------
+   ・頬が膨らむ → 泥つぶてを吐く（しゃがめば頭の上を通り過ぎる）
+   ・舌が垂れている間（spitRest）だけ湯鉄砲が効く。ほかの時は泥ではじかれる
+   ・近づきすぎると腕を振り下ろしてくる */
+function enterBoss(fromRetry){
+  lockCam = true; bossReached = true;
+  if (fromRetry) camX = BOSS_COL * TS;
+  const gy = 12 * TS;
+  enemies = [];   // 道中の敵は連れて来ない
+  boss = {x: (COLS - 1) * TS - 98, y: gy - 70, face: -1, hp: 6, maxHp: 6, action: 'idle', t: 0, first: true, fired: false,
+    flash: 0, dead: 0, idleFor: 1200, walkFor: 0, walkDir: -1, hitThisAction: false};
+  mud = [];
+  Sound.stop();
+  startTalk(TALK.boss, () => { scene = 'play'; Sound.bgm('boss'); });
+}
+// 泥田坊の絵は左向き。右を向く時は反転した絵と当たり判定を使う
+const DP_R = Object.fromEntries(Object.entries(Dorotabo.poses).map(([k, r]) => [k, r.map(l => [...l].reverse().join(''))]));
+for (const p of Object.keys(Dorotabo.poses)) IMG['db_' + p + '_R'] = makeSprite(Dorotabo.poses[p], Dorotabo.palette, true);
+IMG.db_hurt_W_R = whiteOf(IMG.db_hurt_R);
+function bossPose(){ return boss.action === 'walk' ? Dorotabo.frameAt('idle', boss.t * 1.6) : Dorotabo.frameAt(boss.action, boss.t); }
+function bossRows(pose){ return boss.face < 0 ? Dorotabo.poses[pose] : DP_R[pose]; }
+function bossDo(action){
+  if (action === 'spit' && boss.first){ action = 'spitFirst'; boss.first = false; }
+  boss.action = action; boss.t = 0; boss.fired = false; boss.hitThisAction = false;
+  if (action.startsWith('spit')) Sound.puff();
+  if (action === 'attack') Sound.swing();
+}
+const ARENA_L = () => BOSS_COL * TS + 2, ARENA_R = () => (COLS - 1) * TS;
+function updateBoss(){
+  const b = boss;
+  if (b.dead){
+    b.dead++;
+    if (b.dead % 5 === 0){ steam(b.x + 10 + Math.random() * 80, b.y + 69, 4); burst(b.x + 10 + Math.random() * 80, b.y + 20 + Math.random() * 45, 5, ['#84513c', '#bd8040', '#fff']); Sound.splash(); shake = 2; }
+    if (b.dead > 120){
+      boss = null; Sound.stop(); Sound.clear();
+      startTalk(TALK.ending, () => { scene = 'result'; resultT = 0; });
+    }
+    return;
+  }
+  if (b.flash > 0) b.flash--;
+  b.t += FRAME_MS;
+  const angry = b.hp <= 3;
+  const pcx = P.x + P.w / 2, bcx = b.x + 48;
+  const above = P.y + P.h < b.y + 24;                       // 福丸が橋の上など、頭より上にいる
+  const front = b.face < 0 ? b.x + 6 - (P.x + P.w) : P.x - (b.x + 90);   // 腕の届く側との距離
+  // 動作の終わり
+  const dur = b.action === 'walk' ? b.walkFor : Dorotabo.durations[b.action];
+  if (b.action !== 'idle' && b.t >= dur){ b.action = 'idle'; b.t = 0; b.idleFor = angry ? 350 + Math.random() * 350 : 650 + Math.random() * 500; }
+  // 次の動作を決める（待機中はいつでも福丸の方を向き直す）
+  if (b.action === 'idle'){
+    b.face = pcx < bcx ? -1 : 1;
+    if (b.t >= b.idleFor){
+      if (above){
+        // 上にいる福丸には届かないので、間合いを取りに離れる
+        b.walkDir = pcx < bcx ? 1 : -1; b.walkFor = 900; bossDo('walk');
+      } else if (front < 26){
+        bossDo('attack');
+      } else if (front > 150 || Math.random() < (angry ? .55 : .4)){
+        // ずるずると近づいてくる
+        b.walkDir = b.face; b.walkFor = Math.min(1800, (front - 10) / (angry ? 1.25 : .85) * FRAME_MS); bossDo('walk');
+      } else bossDo('spit');
+    }
+  }
+  if (b.action === 'walk'){
+    const sp = angry ? 1.25 : .85;
+    b.x += b.walkDir * sp;
+    if (b.walkDir === b.face && front < 22){ b.action = 'idle'; b.t = 0; b.idleFor = 120; }   // 間合いに入ったらすぐ腕を振る
+    if (frame % 14 === 0){ steam(b.x + (b.walkDir < 0 ? 80 : 16), b.y + 68, 1); }
+  }
+  b.x = Math.max(ARENA_L(), Math.min(b.x, ARENA_R() - 96));
+  const pose = bossPose(), rows = bossRows(pose);
+  // 泥つぶて発射（向いている方へ）
+  if (pose === 'spitRelease' && !b.fired){
+    b.fired = true; Sound.spit();
+    const ox = b.face < 0 ? Dorotabo.mudShot.originX : 96 - Dorotabo.mudShot.originX - 9;
+    mud.push({x: b.x + ox, y: b.y + Dorotabo.mudShot.originY, vx: b.face * (Dorotabo.mudShot.speed / 60) * (angry ? 1.5 : 1.15)});
+  }
+  const pp = playerPose(), d = playerDrawPos(pp), prow = playerRows(pp);
+  // 腕振り
+  if ((pose === 'swing' || pose === 'attack') && !b.hitThisAction && P.inv <= 0 && pixelHit(rows, b.x, b.y, prow, d.x, d.y, 'QUVF')){
+    b.hitThisAction = true; hurtPlayer(bcx);
+  }
+  // 体に触れても痛い
+  if (P.inv <= 0 && pixelHit(rows, b.x, b.y, prow, d.x, d.y, 'QUVF')) hurtPlayer(bcx);
+  // 泥つぶて
+  for (const m of mud){
+    m.x += m.vx;
+    if (P.inv <= 0 && pixelHit(Dorotabo.mudShot.rows, m.x, m.y, prow, d.x, d.y, 'QUVF')){ m.dead = true; hurtPlayer(m.x); burst(m.x + 4, m.y + 3, 10, ['#84513c', '#bd8040', '#542d38']); }
+    for (const s of shots) if (!s.dead && overlap(s, {x: m.x, y: m.y, w: 9, h: 7})){ s.dead = true; m.dead = true; splash(s); burst(m.x + 4, m.y + 3, 8, ['#84513c', '#bd8040']); score += 50; }
+    if (m.x < ARENA_L() - 20 || m.x > ARENA_R() + 10) m.dead = true;
+  }
+  mud = mud.filter(m => !m.dead);
+  // 湯鉄砲が当たった（舌が垂れている間だけ効く）
+  for (const s of shots){
+    if (s.dead) continue;
+    const wr = s.vx > 0 ? WATER : WATER.map(r => [...r].reverse().join(''));
+    if (pixelHit(wr, s.x, s.y, rows, b.x, b.y)){
+      s.dead = true;
+      if (pose === 'spitRest'){
+        b.hp--; b.flash = 12; Sound.hit(); shake = 6; score += 500;
+        burst(s.x + 4, s.y, 12, ['#9fd8ff', '#fff', '#ee8544']); steam(bcx, b.y + 30, 6);
+        if (b.hp <= 0){ b.dead = 1; score += 3000; mud = []; enemies.forEach(e => { if (!e.dead){ e.dead = 1; steam(e.x + 11, e.y + 16, 8); } }); }
+        else {
+          bossDo('hurt');
+          // 半分まで削ったら、椿からの差し入れの茶碗が左の橋に置かれる
+          if (b.hp === 3 && !b.teaDropped){ b.teaDropped = true; const tx = (BOSS_COL + 3) * TS + 3; items.push({type: 'chawan', x: tx, y: 9 * TS - 12, w: 18, h: 12}); steam(tx + 9, 9 * TS - 12, 10); popText(tx - 30, 9 * TS - 34, '椿の差し入れ！'); Sound.item(); }
+        }
+      } else {
+        Sound.clang(); burst(s.x + 4, s.y + 2, 6, ['#bd8040', '#9fd8ff']); popText(s.x - 10, s.y - 14, 'はじかれた');
+      }
+    }
+  }
+}
+const popups = [];
+function popText(x, y, t){ popups.push({x, y, t, life: 40}); }
+
+/* ---------- 描画 ---------- */
+function drawBG(cx){
+  ctx.drawImage(BG.sky, 0, 0);
+  ctx.fillStyle = '#ffd88a'; const sunX = Math.round(270 - cx * .03), sunY = 150;
+  for (let y = -21; y <= 21; y++){ const w = Math.floor(Math.sqrt(441 - y * y)); ctx.fillRect(sunX - w, sunY + y, w * 2, 1); }
+  ctx.fillStyle = '#f0a860'; for (let y = 3; y <= 21; y += 4) ctx.fillRect(sunX - 24, sunY + y, 48, 1);
+  const lay = (img, f, y) => { const ox = -((cx * f) % img.width); for (let x = ox - img.width; x < W; x += img.width) ctx.drawImage(img, Math.round(x), y); };
+  lay(BG.mt, .12, 0); lay(BG.city, .3, 9); lay(BG.bam, .55, 36);
+}
+function drawMap(cx){
+  const t0 = Math.floor(cx / TS), t1 = t0 + 17;
+  for (let ty = 0; ty < ROWS; ty++) for (let tx = t0; tx <= t1; tx++){
+    const ch = tileAt(tx, ty);
+    if (ch === '.') continue;
+    let k = ch === '#' && ty > 0 && isSolid(tileAt(tx, ty - 1)) ? 'd' : ch;
+    if (k === 'd'){ const v = (tx * 7 + ty * 13) % 3; k = v === 0 ? 'd' : v === 1 ? 'd2' : 'd3'; }
+    const img = TILE[k];
+    if (img) ctx.drawImage(img, tx * TS - cx, ty * TS);
+  }
+}
+function drawSprite(img, x, y){ ctx.drawImage(img, Math.round(x), Math.round(y)); }
+function drawText(t, x, y, col = '#ece3cf', size = 16, align = 'left', shadow = true){
+  ctx.font = `${size}px "DotGothic16", monospace`; ctx.textAlign = align; ctx.textBaseline = 'top';
+  if (shadow){ ctx.fillStyle = '#000'; ctx.fillText(t, x + 1, y + 1); }
+  ctx.fillStyle = col; ctx.fillText(t, x, y);
+}
+function drawWindow(x, y, w, h){
+  ctx.fillStyle = '#0c1440'; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = '#142060'; ctx.fillRect(x + 3, y + 3, w - 6, (h - 6) / 2);
+  ctx.strokeStyle = '#f4eee0'; ctx.lineWidth = 1; ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+  ctx.strokeStyle = '#c9a35a'; ctx.strokeRect(x + 4.5, y + 4.5, w - 9, h - 9);
+}
+function wrapJa(text, maxChars){
+  const out = []; let line = '';
+  for (const ch of text){
+    if (line.length >= maxChars && !'、。！？…」）'.includes(ch)){ out.push(line); line = ''; }
+    line += ch;
+  }
+  if (line) out.push(line);
+  return out;
+}
+function drawHUD(){
+  for (let i = 0; i < 3; i++) drawSprite(IMG[i < P.hp ? 'tama' : 'tama_empty'], 10 + i * 16, 10);
+  drawSprite(IMG.fuda, 70, 7);
+  drawText('×' + fudaGot, 85, 8, '#f2e6c4');
+  drawText(String(score).padStart(6, '0'), 372, 8, '#ffd36a', 16, 'right');
+  if (boss && !boss.dead){
+    drawText('大泥田坊', 10, 32, '#d8a868', 14);
+    ctx.fillStyle = '#000'; ctx.fillRect(76, 35, 152, 10);
+    ctx.fillStyle = '#c8342a'; ctx.fillRect(77, 36, Math.max(0, 150 * boss.hp / boss.maxHp), 8);
+    for (let i = 1; i < boss.maxHp; i++){ ctx.fillStyle = '#000'; ctx.fillRect(77 + Math.round(150 * i / boss.maxHp), 36, 1, 8); }
+  }
+}
+function drawWorld(){
+  const sx = shake > 0 ? ((Math.random() * 6) | 0) - 3 : 0, sy = shake > 0 ? ((Math.random() * 6) | 0) - 3 : 0;
+  ctx.save(); ctx.translate(sx, sy);
+  const cx = Math.round(camX);
+  drawBG(cx); drawMap(cx);
+  for (const it of items){
+    const bob = it.type === 'fuda' ? Math.round(Math.sin((frame + it.x) / 12) * 3) : 0;
+    drawSprite(IMG[it.type], it.x - cx, it.y + bob);
+  }
+  for (const e of enemies){
+    if (e.type === 'doro'){
+      const f = (e.anim >> 4) % 2 ? 'mini2' : 'mini1';
+      const img = e.flash > 0 && (e.flash & 2) ? IMG.mini_W : IMG[e.vx > 0 ? f + '_R' : f];
+      if (e.dead){ const sq = Math.min(1, e.dead / 20); ctx.globalAlpha = 1 - sq; ctx.drawImage(img, Math.round(e.x - 1 - cx), Math.round(e.y - 2 + sq * 12), 24, Math.max(1, 18 * (1 - sq))); ctx.globalAlpha = 1; }
+      else drawSprite(img, e.x - 1 - cx, e.y - 2);
+    } else {
+      const f = (e.anim >> 3) % 2 ? 'onibi2' : 'onibi1';
+      if (e.dead) ctx.globalAlpha = Math.max(0, 1 - e.dead / 20);
+      drawSprite(e.flash > 0 ? IMG.onibi1_W : IMG[f], e.x - 1 - cx, e.y - 1);
+      ctx.globalAlpha = 1;
+    }
+  }
+  // ボス
+  if (boss){
+    const b = boss, pose = bossPose();
+    const R = b.face > 0 ? '_R' : '';
+    if (b.dead){ ctx.globalAlpha = Math.max(0, 1 - b.dead / 120); const sink = Math.round(b.dead / 6); ctx.drawImage(IMG['db_' + pose + R], Math.round(b.x) - cx, b.y + sink); ctx.globalAlpha = 1; }
+    else drawSprite(b.flash > 0 && (b.flash & 2) ? IMG['db_hurt_W' + R] : IMG['db_' + pose + R], b.x - cx, b.y);
+    // 隙のある時は舌の上に小さく光
+    if (!b.dead && pose === 'spitRest' && (frame >> 3) % 2) { ctx.fillStyle = '#fff6c0'; ctx.fillRect(Math.round(b.x) - cx + (b.face < 0 ? 14 : 80), b.y + 28, 2, 2); }
+  }
+  for (const m of mud) drawSprite(IMG.mud, m.x - cx, m.y);
+  // 福丸
+  if (!(P.inv > 0 && P.inv <= 60 && (P.inv & 4))){
+    const pose = playerPose(), d = playerDrawPos(pose);
+    drawSprite(IMG['fk_' + pose + (P.face > 0 ? '' : '_L')], d.x - cx, d.y);
+  }
+  for (const s of shots) drawSprite(s.vx > 0 ? IMG.water : IMG.water_L, s.x - cx, s.y);
+  for (const p of parts){ ctx.fillStyle = p.col; const s = p.size || 1; ctx.fillRect(Math.round(p.x - cx), Math.round(p.y), s, s); }
+  for (const p of popups){ drawText(p.t, Math.round(p.x - cx), Math.round(p.y - (40 - p.life) * .4), '#ffe0a0', 12); p.life--; }
+  for (let i = popups.length - 1; i >= 0; i--) if (popups[i].life <= 0) popups.splice(i, 1);
+  ctx.restore();
+}
+function drawTitle(){
+  drawBG(titleT * .9);
+  ctx.fillStyle = 'rgba(8,8,20,.45)'; ctx.fillRect(0, 0, W, H);
+  const bob = Math.round(Math.sin(titleT / 15) * 3);
+  ctx.drawImage(IMG.fk_front, 166, 168 + bob, 52, 80);
+  drawText('神宿りの傀儡 外伝', 192, 40, '#c9a35a', 16, 'center');
+  drawText('福丸の術稽古', 192, 66, '#ffd36a', 36, 'center');
+  drawText('〜 裏山の泥田坊 〜', 192, 116, '#ece3cf', 16, 'center');
+  if ((titleT >> 5) % 2 === 0) drawText(isTouch ? '「跳」ボタンで はじめる' : 'Zキーで はじめる', 192, 274, '#fff', 16, 'center');
+  drawText('©竜田揚げ', 372, 314, '#8f8672', 12, 'right', false);
+}
+function drawTalk(){
+  const L = talk.lines[talk.i], name = L[0], text = L[1].slice(0, Math.floor(talk.chars));
+  drawWindow(9, 228, 366, 100);
+  ctx.fillStyle = '#0c1440'; ctx.fillRect(18, 214, 96, 22);
+  ctx.strokeStyle = '#c9a35a'; ctx.strokeRect(18.5, 214.5, 95, 21);
+  drawText(name, 66, 217, NAMECOL[name] || '#fff', 16, 'center');
+  wrapJa(text, 20).forEach((l, i) => drawText(l, 24, 246 + i * 22, '#f4eee0'));
+  if (talk.chars >= L[1].length && (frame >> 4) % 2) drawText('▼', 352, 306, '#ffd36a', 14);
+  ctx.fillStyle = 'rgba(12,20,64,.85)'; ctx.fillRect(276, 34, 98, 22);
+  ctx.strokeStyle = '#c9a35a'; ctx.strokeRect(276.5, 34.5, 97, 21);
+  drawText(isTouch ? 'スキップ▶▶' : 'X:スキップ', 325, 37, '#ece3cf', 14, 'center');
+}
+function drawOver(){
+  ctx.fillStyle = 'rgba(0,0,0,.7)'; ctx.fillRect(0, 0, W, H);
+  ctx.drawImage(IMG.fk_hurt, 166, 24, 52, 80);
+  drawText('やられてしもうた……', 192, 122, '#ffd36a', 24, 'center');
+  drawText(bossReached ? '大泥田坊の前から やり直す' : 'はじめから やり直す', 192, 166, '#ece3cf', 16, 'center');
+  if (overT > 40){
+    ['もう一度', 'やめる'].forEach((t, i) => {
+      const x = i === 0 ? 126 : 258, sel = overSel === i;
+      drawText(t, x, 214, sel ? '#ffd36a' : '#8f8672', 18, 'center');
+      if (sel && (frame >> 4) % 2 === 0) drawText('▶', x - 52, 214, '#ffd36a', 18);
+    });
+    drawText(isTouch ? '◀▶で選んで「跳」で決定' : '←→で選んで Zキーで決定', 192, 258, '#ece3cf', 14, 'center');
+  }
+}
+const THANKS = {
+  quit:  ['遊んでくれてありがとう！', 'また来てね！'],
+  clear: ['おめでとう！', '今日はきっと', '良いことがあるよ！', 'スマイルスマイル！'],
+};
+function drawThanks(){
+  drawBG(frame * .45);
+  ctx.fillStyle = 'rgba(8,8,20,.6)'; ctx.fillRect(0, 0, W, H);
+  const lines = THANKS[thanksKind], clr = thanksKind === 'clear', top = clr ? 44 : 84, sp = 28;
+  drawWindow(36, top - 20, 312, lines.length * sp + 70);
+  lines.forEach((l, i) => drawText(l, 192, top + i * sp, i === 0 ? '#ffd36a' : '#f4eee0', 20, 'center'));
+  drawText('竜田揚げ', 324, top + lines.length * sp + 14, '#c9a35a', 16, 'right');
+  const bow = clr ? Math.round(Math.sin(frame / 10) * 3) : ((frame >> 5) % 2) * 4;
+  ctx.drawImage(IMG[clr ? 'fk_run' : 'fk_front'], 166, 222 + bow, 52, 80);
+  if (thanksT > 60 && (frame >> 5) % 2 === 0) drawText(isTouch ? '「跳」でタイトルへ' : 'Zキーでタイトルへ', 192, 310, '#fff', 14, 'center');
+}
+function drawResult(){
+  drawBG(timer * .3);
+  ctx.fillStyle = 'rgba(8,8,20,.55)'; ctx.fillRect(0, 0, W, H);
+  drawText('稽古 完了！', 192, 30, '#ffd36a', 36, 'center');
+  drawWindow(54, 96, 276, 138);
+  const sec = Math.floor(timer / 60), t = `${Math.floor(sec / 60)}分${String(sec % 60).padStart(2, '0')}秒`;
+  drawText('かかった時間', 74, 118); drawText(t, 310, 118, '#fff', 16, 'right');
+  drawText('集めた札', 74, 148); drawText(`${fudaGot} / ${fudaTotal}`, 310, 148, '#fff', 16, 'right');
+  drawText('得点', 74, 178); drawText(String(score), 310, 178, '#ffd36a', 16, 'right');
+  const rank = fudaGot === fudaTotal ? (sec < 180 ? '免許皆伝' : '師範代') : (fudaGot >= fudaTotal / 2 ? '一人前' : '見習い');
+  drawText('評価：' + rank, 192, 250, '#8fb4ff', 18, 'center');
+  ctx.drawImage(IMG.fk_attack, 26, 246, 52, 80);
+  if (resultT > 60 && (frame >> 5) % 2 === 0) drawText(isTouch ? '「跳」で つぎへ' : 'Zキーで つぎへ', 192, 296, '#fff', 16, 'center');
+}
+function draw(){
+  ctx.imageSmoothingEnabled = false;
+  if (scene === 'loading'){ ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); drawText('よみこみ中…', 192, 156, '#ece3cf', 16, 'center', false); return; }
+  if (scene === 'title'){ drawTitle(); return; }
+  if (scene === 'result'){ drawResult(); return; }
+  if (scene === 'thanks'){ drawThanks(); return; }
+  drawWorld(); drawHUD();
+  if (scene === 'talk') drawTalk();
+  if (scene === 'over') drawOver();
+}
+
+/* ---------- ループ ---------- */
+let last = 0, accT = 0;
+function loop(t){
+  if (!last) last = t;
+  accT += Math.min(100, t - last); last = t;
+  while (accT >= FRAME_MS){ update(); accT -= FRAME_MS; }
+  draw();
+  requestAnimationFrame(loop);
+}
+// 自動テスト用
+window.__game = {get scene(){ return scene; }, get P(){ return P; }, get boss(){ return boss; }, key, pressed, setKey,
+  get score(){ return score; }, get fuda(){ return fudaGot; }, get camX(){ return camX; }, get mud(){ return mud; },
+  solid: (x, y) => isSolid(tileAt(x, y)), plank: (x, y) => tileAt(x, y) === '=', TS,
+  get enemies(){ return enemies; }, clearEnemies(){ enemies.length = 0; }, spawnDoro(px){ spawnEnemy({type: 'doro', x: px}); const e = enemies[enemies.length - 1]; e.vx = 0; e.dir = 0; e.still = true; return e; },
+  warp(x, y = 9){ P.x = x * TS; P.y = y * TS; P.vy = 0; camX = Math.max(0, P.x - 150); }};
+
+fit();
+Promise.race([document.fonts.load('16px "DotGothic16"'), new Promise(r => setTimeout(r, 2500))]).finally(() => {
+  scene = 'title'; fit(); requestAnimationFrame(loop);
+});
+requestAnimationFrame(() => draw());
+</script>
+</body>
+</html>
