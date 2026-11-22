@@ -2123,9 +2123,11 @@ function drawTitle(){
 function drawTalk(){
   const L = talk.lines[talk.i], name = L[0], text = L[1].slice(0, Math.floor(talk.chars));
   drawWindow(9, 228, 366, 100);
-  ctx.fillStyle = '#0c1440'; ctx.fillRect(18, 214, 96, 22);
-  ctx.strokeStyle = '#c9a35a'; ctx.strokeRect(18.5, 214.5, 95, 21);
-  drawText(name, 66, 217, NAMECOL[name] || '#fff', 16, 'center');
+  ctx.fillStyle = '#0c1440'; ctx.fillRect(18, 204, 96, 28);
+  ctx.strokeStyle = '#c9a35a'; ctx.strokeRect(18.5, 204.5, 95, 27);
+  ctx.font = '16px "DotGothic16", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#000'; ctx.fillText(name, 67, 219);
+  ctx.fillStyle = NAMECOL[name] || '#fff'; ctx.fillText(name, 66, 218);
   wrapJa(text, 20).forEach((l, i) => drawText(l, 24, 246 + i * 22, '#f4eee0'));
   if (talk.chars >= L[1].length && (frame >> 4) % 2) drawText('▼', 352, 306, '#ffd36a', 14);
   ctx.fillStyle = 'rgba(12,20,64,.85)'; ctx.fillRect(276, 34, 98, 22);
