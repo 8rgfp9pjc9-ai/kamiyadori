@@ -1531,17 +1531,28 @@ IMG.kara2 = makeSprite(KARA_TOP.concat(KARA_LEG2), KARA_PAL, false); IMG.kara2_R
 IMG.kara_W = whiteOf(IMG.kara1); IMG.kara_W_R = whiteOf(IMG.kara1_R);
 // 2面のザコ：宙を這う黒蛇（左向き 22×14、2コマ）
 function makeHebi(ph, flip, white){
-  const c = document.createElement('canvas'); c.width = 22; c.height = 14;
-  const g = c.getContext('2d');
-  const put = (x, y, col, w = 1, h = 1) => { g.fillStyle = white ? '#fff' : col; g.fillRect(flip ? 22 - x - w : x, y, w, h); };
-  for (let i = 17; i >= 0; i--){
-    const x = 4 + i, y = Math.round(6 + Math.sin(i * .55 + ph) * 3 * Math.min(1, i / 4));
-    const th = i > 13 ? 2 : 3;
-    put(x, y - 1, '#0e0818', 1, th + 2); put(x, y, '#2a1840', 1, th); put(x, y, '#5a3c82', 1, 1);
+  // 暗い空でも見えるよう、明るい紫の体に淡い光の縁取りをつける（26×18）
+  const Wd = 26, Hd = 18;
+  const body = document.createElement('canvas'); body.width = Wd; body.height = Hd;
+  const g = body.getContext('2d');
+  const put = (x, y, col, w = 1, h = 1) => { g.fillStyle = white ? '#fff' : col; g.fillRect(flip ? Wd - x - w : x, y, w, h); };
+  for (let i = 18; i >= 0; i--){
+    const x = 6 + i, y = Math.round(8 + Math.sin(i * .55 + ph) * 3 * Math.min(1, i / 4));
+    const th = i > 14 ? 2 : 3;
+    put(x, y - 1, '#1a0c2a', 1, th + 2); put(x, y, '#8a48c8', 1, th); put(x, y, '#d8a8ff', 1, 1);
+    if (i % 3 === 0) put(x, y + th - 1, '#5a2a90', 1, 1);
   }
-  const hy = Math.round(6 + Math.sin(ph) * 0);
-  put(0, hy - 3, '#0e0818', 6, 7); put(1, hy - 2, '#2a1840', 5, 5); put(1, hy - 2, '#5a3c82', 4, 1);
-  put(2, hy - 1, '#ff3a2a', 1, 1); put(0, hy + 2, '#d84040', 2, 1);
+  put(1, 4, '#1a0c2a', 7, 8); put(2, 5, '#9a58d8', 5, 6); put(2, 5, '#e0b8ff', 5, 1);
+  put(3, 7, '#ffe040', 2, 2); put(3, 8, '#e02020', 1, 1);
+  put(0, 10, '#ff4a4a', 2, 1); put(0, 11, '#ff4a4a', 1, 1);
+  if (white) return body;
+  // 光の縁取り
+  const c = document.createElement('canvas'); c.width = Wd; c.height = Hd;
+  const o = c.getContext('2d');
+  const glow = document.createElement('canvas'); glow.width = Wd; glow.height = Hd;
+  const gg = glow.getContext('2d'); gg.drawImage(body, 0, 0); gg.globalCompositeOperation = 'source-in'; gg.fillStyle = 'rgba(240,200,255,.85)'; gg.fillRect(0, 0, Wd, Hd);
+  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) o.drawImage(glow, dx, dy);
+  o.drawImage(body, 0, 0);
   return c;
 }
 IMG.hebi1 = makeHebi(0, false); IMG.hebi2 = makeHebi(Math.PI, false);
@@ -2025,7 +2036,7 @@ const TALK2 = {
     ['福丸', 'な、なんじゃこのでっかいからくりは！？', 'fk_surp'],
     ['源八', 'シゴト……ジャマ……スルナ……'],
     ['福丸', '黒い蛇が巻き付いとる……！あれが吉利の術か！', 'fk_fight'],
-    ['福丸', '鉋くずは跳んで、釘はしゃがんでかわすんじゃ。鉋をかけとる間が狙い目じゃな！', 'fk_fight'],
+    ['福丸', 'カンナくずは跳んで、釘はしゃがんでかわすんじゃ。カンナをかけとる間が狙い目じゃな！', 'fk_fight'],
   ],
   ending: [
     ['灯真', '福丸！無事か！'],
@@ -2090,7 +2101,7 @@ function groundTopAt(px){ const tx = Math.floor(px / TS); for (let y = 0; y < RO
 function spawnEnemy(s){
   if (s.type === 'doro') enemies.push({type: 'doro', x: s.x, y: groundTopAt(s.x + 12) - 16, w: 22, h: 16, vx: -.55, vy: 0, hp: 2, flash: 0, anim: (Math.random() * 40) | 0, dead: 0});
   if (s.type === 'kara') enemies.push({type: 'kara', x: s.x, y: groundTopAt(s.x + 12) - 24, w: 16, h: 24, vx: -.6, vy: 0, hp: 2, flash: 0, anim: (Math.random() * 40) | 0, dead: 0});
-  if (s.type === 'hebi') enemies.push({type: 'hebi', x: s.x, y: s.y, by: s.y, w: 18, h: 10, vx: 0, vy: 0, hp: 1, flash: 0, anim: (Math.random() * 60) | 0, dead: 0, face: -1});
+  if (s.type === 'hebi') enemies.push({type: 'hebi', x: s.x, y: s.y, by: s.y, w: 22, h: 12, vx: 0, vy: 0, hp: 1, flash: 0, anim: (Math.random() * 60) | 0, dead: 0, face: -1});
   if (s.type === 'onibi') enemies.push({type: 'onibi', x: s.x, y: s.y, by: s.y, w: 15, h: 15, vx: 0, vy: 0, hp: 1, flash: 0, anim: (Math.random() * 60) | 0, dead: 0});
 }
 function startTalk(lines, then){ talk = {lines, i: 0, chars: 0}; talkNext = then; scene = 'talk'; }
@@ -2705,7 +2716,7 @@ function drawWorld(){
     if (e.type === 'hebi'){
       const f = (e.anim >> 3) % 2 ? 'hebi2' : 'hebi1', R = e.face > 0 ? '_R' : '';
       if (e.dead) ctx.globalAlpha = Math.max(0, 1 - e.dead / 20);
-      drawSprite(e.flash > 0 ? IMG.hebi_W : IMG[f + R], e.x - 2 - cx, e.y - 2);
+      drawSprite(e.flash > 0 ? IMG.hebi_W : IMG[f + R], e.x - 2 - cx, e.y - 3);
       ctx.globalAlpha = 1;
       continue;
     }
