@@ -2068,6 +2068,8 @@ function drawPortraits(){
     if (L[0] === '福丸' && L[2]) face = L[2];
   }
   const speaker = talk.lines[talk.i][0];
+  // セリフ枠の左右の幅からはみ出さないよう切り取って描く
+  ctx.save(); ctx.beginPath(); ctx.rect(9, 0, 366, H); ctx.clip();
   for (const who of PORTRAIT_ORDER){
     if (!cast.has(who)) continue;
     // セリフの後で退場する人（exit：この行より後は出さない）
@@ -2087,6 +2089,7 @@ function drawPortraits(){
     const y = 240 - img.height - (on ? 3 : 0);
     ctx.globalAlpha = fade; ctx.drawImage(img, x, y); ctx.globalAlpha = 1;
   }
+  ctx.restore();
 }
 const TALK2 = {
   intro: [
