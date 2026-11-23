@@ -2059,6 +2059,7 @@ function talkCast(lines){
   return lines.cast || ['福丸', '灯真', '椿'];
 }
 function drawPortraits(){
+  if (talk.lineI !== talk.i || talk.lineL !== talk.lines){ talk.lineI = talk.i; talk.lineL = talk.lines; talk.lineT = frame; }
   const cast = new Set(talkCast(talk.lines));
   let face = 'fk_fight';
   for (let i = 0; i <= talk.i; i++){
@@ -2070,7 +2071,13 @@ function drawPortraits(){
   for (const who of PORTRAIT_ORDER){
     if (!cast.has(who)) continue;
     // セリフの後で退場する人（exit：この行より後は出さない）
-    if (talk.lines.exit && talk.lines.exit[who] !== undefined && talk.i > talk.lines.exit[who]) continue;
+    let fade = 1;
+    if (talk.lines.exit && talk.lines.exit[who] !== undefined && talk.i > talk.lines.exit[who]){
+      // 次の行に移ってから約0.5秒かけて、すっと薄くなって消える
+      if (talk.i > talk.lines.exit[who] + 1) continue;
+      fade = 1 - (frame - talk.lineT) / 30;
+      if (fade <= 0) continue;
+    }
     const key = who === '福丸' ? face : PORTRAIT_POS[who].key;
     const on = who === speaker;
     const img = on ? PIMG[key] : PDIM[key];
@@ -2078,7 +2085,7 @@ function drawPortraits(){
     const pcx = (talk.lines.pos && talk.lines.pos[who]) || PORTRAIT_POS[who].cx;
     const x = Math.round(pcx - img.width / 2);
     const y = 240 - img.height - (on ? 3 : 0);
-    ctx.drawImage(img, x, y);
+    ctx.globalAlpha = fade; ctx.drawImage(img, x, y); ctx.globalAlpha = 1;
   }
 }
 const TALK2 = {
@@ -2107,6 +2114,7 @@ TALK.boss.cast = ['福丸'];
 TALK2.intro.cast = ['福丸', '灯真', '宝条吉利'];
 TALK2.intro.pos = {'灯真': 318};
 TALK2.intro.exit = {'宝条吉利': 0};
+TALK2.ending.pos = {'灯真': 318};
 TALK2.boss.cast = ['福丸'];
 TALK2.ending.cast = ['福丸'];
 const T = () => stageNo === 2 ? TALK2 : TALK;
