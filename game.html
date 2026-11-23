@@ -1428,6 +1428,48 @@
   globalThis.GenpachiAnimation = Object.freeze({width:112,height:128,duration,releaseMs,frameAt,sample,draw,drawAnimation,leap,cycleDuration,stage,atSide,sampleCycle,drawFacing,drawCycle});
 })();
 </script>
+<script>// 二面の人形：各スプライトの1文字が1ドット。
+const stage2DollArt = {"server0":{"palette":["#674031","#915438","#251721","#d89549","#ffd387","#efaf5c","#be743d","#412526","#261618","#a18a87","#d8c2b1","#fff4df","#ffeac1","#71656b"],"rows":["...........ABAC......",".........CDEFFFB.....",".........GEDGFFGH....","........AFEEGGAHH....","........BFFGFABGC....","........CIFIFAAGH....","........CFFFFACA.....",".........GFFBHA..BA..","..........GBCGB..BH..","............CDCAHGB..","..........HAHAJJCBB..","........BGKJAKKHDAA..","........BBGLMDCGGBA..","........CHKLLJHCBAC..","........DGKLMKCAFA...","...BBAHABCNMMMACDB...","..ALLNNLMCCNJAAHBB...","CGHNKCCKNCBBCAFFBA...","BBAAABBBAHBFBBGAAC...","HAAC...CABBACABHAKJ..",".........CAAKKKCNJJ..",".........NKKMKMCNJ...",".........KLMKMKCCMC..","........HLKKKLKHCKK..","........JLLMMLKACJJ..","........CAKLLLJBC....","........HGCCCAHAB....","........ADGH.CGBAC...","........BAH...HHDG...","........FFB....ADDH..",".......CFDC.....AFB..",".......AFH.......GGC.",".....BCABC.......CAB.","....BFDDA........HDGH","....CCAGB......CDFDAC","......CCH......CBHCC."]},"server1":{"palette":["#674031","#915438","#251721","#d89549","#ffd387","#efaf5c","#be743d","#412526","#261618","#a18a87","#d8c2b1","#fff4df","#ffeac1","#71656b"],"rows":["...........ABAC......",".........CDEFFFB.....",".........GEDGFFGH....","........AFEEGGAHH....","........BFFGFABGC....","........CIFIFAAGH....","........CFFFFACA.....",".........GFFBHA..BA..","..........GBCGB..BH..","............CDCAHGB..","..........HAHAJJCBB..","........BGKJAKKHDAA..","........BBGLMDCGGBA..","........CHKLLJHCBAC..","........DGKLMKCAFA...","...BBAHABCNMMMACDB...","..ALLNNLMCCNJAAHBB...","CGHNKCCKNCBBCAFFBA...","BBAAABBBAHBFBBGAAC...","HAAC...CABBACABHAKJ..",".........CAAKKKCNJJ..",".........NKKMKMCNJ...",".........KLMKMKCCMC..","........HLKKKLKHCKK..","........JLLMMLKACJJ..","........CAKLLLJBC....","........HGCCCAHAB....","........ADGH.CGBAC...","........BAH...HHDG...",".........FFB...ADDH..","........CFDC....GGC..","........AFH.....CAB..","......BCABC.....HDGH.","......BFDDA...CDFDAC.","......CCAGB...CBHCC..","........CCH.........."]},"server2":{"palette":["#674031","#915438","#251721","#d89549","#ffd387","#efaf5c","#be743d","#412526","#261618","#a18a87","#d8c2b1","#fff4df","#ffeac1","#71656b"],"rows":[".....................","...........ABAC......",".........CDEFFFB.....",".........GEDGFFGH....","........AFEEGGAHH....","........BFFGFABGC....","........CIFIFAAGH....","........CFFFFACA.....",".........GFFBHA..BA..","..........GBCGB..BH..","............CDCAHGB..","..........HAHAJJCBB..","........BGKJAKKHDAA..","........BBGLMDCGGBA..","........CHKLLJHCBAC..","........DGKLMKCAFA...","...BBAHABCNMMMACDB...","..ALLNNLMCCNJAAHBB...","CGHNKCCKNCBBCAFFBA...","BBAAABBBAHBFBBGAAC...","HAAC...CABBACABHAKJ..",".........CAAKKKCNJJ..",".........NKKMKMCNJ...",".........KLMKMKCCMC..","........HLKKKLKHCKK..","........JLLMMLKACJJ..","........CAKLLLJBC....","........HGCCCAHAB....","........ADGH.CGBAC...",".........FFB.HHDG....","........CFDC..ADDH...",".........AFH...GGC...","......BFDDAC...CAB...",".......CCAGB...HDGH..",".........CCHCDFDAC...","............CBHCC...."]},"server3":{"palette":["#674031","#915438","#251721","#d89549","#ffd387","#efaf5c","#be743d","#412526","#261618","#a18a87","#d8c2b1","#fff4df","#ffeac1","#71656b"],"rows":["...........ABAC......",".........CDEFFFB.....",".........GEDGFFGH....","........AFEEGGAHH....","........BFFGFABGC....","........CIFIFAAGH....","........CFFFFACA.....",".........GFFBHA..BA..","..........GBCGB..BH..","............CDCAHGB..","..........HAHAJJCBB..","........BGKJAKKHDAA..","........BBGLMDCGGBA..","........CHKLLJHCBAC..","........DGKLMKCAFA...","...BBAHABCNMMMACDB...","..ALLNNLMCCNJAAHBB...","CGHNKCCKNCBBCAFFBA...","BBAAABBBAHBFBBGAAC...","HAAC...CABBACABHAKJ..",".........CAAKKKCNJJ..",".........NKKMKMCNJ...",".........KLMKMKCCMC..","........HLKKKLKHCKK..","........JLLMMLKACJJ..","........CAKLLLJBC....","........HGCCCAHAB....","........ADGH.CGBAC...","........BAH...HHDG...","........FFB...ADDH...",".......CAFH....AFB...","......BCABC.....GGC..",".....BFDDA......CAB..",".....CCAGB.....HDGH..",".......CCH...CDFDAC..",".............CBHCC..."]},"server4":{"palette":["#674031","#915438","#251721","#d89549","#ffd387","#efaf5c","#be743d","#412526","#261618","#a18a87","#d8c2b1","#fff4df","#ffeac1","#71656b"],"rows":["...........ABAC......",".........CDEFFFB.....",".........GEDGFFGH....","........AFEEGGAHH....","........BFFGFABGC....","........CIFIFAAGH....","........CFFFFACA.....",".........GFFBHA..BA..","..........GBCGB..BH..","............CDCAHGB..","..........HAHAJJCBB..","........BGKJAKKHDAA..","........BBGLMDCGGBA..","........CHKLLJHCBAC..","........DGKLMKCAFA...","...BBAHABCNMMMACDB...","..ALLNNLMCCNJAAHBB...","CGHNKCCKNCBBCAFFBA...","BBAAABBBAHBFBBGAAC...","HAAC...CABBACABHAKJ..",".........CAAKKKCNJJ..",".........NKKMKMCNJ...",".........KLMKMKCCMC..","........HLKKKLKHCKK..","........JLLMMLKACJJ..","........CAKLLLJBC....","........HGCCCAHAB....","........ADGH.CGBAC...","........BAH...HHDG...","........FFB....ADDH..",".......CFDC.....AFGGC","......AFH.........CAB","....BCABC.........HDG","...BFDDA........CDFDA","...CCAGB........CBHCC",".....CCH............."]},"server5":{"palette":["#674031","#915438","#251721","#d89549","#ffd387","#efaf5c","#be743d","#412526","#261618","#a18a87","#d8c2b1","#fff4df","#ffeac1","#71656b"],"rows":[".....................","...........ABAC......",".........CDEFFFB.....",".........GEDGFFGH....","........AFEEGGAHH....","........BFFGFABGC....","........CIFIFAAGH....","........CFFFFACA.....",".........GFFBHA..BA..","..........GBCGB..BH..","............CDCAHGB..","..........HAHAJJCBB..","........BGKJAKKHDAA..","........BBGLMDCGGBA..","........CHKLLJHCBAC..","........DGKLMKCAFA...","...BBAHABCNMMMACDB...","..ALLNNLMCCNJAAHBB...","CGHNKCCKNCBBCAFFBA...","BBAAABBBAHBFBBGAAC...","HAAC...CABBACABHAKJ..",".........CAAKKKCNJJ..",".........NKKMKMCNJ...",".........KLMKMKCCMC..","........HLKKKLKHCKK..","........JLLMMLKACJJ..","........CAKLLLJBC....","........HGCCCAHAB....","........ADGH.CHHDG...","........BAH.....ADDH.",".......FFB.......AGGC","......AFHC........CAB","....BCABC........CDFD","..BFDDA..........CBHC","..CCAGB..............","....CCH.............."]},"porter0":{"palette":["#412526","#915438","#251721","#be743d","#ffd387","#efaf5c","#d89549","#674031","#261618","#c65128","#403648","#71656b","#212337","#353145","#55516c"],"rows":[".................ABBAAC.........","..............CDDEFGFFFD........","..............CDDEFGFFFD........","..............GEEGHGFFFDBB......",".............DEFFEEBGGHHBBC.....",".............HGFFHDFHHBGBBA.....",".............IGEEHIEHHDDBBB.....",".............IGEEHIEHHDDBBB.....",".....ACCACCCCBBHHBBBBBCBHHC.....","....GFDDDDDDGDDJJJJJAAHCHHA.....","...CFFBBHBBBHBBBBBBBCCBGDDKCC...","...CFFBBHBBBHBBBBBBBCCBGDDKCC...","...CHBCCCCCCCCCAACACCCGLCCHGDAA.",".BBDBDDDDDDDDBDBBABBHHCMBBEFDDDC",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".CCDAHHHAABBBCDHHCAAHHCCHHFDADDA",".HHDBBBBBDDDAADBBCAHAACHBBBFDAA.","BHHBBBHHDDCCHBDAADBCBBFEEEBCDAA.","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","AGGBCDDDAHDDBABDDBFGHHBGDDDBA...","HDDBCBAACBHHHADDDHDDAAHBDDDA....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....",".AAAABHHHHHHHACHHHHCCCCCKKCKC...","......CCCCCCCMCCCCCMNNNAAACOO...","......HHLKNNKNNNNAMNNNNACCKCC...",".....COOLNNNKKMKKLKLLLNACCAO....",".....COOLNNNKKMKKLKLLLNACCAO....",".....KOOONOONKKKKOOOKKNHBBCLO...",".....OKKNOLLONNOOOOOKKNHDDCKO...",".....CHHACMMOLKMMNNMKKKHDDC.....",".....CHHACMMOLKMMNNMKKKHDDC.....",".....HFFEGHHCNLOOOLOLLNCBBB.....",".....CAAABGGDACAANAACCCHGGDC....","......DDFCCCBA.....HDDDGDDAC....","......DDFCCCBA.....HDDDGDDAC....",".CCGFBDDBDAAC.......HHHCCCBH....",".HHDFGGGHHHH..........CHBBABA...",".CCCCABBGBCC........DDGGGGGDH...","....CCCCHBAA.......AFFEGBBBAA...","....CCCCHBAA.......AFFEGBBBAA...","......CCCACC.......CAACCCCCC...."]},"porter1":{"palette":["#412526","#915438","#251721","#be743d","#ffd387","#efaf5c","#d89549","#674031","#261618","#c65128","#403648","#71656b","#212337","#353145","#55516c"],"rows":[".................ABBAAC.........","..............CDDEFGFFFD........","..............CDDEFGFFFD........","..............GEEGHGFFFDBB......",".............DEFFEEBGGHHBBC.....",".............HGFFHDFHHBGBBA.....",".............IGEEHIEHHDDBBB.....",".............IGEEHIEHHDDBBB.....",".....ACCACCCCBBHHBBBBBCBHHC.....","....GFDDDDDDGDDJJJJJAAHCHHA.....","...CFFBBHBBBHBBBBBBBCCBGDDKCC...","...CFFBBHBBBHBBBBBBBCCBGDDKCC...","...CHBCCCCCCCCCAACACCCGLCCHGDAA.",".BBDBDDDDDDDDBDBBABBHHCMBBEFDDDC",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".CCDAHHHAABBBCDHHCAAHHCCHHFDADDA",".HHDBBBBBDDDAADBBCAHAACHBBBFDAA.","BHHBBBHHDDCCHBDAADBCBBFEEEBCDAA.","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","AGGBCDDDAHDDBABDDBFGHHBGDDDBA...","HDDBCBAACBHHHADDDHDDAAHBDDDA....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....",".AAAABHHHHHHHACHHHHCCCCCKKCKC...","......CCCCCCCMCCCCCMNNNAAACOO...","......HHLKNNKNNNNAMNNNNACCKCC...",".....COOLNNNKKMKKLKLLLNACCAO....",".....COOLNNNKKMKKLKLLLNACCAO....",".....KOOONOONKKKKOOOKKNHBBCLO...",".....OKKNOLLONNOOOOOKKNHDDCKO...",".....CHHACMMOLKMMNNMKKKHDDC.....",".....CHHACMMOLKMMNNMKKKHDDC.....",".....HFFEGHHCNLOOOLOLLNCBBB.....",".....CAAABGGDACAANAACCCHGGDC....","......DDFCCCBA.....HDDDGDDAC....","......DDFCCCBA.....HDDDGDDAC....","...CGFBBDBDDAC......HHHCCCBH....","...HDFGGGHHHH......DGGGGGGDHA...","...CCCAABGBBC.....AFEEGBBBAA....","......CCCCHHBA....CACCCCCCC.....","......CCCCHHBA....CACCCCCCC.....",".........CCCAC.................."]},"porter2":{"palette":["#412526","#915438","#251721","#be743d","#ffd387","#efaf5c","#d89549","#674031","#261618","#c65128","#403648","#71656b","#212337","#353145","#55516c"],"rows":["................................",".................ABBAAC.........",".................ABBAAC.........","..............CDDEFGFFFD........","..............GEEGHGFFFDBB......",".............DEFFEEBGGHHBBC.....",".............HGFFHDFHHBGBBA.....",".............HGFFHDFHHBGBBA.....",".............IGEEHIEHHDDBBB.....",".....ACCACCCCBBHHBBBBBCBHHC.....","....GFDDDDDDGDDJJJJJAAHCHHA.....","....GFDDDDDDGDDJJJJJAAHCHHA.....","...CFFBBHBBBHBBBBBBBCCBGDDKCC...","...CHBCCCCCCCCCAACACCCGLCCHGDAA.",".BBDBDDDDDDDDBDBBABBHHCMBBEFDDDC",".BBDBDDDDDDDDBDBBABBHHCMBBEFDDDC",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".CCDAHHHAABBBCDHHCAAHHCCHHFDADDA",".HHDBBBBBDDDAADBBCAHAACHBBBFDAA.","BHHBBBHHDDCCHBDAADBCBBFEEEBCDAA.","BHHBBBHHDDCCHBDAADBCBBFEEEBCDAA.","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","AGGBCDDDAHDDBABDDBFGHHBGDDDBA...","HDDBCBAACBHHHADDDHDDAAHBDDDA....","HDDBCBAACBHHHADDDHDDAAHBDDDA....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....",".AAAABHHHHHHHACHHHHCCCCCKKCKC...","......CCCCCCCMCCCCCMNNNAAACOO...","......HHLKNNKNNNNAMNNNNACCKCC...","......HHLKNNKNNNNAMNNNNACCKCC...",".....COOLNNNKKMKKLKLLLNACCAO....",".....KOOONOONKKKKOOOKKNHBBCLO...",".....OKKNOLLONNOOOOOKKNHDDCKO...",".....OKKNOLLONNOOOOOKKNHDDCKO...",".....CHHACMMOLKMMNNMKKKHDDC.....",".....HFFEGHHCNLOOOLOLLNCBBB.....",".....CAAABGGDACAANAACCCHGGDC....",".....CAAABGGDACAANAACCCHGGDC....","...CGFBBDBDDACA....HDDDGDDAC....","....HDFFGGHHHH.....HHHCCBBH.....","....CCCCCCCCHBA...DGGGGGDDHA....","..........CCCAC..AFEGGBBAAA.....","..........CCCAC..AFEGGBBAAA.....","...............CCACCCCCC........"]},"porter3":{"palette":["#412526","#915438","#251721","#be743d","#ffd387","#efaf5c","#d89549","#674031","#261618","#c65128","#403648","#71656b","#212337","#353145","#55516c"],"rows":[".................ABBAAC.........","..............CDDEFGFFFD........","..............CDDEFGFFFD........","..............GEEGHGFFFDBB......",".............DEFFEEBGGHHBBC.....",".............HGFFHDFHHBGBBA.....",".............IGEEHIEHHDDBBB.....",".............IGEEHIEHHDDBBB.....",".....ACCACCCCBBHHBBBBBCBHHC.....","....GFDDDDDDGDDJJJJJAAHCHHA.....","...CFFBBHBBBHBBBBBBBCCBGDDKCC...","...CFFBBHBBBHBBBBBBBCCBGDDKCC...","...CHBCCCCCCCCCAACACCCGLCCHGDAA.",".BBDBDDDDDDDDBDBBABBHHCMBBEFDDDC",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".CCDAHHHAABBBCDHHCAAHHCCHHFDADDA",".HHDBBBBBDDDAADBBCAHAACHBBBFDAA.","BHHBBBHHDDCCHBDAADBCBBFEEEBCDAA.","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","AGGBCDDDAHDDBABDDBFGHHBGDDDBA...","HDDBCBAACBHHHADDDHDDAAHBDDDA....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....",".AAAABHHHHHHHACHHHHCCCCCKKCKC...","......CCCCCCCMCCCCCMNNNAAACOO...","......HHLKNNKNNNNAMNNNNACCKCC...",".....COOLNNNKKMKKLKLLLNACCAO....",".....COOLNNNKKMKKLKLLLNACCAO....",".....KOOONOONKKKKOOOKKNHBBCLO...",".....OKKNOLLONNOOOOOKKNHDDCKO...",".....CHHACMMOLKMMNNMKKKHDDC.....",".....CHHACMMOLKMMNNMKKKHDDC.....",".....HFFEGHHCNLOOOLOLLNCBBB.....",".....CAAABGGDACAANAACCCHGGDC....","......DDFCCCBA.....HDDDGDDAC....","......DDFCCCBA.....HDDDGDDAC....",".CCGFBDDBDAAC......HHHCCBBH.....","...CCCAABGBBC.......CCHBAABA....",".....CCCCHBBA......DGGGGGGDH....","........CCAAC....AFEGGBBAAA.....","........CCAAC....AFEGGBBAAA.....",".................CACCCCCCC......"]},"porter4":{"palette":["#412526","#915438","#251721","#be743d","#ffd387","#efaf5c","#d89549","#674031","#261618","#c65128","#403648","#71656b","#212337","#353145","#55516c"],"rows":[".................ABBAAC.........","..............CDDEFGFFFD........","..............CDDEFGFFFD........","..............GEEGHGFFFDBB......",".............DEFFEEBGGHHBBC.....",".............HGFFHDFHHBGBBA.....",".............IGEEHIEHHDDBBB.....",".............IGEEHIEHHDDBBB.....",".....ACCACCCCBBHHBBBBBCBHHC.....","....GFDDDDDDGDDJJJJJAAHCHHA.....","...CFFBBHBBBHBBBBBBBCCBGDDKCC...","...CFFBBHBBBHBBBBBBBCCBGDDKCC...","...CHBCCCCCCCCCAACACCCGLCCHGDAA.",".BBDBDDDDDDDDBDBBABBHHCMBBEFDDDC",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".CCDAHHHAABBBCDHHCAAHHCCHHFDADDA",".HHDBBBBBDDDAADBBCAHAACHBBBFDAA.","BHHBBBHHDDCCHBDAADBCBBFEEEBCDAA.","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","AGGBCDDDAHDDBABDDBFGHHBGDDDBA...","HDDBCBAACBHHHADDDHDDAAHBDDDA....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....",".AAAABHHHHHHHACHHHHCCCCCKKCKC...","......CCCCCCCMCCCCCMNNNAAACOO...","......HHLKNNKNNNNAMNNNNACCKCC...",".....COOLNNNKKMKKLKLLLNACCAO....",".....COOLNNNKKMKKLKLLLNACCAO....",".....KOOONOONKKKKOOOKKNHBBCLO...",".....OKKNOLLONNOOOOOKKNHDDCKO...",".....CHHACMMOLKMMNNMKKKHDDC.....",".....CHHACMMOLKMMNNMKKKHDDC.....",".....HFFEGHHCNLOOOLOLLNCBBB.....",".....CAAABGGDACAANAACCCHGGDC....","......DDFCCCBA.....HDDDGDDAC....","......DDFCCCBA.....HDDDGDDAC....",".CCGFBDDBDAAC.......HHHCCCBH....",".HHDFGGGHHHH..........DGGGGGDHH.","CCCCABGGBC..........AAFEGGBBAAA.","...CCCHHBA..........CCACCCCCC...","...CCCHHBA..........CCACCCCCC...",".....CCCAC......................"]},"porter5":{"palette":["#412526","#915438","#251721","#be743d","#ffd387","#efaf5c","#d89549","#674031","#261618","#c65128","#403648","#71656b","#212337","#353145","#55516c"],"rows":["................................",".................ABBAAC.........",".................ABBAAC.........","..............CDDEFGFFFD........","..............GEEGHGFFFDBB......",".............DEFFEEBGGHHBBC.....",".............HGFFHDFHHBGBBA.....",".............HGFFHDFHHBGBBA.....",".............IGEEHIEHHDDBBB.....",".....ACCACCCCBBHHBBBBBCBHHC.....","....GFDDDDDDGDDJJJJJAAHCHHA.....","....GFDDDDDDGDDJJJJJAAHCHHA.....","...CFFBBHBBBHBBBBBBBCCBGDDKCC...","...CHBCCCCCCCCCAACACCCGLCCHGDAA.",".BBDBDDDDDDDDBDBBABBHHCMBBEFDDDC",".BBDBDDDDDDDDBDBBABBHHCMBBEFDDDC",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".CCDAHHHAABBBCDHHCAAHHCCHHFDADDA",".HHDBBBBBDDDAADBBCAHAACHBBBFDAA.","BHHBBBHHDDCCHBDAADBCBBFEEEBCDAA.","BHHBBBHHDDCCHBDAADBCBBFEEEBCDAA.","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","AGGBCDDDAHDDBABDDBFGHHBGDDDBA...","HDDBCBAACBHHHADDDHDDAAHBDDDA....","HDDBCBAACBHHHADDDHDDAAHBDDDA....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....",".AAAABHHHHHHHACHHHHCCCCCKKCKC...","......CCCCCCCMCCCCCMNNNAAACOO...","......HHLKNNKNNNNAMNNNNACCKCC...","......HHLKNNKNNNNAMNNNNACCKCC...",".....COOLNNNKKMKKLKLLLNACCAO....",".....KOOONOONKKKKOOOKKNHBBCLO...",".....OKKNOLLONNOOOOOKKNHDDCKO...",".....OKKNOLLONNOOOOOKKNHDDCKO...",".....CHHACMMOLKMMNNMKKKHDDC.....",".....HFFEGHHCNLOOOLOLLNCBBB.....",".....CAAABGGDACAANAACCCHGGDC....",".....CAAABGGDACAANAACCCHGGDC....","......DDFCCCBA.....HDDHHCCCBH...","CGGFBDBBDACC..........DGGGGGDHH.","CCCCABGGBC............CACCCCCCCA",".CCCCHBBA.......................",".CCCCHBBA.......................","....CCAAC......................."]},"unloaded0":{"palette":["#412526","#915438","#251721","#be743d","#ffd387","#efaf5c","#d89549","#674031","#261618","#403648","#71656b","#212337","#353145","#55516c"],"rows":[".................ABBAAC.........","..............CDDEFGFFFD........","..............CDDEFGFFFD........","..............GEEGHGFFFDBB......",".............DEFFEEBGGHHBBC.....",".............HGFFHDFHHBGBBA.....",".............IGEEHIEHHDDBBB.....",".............IGEEHIEHHDDBBB.....",".............FFBBBAACCCBHHC.....",".............DDGGHBACCHCHHA.....",".............BBBBHHCCCBGDDJCC...",".............BBBBHHCCCBGDDJCC...",".............CCAAACCCCGKCCHGDAA.",".BBDBDDDDDDDDBDBBABBHHCLBBEFDDDC",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".CCDAHHHAABBBCDHHCAAHHCCHHFDADDA",".HHDBBBBBDDDAADBBCAHAACHBBBFDAA.","BHHBBBHHDDCCHBDAADBCBBFEEEBCDAA.","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","AGGBCDDDAHDDBABDDBFGHHBGDDDBA...","HDDBCBAACBHHHADDDHDDAAHBDDDA....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....",".AAAABHHHHHHHACHHHHCCCCCJJCJC...","......CCCCCCCLCCCCCLMMMAAACNN...","......HHKJMMJMMMMALMMMMACCJCC...",".....CNNKMMMJJLJJKJKKKMACCAN....",".....CNNKMMMJJLJJKJKKKMACCAN....",".....JNNNMNNMJJJJNNNJJMHBBCKN...",".....NJJMNKKNMMNNNNNJJMHDDCJN...",".....CHHACLLNKJLLMMLJJJHDDC.....",".....CHHACLLNKJLLMMLJJJHDDC.....",".....HFFEGHHCMKNNNKNKKMCBBB.....",".....CAAABGGDACAAMAACCCHGGDC....","......DDFCCCBA.....HDDDGDDAC....","......DDFCCCBA.....HDDDGDDAC....",".CCGFBDDBDAAC.......HHHCCCBH....",".HHDFGGGHHHH..........CHBBABA...",".CCCCABBGBCC........DDGGGGGDH...","....CCCCHBAA.......AFFEGBBBAA...","....CCCCHBAA.......AFFEGBBBAA...","......CCCACC.......CAACCCCCC...."]},"unloaded1":{"palette":["#412526","#915438","#251721","#be743d","#ffd387","#efaf5c","#d89549","#674031","#261618","#403648","#71656b","#212337","#353145","#55516c"],"rows":[".................ABBAAC.........","..............CDDEFGFFFD........","..............CDDEFGFFFD........","..............GEEGHGFFFDBB......",".............DEFFEEBGGHHBBC.....",".............HGFFHDFHHBGBBA.....",".............IGEEHIEHHDDBBB.....",".............IGEEHIEHHDDBBB.....",".............FFBBBAACCCBHHC.....",".............DDGGHBACCHCHHA.....",".............BBBBHHCCCBGDDJCC...",".............BBBBHHCCCBGDDJCC...",".............CCAAACCCCGKCCHGDAA.",".BBDBDDDDDDDDBDBBABBHHCLBBEFDDDC",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".CCDAHHHAABBBCDHHCAAHHCCHHFDADDA",".HHDBBBBBDDDAADBBCAHAACHBBBFDAA.","BHHBBBHHDDCCHBDAADBCBBFEEEBCDAA.","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","AGGBCDDDAHDDBABDDBFGHHBGDDDBA...","HDDBCBAACBHHHADDDHDDAAHBDDDA....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....",".AAAABHHHHHHHACHHHHCCCCCJJCJC...","......CCCCCCCLCCCCCLMMMAAACNN...","......HHKJMMJMMMMALMMMMACCJCC...",".....CNNKMMMJJLJJKJKKKMACCAN....",".....CNNKMMMJJLJJKJKKKMACCAN....",".....JNNNMNNMJJJJNNNJJMHBBCKN...",".....NJJMNKKNMMNNNNNJJMHDDCJN...",".....CHHACLLNKJLLMMLJJJHDDC.....",".....CHHACLLNKJLLMMLJJJHDDC.....",".....HFFEGHHCMKNNNKNKKMCBBB.....",".....CAAABGGDACAAMAACCCHGGDC....","......DDFCCCBA.....HDDDGDDAC....","......DDFCCCBA.....HDDDGDDAC....","...CGFBBDBDDAC......HHHCCCBH....","...HDFGGGHHHH......DGGGGGGDHA...","...CCCAABGBBC.....AFEEGBBBAA....","......CCCCHHBA....CACCCCCCC.....","......CCCCHHBA....CACCCCCCC.....",".........CCCAC.................."]},"unloaded2":{"palette":["#412526","#915438","#251721","#be743d","#ffd387","#efaf5c","#d89549","#674031","#261618","#403648","#71656b","#212337","#353145","#55516c"],"rows":["................................",".................ABBAAC.........",".................ABBAAC.........","..............CDDEFGFFFD........","..............GEEGHGFFFDBB......",".............DEFFEEBGGHHBBC.....",".............HGFFHDFHHBGBBA.....",".............HGFFHDFHHBGBBA.....",".............IGEEHIEHHDDBBB.....",".............FFBBBAACCCBHHC.....",".............DDGGHBACCHCHHA.....",".............DDGGHBACCHCHHA.....",".............BBBBHHCCCBGDDJCC...",".............CCAAACCCCGKCCHGDAA.",".BBDBDDDDDDDDBDBBABBHHCLBBEFDDDC",".BBDBDDDDDDDDBDBBABBHHCLBBEFDDDC",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".CCDAHHHAABBBCDHHCAAHHCCHHFDADDA",".HHDBBBBBDDDAADBBCAHAACHBBBFDAA.","BHHBBBHHDDCCHBDAADBCBBFEEEBCDAA.","BHHBBBHHDDCCHBDAADBCBBFEEEBCDAA.","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","AGGBCDDDAHDDBABDDBFGHHBGDDDBA...","HDDBCBAACBHHHADDDHDDAAHBDDDA....","HDDBCBAACBHHHADDDHDDAAHBDDDA....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....",".AAAABHHHHHHHACHHHHCCCCCJJCJC...","......CCCCCCCLCCCCCLMMMAAACNN...","......HHKJMMJMMMMALMMMMACCJCC...","......HHKJMMJMMMMALMMMMACCJCC...",".....CNNKMMMJJLJJKJKKKMACCAN....",".....JNNNMNNMJJJJNNNJJMHBBCKN...",".....NJJMNKKNMMNNNNNJJMHDDCJN...",".....NJJMNKKNMMNNNNNJJMHDDCJN...",".....CHHACLLNKJLLMMLJJJHDDC.....",".....HFFEGHHCMKNNNKNKKMCBBB.....",".....CAAABGGDACAAMAACCCHGGDC....",".....CAAABGGDACAAMAACCCHGGDC....","...CGFBBDBDDACA....HDDDGDDAC....","....HDFFGGHHHH.....HHHCCBBH.....","....CCCCCCCCHBA...DGGGGGDDHA....","..........CCCAC..AFEGGBBAAA.....","..........CCCAC..AFEGGBBAAA.....","...............CCACCCCCC........"]},"unloaded3":{"palette":["#412526","#915438","#251721","#be743d","#ffd387","#efaf5c","#d89549","#674031","#261618","#403648","#71656b","#212337","#353145","#55516c"],"rows":[".................ABBAAC.........","..............CDDEFGFFFD........","..............CDDEFGFFFD........","..............GEEGHGFFFDBB......",".............DEFFEEBGGHHBBC.....",".............HGFFHDFHHBGBBA.....",".............IGEEHIEHHDDBBB.....",".............IGEEHIEHHDDBBB.....",".............FFBBBAACCCBHHC.....",".............DDGGHBACCHCHHA.....",".............BBBBHHCCCBGDDJCC...",".............BBBBHHCCCBGDDJCC...",".............CCAAACCCCGKCCHGDAA.",".BBDBDDDDDDDDBDBBABBHHCLBBEFDDDC",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".CCDAHHHAABBBCDHHCAAHHCCHHFDADDA",".HHDBBBBBDDDAADBBCAHAACHBBBFDAA.","BHHBBBHHDDCCHBDAADBCBBFEEEBCDAA.","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","AGGBCDDDAHDDBABDDBFGHHBGDDDBA...","HDDBCBAACBHHHADDDHDDAAHBDDDA....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....",".AAAABHHHHHHHACHHHHCCCCCJJCJC...","......CCCCCCCLCCCCCLMMMAAACNN...","......HHKJMMJMMMMALMMMMACCJCC...",".....CNNKMMMJJLJJKJKKKMACCAN....",".....CNNKMMMJJLJJKJKKKMACCAN....",".....JNNNMNNMJJJJNNNJJMHBBCKN...",".....NJJMNKKNMMNNNNNJJMHDDCJN...",".....CHHACLLNKJLLMMLJJJHDDC.....",".....CHHACLLNKJLLMMLJJJHDDC.....",".....HFFEGHHCMKNNNKNKKMCBBB.....",".....CAAABGGDACAAMAACCCHGGDC....","......DDFCCCBA.....HDDDGDDAC....","......DDFCCCBA.....HDDDGDDAC....",".CCGFBDDBDAAC......HHHCCBBH.....","...CCCAABGBBC.......CCHBAABA....",".....CCCCHBBA......DGGGGGGDH....","........CCAAC....AFEGGBBAAA.....","........CCAAC....AFEGGBBAAA.....",".................CACCCCCCC......"]},"unloaded4":{"palette":["#412526","#915438","#251721","#be743d","#ffd387","#efaf5c","#d89549","#674031","#261618","#403648","#71656b","#212337","#353145","#55516c"],"rows":[".................ABBAAC.........","..............CDDEFGFFFD........","..............CDDEFGFFFD........","..............GEEGHGFFFDBB......",".............DEFFEEBGGHHBBC.....",".............HGFFHDFHHBGBBA.....",".............IGEEHIEHHDDBBB.....",".............IGEEHIEHHDDBBB.....",".............FFBBBAACCCBHHC.....",".............DDGGHBACCHCHHA.....",".............BBBBHHCCCBGDDJCC...",".............BBBBHHCCCBGDDJCC...",".............CCAAACCCCGKCCHGDAA.",".BBDBDDDDDDDDBDBBABBHHCLBBEFDDDC",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".CCDAHHHAABBBCDHHCAAHHCCHHFDADDA",".HHDBBBBBDDDAADBBCAHAACHBBBFDAA.","BHHBBBHHDDCCHBDAADBCBBFEEEBCDAA.","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","AGGBCDDDAHDDBABDDBFGHHBGDDDBA...","HDDBCBAACBHHHADDDHDDAAHBDDDA....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....",".AAAABHHHHHHHACHHHHCCCCCJJCJC...","......CCCCCCCLCCCCCLMMMAAACNN...","......HHKJMMJMMMMALMMMMACCJCC...",".....CNNKMMMJJLJJKJKKKMACCAN....",".....CNNKMMMJJLJJKJKKKMACCAN....",".....JNNNMNNMJJJJNNNJJMHBBCKN...",".....NJJMNKKNMMNNNNNJJMHDDCJN...",".....CHHACLLNKJLLMMLJJJHDDC.....",".....CHHACLLNKJLLMMLJJJHDDC.....",".....HFFEGHHCMKNNNKNKKMCBBB.....",".....CAAABGGDACAAMAACCCHGGDC....","......DDFCCCBA.....HDDDGDDAC....","......DDFCCCBA.....HDDDGDDAC....",".CCGFBDDBDAAC.......HHHCCCBH....",".HHDFGGGHHHH..........DGGGGGDHH.","CCCCABGGBC..........AAFEGGBBAAA.","...CCCHHBA..........CCACCCCCC...","...CCCHHBA..........CCACCCCCC...",".....CCCAC......................"]},"unloaded5":{"palette":["#412526","#915438","#251721","#be743d","#ffd387","#efaf5c","#d89549","#674031","#261618","#403648","#71656b","#212337","#353145","#55516c"],"rows":["................................",".................ABBAAC.........",".................ABBAAC.........","..............CDDEFGFFFD........","..............GEEGHGFFFDBB......",".............DEFFEEBGGHHBBC.....",".............HGFFHDFHHBGBBA.....",".............HGFFHDFHHBGBBA.....",".............IGEEHIEHHDDBBB.....",".............FFBBBAACCCBHHC.....",".............DDGGHBACCHCHHA.....",".............DDGGHBACCHCHHA.....",".............BBBBHHCCCBGDDJCC...",".............CCAAACCCCGKCCHGDAA.",".BBDBDDDDDDDDBDBBABBHHCLBBEFDDDC",".BBDBDDDDDDDDBDBBABBHHCLBBEFDDDC",".AAHAHHHHHHHHHHHHCAAAACHHHBHBDDH",".CCDAHHHAABBBCDHHCAAHHCCHHFDADDA",".HHDBBBBBDDDAADBBCAHAACHBBBFDAA.","BHHBBBHHDDCCHBDAADBCBBFEEEBCDAA.","BHHBBBHHDDCCHBDAADBCBBFEEEBCDAA.","HDDHABBBDAHHDHBBBAGBHHFFGGFHH...","AGGBCDDDAHDDBABDDBFGHHBGDDDBA...","HDDBCBAACBHHHADDDHDDAAHBDDDA....","HDDBCBAACBHHHADDDHDDAAHBDDDA....","CDDDADBBDBBBDHBBBHDBCCBBHHC.....",".AAAABHHHHHHHACHHHHCCCCCJJCJC...","......CCCCCCCLCCCCCLMMMAAACNN...","......HHKJMMJMMMMALMMMMACCJCC...","......HHKJMMJMMMMALMMMMACCJCC...",".....CNNKMMMJJLJJKJKKKMACCAN....",".....JNNNMNNMJJJJNNNJJMHBBCKN...",".....NJJMNKKNMMNNNNNJJMHDDCJN...",".....NJJMNKKNMMNNNNNJJMHDDCJN...",".....CHHACLLNKJLLMMLJJJHDDC.....",".....HFFEGHHCMKNNNKNKKMCBBB.....",".....CAAABGGDACAAMAACCCHGGDC....",".....CAAABGGDACAAMAACCCHGGDC....","......DDFCCCBA.....HDDHHCCCBH...","CGGFBDBBDACC..........DGGGGGDHH.","CCCCABGGBC............CACCCCCCCA",".CCCCHBBA.......................",".CCCCHBBA.......................","....CCAAC......................."]},"log0":{"palette":["#412526","#ffd387","#d89549","#915438","#be743d","#674031"],"rows":["....AAAAA....",".AAABCDDDAAA.",".AAABCDDDAAA.",".AACCEEEDDAA.","ACCCEEEEEDDDA","ACCCEFFFEDDDA","ACCCEFFFEDDDA","ACCCEEEEEDDDA",".AACCEEEDDAA.",".AAACCDDDAAA.",".AAACCDDDAAA.","....AAAAA...."]},"log1":{"palette":["#412526","#d89549","#915438","#be743d","#ffd387","#674031"],"rows":["....AAAAA....",".AAABBCCCAAA.",".AAABBCCCAAA.",".AABBDDDCCAA.","ABBBDDDDDCCCA","AEEBDFFFDCCCA","AEEBDFFFDCCCA","ABBBDDDDDCCCA",".AABBDDDCCAA.",".AAABBCCCAAA.",".AAABBCCCAAA.","....AAAAA...."]},"log2":{"palette":["#412526","#d89549","#915438","#be743d","#674031","#ffd387"],"rows":["....AAAAA....",".AAABBCCCAAA.",".AAABBCCCAAA.",".AABBDDDCCAA.","ABBBDDDDDCCCA","ABBBDEEEDCCCA","ABBBDEEEDCCCA","ABBBDDDDDCCCA",".AABBDDDCCAA.",".AAABFCCCAAA.",".AAABFCCCAAA.","....AAAAA...."]},"log3":{"palette":["#412526","#d89549","#915438","#be743d","#674031","#ffd387"],"rows":["....AAAAA....",".AAABBCCCAAA.",".AAABBCCCAAA.",".AABBDDDCCAA.","ABBBDDDDDCCCA","ABBBDEEEDFCCA","ABBBDEEEDFCCA","ABBBDDDDDCCCA",".AABBDDDCCAA.",".AAABBCCCAAA.",".AAABBCCCAAA.","....AAAAA...."]}};
+(() => {
+  "use strict";
+  const art=stage2DollArt, alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  function draw(ctx,key,x,y){
+    const sprite=art[key];ctx.save();
+    sprite.rows.forEach((row,j)=>{for(let i=0;i<row.length;i++){
+      if(row[i]===".")continue;
+      ctx.fillStyle=sprite.palette[alphabet.indexOf(row[i])];ctx.fillRect(Math.round(x)+i,Math.round(y)+j,1,1);
+    }});ctx.restore();
+  }
+  // x は出現位置、floor は足元。dropAt は出現から丸太を落とすまでのミリ秒。
+  function spawn(type,x,floor,options={}){
+    if(type!=="server"&&type!=="porter")throw new RangeError("server または porter を指定してください。");
+    const random=options.random||Math.random;
+    const dropAt=type==="server"?Infinity:options.dropAt??(random()<0.35?950+random()*1700:Infinity);
+    return Object.freeze({type,x,floor,dropAt});
+  }
+  function sample(enemy,elapsed){
+    const t=Math.max(0,elapsed),porter=enemy.type==="porter",v=porter?24:30;
+    const x=enemy.x-t*v/1000,y=enemy.floor-(porter?44:36);
+    const after=t-enemy.dropAt;
+    const frame=Math.floor(t/(porter?118:95))%6;
+    const body={key:(porter&&after>=0?"unloaded":enemy.type)+frame,x:Math.round(x),y};
+    let log=null;
+    if(porter&&after>=0){
+      const startX=enemy.x-v*enemy.dropAt/1000+3;
+      const fall=Math.min(after/410,1);
+      const bounce=after>=410&&after<650?3*Math.sin(Math.PI*(after-410)/240):0;
+      log={key:"log"+(Math.floor(after/80)%4),x:Math.round(startX-after*.068),
+           y:Math.round(enemy.floor-12-26*(1-fall*fall)-bounce)};
+    }
+    return {body,log};
+  }
+  function drawEnemy(ctx,enemy,elapsed){const state=sample(enemy,elapsed);
+    for(const s of [state.body,state.log])if(s)draw(ctx,s.key,s.x,s.y);
+    return state;
+  }
+  globalThis.Stage2Dolls=Object.freeze({spawn,sample,draw,drawEnemy});
+})();
+</script>
 <script>
 "use strict";
 /* ==================================================================
@@ -1554,6 +1596,17 @@ function makeHebi(ph, flip, white){
   for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) o.drawImage(glow, dx, dy);
   o.drawImage(body, 0, 0);
   return c;
+}
+// 2面のザコ：給仕人形（21×36）と荷運び人形（32×44、丸太を落とす）。竜田揚げ提供 stage2-dolls.js
+const DOLL_ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const DOLL_ROWS = {}, DOLL_ROWS_R = {};
+for (const k of Object.keys(stage2DollArt)){
+  const a = stage2DollArt[k], pal = {};
+  a.palette.forEach((c, i) => pal[DOLL_ABC[i]] = c);
+  IMG['dl_' + k] = makeSprite(a.rows, pal, false);
+  IMG['dl_' + k + '_R'] = makeSprite(a.rows, pal, true);
+  IMG['dl_' + k + '_W'] = whiteOf(IMG['dl_' + k]);
+  IMG['dl_' + k + '_R_W'] = whiteOf(IMG['dl_' + k + '_R']);
 }
 IMG.hebi1 = makeHebi(0, false); IMG.hebi2 = makeHebi(Math.PI, false);
 IMG.hebi1_R = makeHebi(0, true); IMG.hebi2_R = makeHebi(Math.PI, true);
@@ -1825,24 +1878,25 @@ function buildLevel2(){
   const gear = (x, y0, y1 = y0) => { for (let y = y0; y <= y1; y++) map[y][x] = 'G'; };
   const fuda = (x, y) => items.push({type: 'fuda', x: x * TS + 6, y: y * TS + 3, w: 12, h: 18});
   const tea = (x, y) => items.push({type: 'chawan', x: x * TS + 3, y: y * TS + 12, w: 18, h: 12});
-  const kara = (x) => spawns.push({type: 'kara', x: x * TS});
+  const server = (x) => spawns.push({type: 'server', x: x * TS});
+  const porter = (x) => spawns.push({type: 'porter', x: x * TS});
   const hebi = (x, y) => spawns.push({type: 'hebi', x: x * TS, y: y * TS});
   // 蒸気パイプ：一定の間隔で真上に蒸気を噴く（噴いている間に触れると痛い）
   const vent = (x, top = 12, phase = 0) => vents.push({x: x * TS + 12, y: top * TS, phase});
 
-  ground(0, 22); fuda(6, 9); fuda(8, 9); kara(15); vent(19, 12, 0);
-  belt(25, 36, 'C'); kara(30); fuda(31, 9); fuda(33, 9);
+  ground(0, 22); fuda(6, 9); fuda(8, 9); server(15); vent(19, 12, 0);
+  belt(25, 36, 'C'); porter(30); fuda(31, 9); fuda(33, 9);
   ground(37, 42); vent(39, 12, 60);
   plank(44, 44, 10);
-  ground(46, 60, 11); hebi(50, 7); fuda(48, 8); plank(53, 56, 8); fuda(54, 7); fuda(56, 7); kara(58);
+  ground(46, 60, 11); hebi(50, 7); fuda(48, 8); plank(53, 56, 8); fuda(54, 7); fuda(56, 7); server(58);
   plank(61, 63, 10);
   ground(64, 82); vent(67, 12, 0); vent(71, 12, 70); vent(75, 12, 140); hebi(73, 6); tea(80, 11);
   gear(84, 10); gear(85, 10); gear(87, 9); gear(88, 9);
-  belt(90, 100, 'c'); kara(94); kara(99); fuda(92, 9); fuda(97, 8);
+  belt(90, 100, 'c'); porter(94); server(99); fuda(92, 9); fuda(97, 8);
   ground(101, 110); vent(104, 12, 30); fuda(106, 9); hebi(108, 7);
   ground(114, 114); fuda(114, 9);
   ground(118, 140);
-  plank(119, 120, 10); plank(122, 126, 8); fuda(122, 7); fuda(126, 7); tea(124, 7); kara(129); vent(132, 12, 90); kara(135); hebi(137, 7);
+  plank(119, 120, 10); plank(122, 126, 8); fuda(122, 7); fuda(126, 7); tea(124, 7); porter(129); vent(132, 12, 90); server(135); hebi(137, 7);
   ground(BOSS_COL, COLS - 1);
   for (let y = 0; y < 12; y++) map[y][COLS - 1] = 'G';
 }
@@ -2089,6 +2143,7 @@ function startGame(fromBoss){
   shots = []; enemies = []; parts = []; mud = []; boss = null; shake = 0; lockCam = false; lookX = 24;
   fudaTotal = items.filter(i => i.type === 'fuda').length;
   if (!fromBoss){ timer = 0; score = 0; fudaGot = 0; bossReached = false; }
+  firstPorterDone = false; logs = [];
   for (const s of spawns) spawnEnemy(s);
   if (fromBoss){
     P = newPlayer((BOSS_COL - 3) * TS, 10 * TS - 4);
@@ -2100,10 +2155,16 @@ function startGame(fromBoss){
 function groundTopAt(px){ const tx = Math.floor(px / TS); for (let y = 0; y < ROWS; y++) if (isSolid(tileAt(tx, y))) return y * TS; return 12 * TS; }
 function spawnEnemy(s){
   if (s.type === 'doro') enemies.push({type: 'doro', x: s.x, y: groundTopAt(s.x + 12) - 16, w: 22, h: 16, vx: -.55, vy: 0, hp: 2, flash: 0, anim: (Math.random() * 40) | 0, dead: 0});
-  if (s.type === 'kara') enemies.push({type: 'kara', x: s.x, y: groundTopAt(s.x + 12) - 24, w: 16, h: 24, vx: -.6, vy: 0, hp: 2, flash: 0, anim: (Math.random() * 40) | 0, dead: 0});
+  if (s.type === 'server') enemies.push({type: 'server', x: s.x, y: groundTopAt(s.x + 12) - 34, w: 12, h: 34, vx: -.5, vy: 0, hp: 2, flash: 0, anim: (Math.random() * 40) | 0, dead: 0});
+  if (s.type === 'porter'){
+    // 最初の荷運び人形は必ず、ほかは35%の確率で丸太を落とす
+    const drops = !firstPorterDone || Math.random() < .35; firstPorterDone = true;
+    enemies.push({type: 'porter', x: s.x, y: groundTopAt(s.x + 12) - 42, w: 20, h: 42, vx: -.4, vy: 0, hp: 3, flash: 0, anim: (Math.random() * 40) | 0, dead: 0, carry: true, drops});
+  }
   if (s.type === 'hebi') enemies.push({type: 'hebi', x: s.x, y: s.y, by: s.y, w: 22, h: 12, vx: 0, vy: 0, hp: 1, flash: 0, anim: (Math.random() * 60) | 0, dead: 0, face: -1});
   if (s.type === 'onibi') enemies.push({type: 'onibi', x: s.x, y: s.y, by: s.y, w: 15, h: 15, vx: 0, vy: 0, hp: 1, flash: 0, anim: (Math.random() * 60) | 0, dead: 0});
 }
+let firstPorterDone = false, logs = [];
 function startTalk(lines, then){ talk = {lines, i: 0, chars: 0}; talkNext = then; scene = 'talk'; }
 
 /* ---------- 当たり判定・移動 ---------- */
@@ -2274,13 +2335,13 @@ function updatePlay(){
     e.anim++;
     if (e.dead){ e.dead++; continue; }
     if (e.flash > 0) e.flash--;
-    if (e.type === 'doro' || e.type === 'kara'){
+    if (e.type === 'doro' || e.type === 'server' || e.type === 'porter'){
       if (e.still){ e.vy = 0; }
       else if (Math.abs(e.x - P.x) < 450){
         const wall = moveBody(e);
         e.vy = Math.min(e.vy + .3, 6);
         if (e.ground){
-          if (e.vx === 0) e.vx = e.dir || (e.type === 'kara' ? -.6 : -.55);
+          if (e.vx === 0) e.vx = e.dir || ({server: -.5, porter: -.4}[e.type] || -.55);
           const ahead = Math.floor((e.x + (e.vx > 0 ? e.w + 1 : -1)) / TS), below = Math.floor((e.y + e.h + 2) / TS);
           const t = tileAt(ahead, below);
           if (wall || !(isSolid(t) || t === '=')) e.vx = -(e.dir || e.vx || -.55);
@@ -2299,14 +2360,35 @@ function updatePlay(){
     for (const s of shots) if (!s.dead && overlap(s, hb)){
       s.dead = true; e.hp--; e.flash = 8; Sound.hit(); burst(s.x, s.y, 5, ['#9fd8ff', '#fff']);
       if (e.hp <= 0){
-        e.dead = 1; score += (e.type === 'doro' || e.type === 'kara') ? 200 : 300; Sound.kill(); steam(e.x + e.w / 2, e.y + e.h, 12);
-        const cols = {doro: ['#84513c', '#bd8040', '#341717'], kara: ['#2a1840', '#5a3c82', '#b07a46', '#f2dcc4'], hebi: ['#2a1840', '#5a3c82', '#0e0818']}[e.type] || ['#7fd8ff', '#e8fbff'];
+        e.dead = 1; score += e.type === 'porter' ? 400 : (e.type === 'doro' || e.type === 'server') ? 200 : 300; Sound.kill(); steam(e.x + e.w / 2, e.y + e.h, 12);
+        const cols = {doro: ['#84513c', '#bd8040', '#341717'], server: ['#2a1840', '#5a3c82', '#d89549', '#fff4df'], porter: ['#2a1840', '#5a3c82', '#d89549', '#915438'], hebi: ['#2a1840', '#5a3c82', '#0e0818']}[e.type] || ['#7fd8ff', '#e8fbff'];
         burst(e.x + e.w / 2, e.y + e.h / 2, 12, cols);
-        if (e.type === 'kara') snakeOut(e.x + e.w / 2, e.y + 4, 6);
+        if (e.type === 'server' || e.type === 'porter') snakeOut(e.x + e.w / 2, e.y + 4, 6);
       }
     }
   }
   enemies = enemies.filter(e => !(e.dead > 24) && !e.gone);
+  // --- 荷運び人形が丸太を落とす ---
+  for (const e of enemies){
+    if (e.type !== 'porter' || e.dead || !e.carry || !e.drops) continue;
+    const dir = e.vx > 0 ? 1 : -1, dx = (P.x + P.w / 2) - (e.x + e.w / 2);
+    if (Math.sign(dx) === dir && Math.abs(dx) < 150 && Math.abs(P.y - e.y) < 80){
+      e.carry = false; Sound.clang();
+      logs.push({x: e.x + e.w / 2 - 6 + dir * 4, y: e.y + 6, w: 13, h: 12, vx: dir * 1.2, vy: -1, ground: false, t: 0});
+    }
+  }
+  for (const L of logs){
+    L.t++;
+    L.vy = Math.min(L.vy + .3, 6);
+    const was = L.ground;
+    if (moveBody(L, true)){ L.dead = true; burst(L.x + 6, L.y + 6, 8, ['#d89549', '#915438', '#412526']); Sound.clang(); }
+    if (L.ground && !was) Sound.land();
+    if (L.ground) L.vx = L.vx > 0 ? 1.2 : -1.2;
+    if (L.y > H + 30) L.dead = true;
+    if (P.inv <= 0 && overlap(P, {x: L.x + 1, y: L.y + 1, w: 11, h: 11})){ hurtPlayer(L.x + 6); L.dead = true; burst(L.x + 6, L.y + 6, 8, ['#d89549', '#915438']); }
+    for (const s of shots) if (!s.dead && overlap(s, L)){ s.dead = true; L.dead = true; splash(s); burst(L.x + 6, L.y + 6, 8, ['#d89549', '#915438', '#412526']); score += 50; }
+  }
+  logs = logs.filter(L => !L.dead);
   // --- 蒸気パイプ ---
   for (const v of vents){
     const t = (frame + v.phase) % VENT_PER;
@@ -2706,11 +2788,14 @@ function drawWorld(){
     ctx.fillStyle = warn ? '#ff5a3a' : '#2a2a30'; ctx.fillRect(vx - 4, v.y - 10, 8, 2);
   }
   for (const e of enemies){
-    if (e.type === 'kara'){
-      const f = (e.anim >> 3) % 2 ? 'kara2' : 'kara1', R = e.vx > 0 ? '_R' : '';
-      const img = e.flash > 0 && (e.flash & 2) ? IMG['kara_W' + R] : IMG[f + R];
-      if (e.dead){ const sq = Math.min(1, e.dead / 20); ctx.globalAlpha = 1 - sq; ctx.drawImage(img, Math.round(e.x - 2 - cx), Math.round(e.y - 2 + sq * 14), 20, Math.max(1, 26 * (1 - sq))); ctx.globalAlpha = 1; }
-      else drawSprite(img, e.x - 2 - cx, e.y - 2);
+    if (e.type === 'server' || e.type === 'porter'){
+      const por = e.type === 'porter';
+      const k = (por ? (e.carry ? 'porter' : 'unloaded') : 'server') + (Math.floor(e.anim * FRAME_MS / (por ? 118 : 95)) % 6);
+      const R = e.vx > 0 ? '_R' : '', Wf = e.flash > 0 && (e.flash & 2) ? '_W' : '';
+      const img = IMG['dl_' + k + R + Wf], sw = img.width, sh = img.height;
+      const dx = Math.round(e.x + e.w / 2 - sw / 2 - cx), dy = Math.round(e.y + e.h - sh);
+      if (e.dead){ const sq = Math.min(1, e.dead / 20); ctx.globalAlpha = 1 - sq; ctx.drawImage(img, dx, Math.round(dy + sq * sh * .5), sw, Math.max(1, sh * (1 - sq))); ctx.globalAlpha = 1; }
+      else ctx.drawImage(img, dx, dy);
       continue;
     }
     if (e.type === 'hebi'){
@@ -2747,6 +2832,7 @@ function drawWorld(){
     if (!b.dead && pose === 'spitRest' && (frame >> 3) % 2) { ctx.fillStyle = '#fff6c0'; ctx.fillRect(Math.round(b.x + (b.face < 0 ? 14 : 80) * b.s) - cx, Math.round(b.y + 28 * b.s), 2, 2); }
   }
   for (const m of mud) drawSprite(IMG.mud, m.x - cx, m.y);
+  for (const L of logs) drawSprite(IMG['dl_log' + (Math.floor(L.t / 5) % 4) + (L.vx > 0 ? '_R' : '')], L.x - cx, L.y);
   // 福丸
   if (!(P.inv > 0 && P.inv <= 60 && (P.inv & 4))){
     const pose = playerPose(), d = playerDrawPos(pose);
@@ -2877,7 +2963,7 @@ window.__game = {get scene(){ return scene; }, get P(){ return P; }, get boss(){
   get score(){ return score; }, get fuda(){ return fudaGot; }, get camX(){ return camX; }, get mud(){ return mud; },
   solid: (x, y) => isSolid(tileAt(x, y)), plank: (x, y) => tileAt(x, y) === '=', TS,
   get enemies(){ return enemies; }, clearEnemies(){ enemies.length = 0; }, spawnDoro(px){ spawnEnemy({type: 'doro', x: px}); const e = enemies[enemies.length - 1]; e.vx = 0; e.dir = 0; e.still = true; return e; },
-  get stage(){ return stageNo; }, setStage(n){ stageNo = n; }, unlockAll(){ SAVE.cleared = [1, 2]; saveNow(); }, get vents(){ return vents; },
+  get stage(){ return stageNo; }, setStage(n){ stageNo = n; }, unlockAll(){ SAVE.cleared = [1, 2]; saveNow(); }, get vents(){ return vents; }, get logs(){ return logs; },
   warp(x, y = 9){ P.x = x * TS; P.y = y * TS; P.vy = 0; camX = Math.max(0, P.x - 150); }};
 
 fit();
