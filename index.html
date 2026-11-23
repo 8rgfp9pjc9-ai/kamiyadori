@@ -160,7 +160,8 @@
   .placeholder b{display:block;font-family:"Shippori Mincho B1",serif;font-size:20px;color:var(--brass);margin-bottom:6px;letter-spacing:.3em}
   .video-wrap.missing .placeholder{display:grid}
   .video-wrap.missing video{visibility:hidden}
-  .pv-list{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
+  .pv-list{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}
+  @media (max-width:560px){.pv-list{gap:8px}.pv-item span{font-size:11px;padding:6px}}
   .pv-item{background:var(--ink2);border:1px solid var(--line);padding:0;cursor:pointer;color:var(--paper-dim);
     font:inherit;font-size:12.5px;letter-spacing:.12em;text-align:left;transition:border-color .3s,color .3s;display:block}
   .pv-item img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;opacity:.7;transition:opacity .3s}
@@ -343,16 +344,19 @@
     <div class="head reveal"><span class="en">PROMOTION VIDEO</span><h2>映像</h2></div>
     <div class="frame reveal">
       <div class="video-wrap" id="vw">
-        <video id="pv-video" controls playsinline preload="metadata" poster="poster.jpg">
-          <source src="pv.mp4" type="video/mp4">
+        <video id="pv-video" controls playsinline preload="metadata" poster="poster1.jpg">
+          <source src="pv1.mp4" type="video/mp4">
         </video>
         <div class="placeholder"><div><b>PV 公開準備中</b>動画を読み込めませんでした</div></div>
       </div>
     </div>
-    <p class="pv-note reveal" id="pv-note">第二部 イメージムービー</p>
+    <p class="pv-note reveal" id="pv-note">第一部 PV</p>
     <!-- PVの一覧：増やす時はボタンを1つ足す（data-src・data-poster・data-title） -->
     <div class="pv-list reveal" role="list">
-      <button class="pv-item on" type="button" role="listitem" data-src="pv.mp4" data-poster="poster.jpg" data-title="第二部 イメージムービー">
+      <button class="pv-item on" type="button" role="listitem" data-src="pv1.mp4" data-poster="poster1.jpg" data-title="第一部 PV">
+        <img src="poster1.jpg" alt="" loading="lazy"><span>第一部 PV</span>
+      </button>
+      <button class="pv-item" type="button" role="listitem" data-src="pv.mp4" data-poster="poster.jpg" data-title="第二部 イメージムービー">
         <img src="poster.jpg" alt="" loading="lazy"><span>第二部 イメージムービー</span>
       </button>
       <button class="pv-item" type="button" role="listitem" data-src="pv54.mp4" data-poster="poster54.jpg" data-title="第一部 第54話 イメージ映像">
