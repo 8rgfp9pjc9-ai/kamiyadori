@@ -34,6 +34,7 @@
     .touch #pad .btn{pointer-events:auto;opacity:.75}
     #bar{position:fixed;top:0;z-index:2}
   }
+  #pause{margin-right:6px}
   #help{font-size:12px;color:#8f8672;text-align:center;padding-bottom:10px}
   .touch #help{display:none}
 </style>
@@ -42,7 +43,8 @@
 <div id="wrap">
   <div id="bar">
     <a href="index.html">← 公式サイトへ</a>
-    <button id="mute" type="button">♪ 音：オン</button>
+    <span><button id="pause" type="button" hidden>⏸ 一時停止</button>
+    <button id="mute" type="button">♪ 音：オン</button></span>
   </div>
   <div id="stage"><canvas id="cv" width="384" height="336"></canvas></div>
   <div id="pad">
@@ -56,7 +58,7 @@
       <button class="btn a" data-k="a" type="button">跳</button>
     </div>
   </div>
-  <p id="help">←→ 移動　↓ しゃがむ　Z/スペース ジャンプ・会話送り　X 湯鉄砲・会話スキップ</p>
+  <p id="help">←→ 移動　↓ しゃがむ　Z/スペース ジャンプ・会話送り　X 湯鉄砲・会話スキップ　P/Esc 一時停止</p>
 </div>
 
 <!-- 福丸（26×40）・泥田坊（96×72）・棟梁 源八（112×128）のドット絵：竜田揚げ 提供 -->
@@ -1905,13 +1907,13 @@ function tileAt(tx, ty){ if (tx < 0 || tx >= COLS) return 'G'; if (ty < 0 || ty 
 
 /* ---------- 入力 ---------- */
 const key = {left: false, right: false, down: false, a: false, b: false};
-const pressed = {a: false, b: false, left: false, right: false, down: false};
+const pressed = {a: false, b: false, left: false, right: false, down: false, pause: false};
 function setKey(k, v){ if (v && !key[k]) pressed[k] = true; key[k] = v; }
 const KEYMAP = {ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowDown: 'down', KeyS: 'down',
-  KeyZ: 'a', Space: 'a', ArrowUp: 'a', KeyW: 'a', Enter: 'a', KeyX: 'b', KeyC: 'b', KeyJ: 'b'};
+  KeyZ: 'a', Space: 'a', ArrowUp: 'a', KeyW: 'a', Enter: 'a', KeyX: 'b', KeyC: 'b', KeyJ: 'b', KeyP: 'pause', Escape: 'pause'};
 addEventListener('keydown', e => { const k = KEYMAP[e.code]; if (k){ e.preventDefault(); if (!e.repeat) setKey(k, true); Sound.unlock(); } });
 addEventListener('keyup', e => { const k = KEYMAP[e.code]; if (k){ e.preventDefault(); setKey(k, false); } });
-addEventListener('blur', () => { for (const k in key) key[k] = false; document.querySelectorAll('#pad .btn').forEach(b => b.classList.remove('on')); });
+addEventListener('blur', () => { if (scene === 'play') pauseGame(); for (const k in key) key[k] = false; document.querySelectorAll('#pad .btn').forEach(b => b.classList.remove('on')); });
 document.querySelectorAll('#pad .btn').forEach(btn => {
   const k = btn.dataset.k;
   const on = e => { e.preventDefault(); btn.setPointerCapture && btn.setPointerCapture(e.pointerId); btn.classList.add('on'); setKey(k, true); Sound.unlock(); };
@@ -1926,6 +1928,11 @@ cv.addEventListener('pointerdown', e => {
   e.preventDefault(); Sound.unlock();
   const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H;
   if (scene === 'talk' && x > 264 && y < 60) skipTap = true;
+  else if (scene === 'pause'){
+    // メニューの行をタップ：選んでいなければ選ぶ、選んでいれば決定
+    const i = y >= 150 && y < 180 ? 0 : y >= 180 && y < 210 ? 1 : -1;
+    if (i >= 0 && i !== pauseSel){ pauseSel = i; Sound.talk(); } else if (i >= 0) pressed.a = true;
+  }
   else if (scene === 'select'){
     // 巻の枠をタップ：選んでいなければ選ぶ、選んでいれば決定
     const i = STAGES.findIndex((st, k) => y >= 67 + k * 92 && y < 149 + k * 92);
@@ -2005,6 +2012,9 @@ const Sound = (() => {
     clear(){ [523,659,784,1047,784,1047].forEach((f,i) => tone(f, .16, 'square', .07, 1, ac ? ac.currentTime + i * .12 : 0)); },
     bgm(name){ if (!ac) return; song = name; if (!bgmOn){ bgmOn = true; nextT = ac.currentTime + .05; step = 0; bgmTimer = setInterval(schedule, 60); } else { step = 0; } },
     stop(){ bgmOn = false; clearInterval(bgmTimer); },
+    // 一時停止：曲の位置を覚えたまま止めて、続きから鳴らす
+    hold(){ if (!bgmOn) return false; bgmOn = false; clearInterval(bgmTimer); return true; },
+    resume(){ if (!ac || bgmOn) return; bgmOn = true; nextT = ac.currentTime + .05; bgmTimer = setInterval(schedule, 60); },
     toggle(){ unlock(); muted = !muted; if (master) master.gain.value = muted ? 0 : .5; try { localStorage.setItem('fukumaru_mute', muted ? '1' : '0'); } catch(e){} return muted; },
     get muted(){ return muted; }
   };
@@ -2228,6 +2238,12 @@ function hurtPlayer(fromX){
   burst(P.x + 7, P.y + 15, 10, ['#ffd36a', '#fff']);
   if (P.hp <= 0) gameOver();
 }
+/* ---------- 一時停止 ---------- */
+let pauseSel = 0, pauseMusic = false;
+const pauseBtn = document.getElementById('pause');
+function pauseGame(){ if (scene !== 'play') return; scene = 'pause'; pauseSel = 0; pauseMusic = Sound.hold(); Sound.item(); clearPressed(); }
+function resumeGame(){ scene = 'play'; if (pauseMusic) Sound.resume(); for (const k in key) key[k] = false; clearPressed(); }
+pauseBtn.addEventListener('click', e => { e.currentTarget.blur(); Sound.unlock(); if (scene === 'play') pauseGame(); else if (scene === 'pause') resumeGame(); });
 function gameOver(){ scene = 'over'; Sound.stop(); overT = 0; overSel = 0; }
 
 /* 福丸の今の絵の名前と、描く左上の座標 */
@@ -2276,7 +2292,15 @@ function update(){
     }
     updateParts();
   }
-  else if (scene === 'play') updatePlay();
+  else if (scene === 'play'){ if (pressed.pause){ pauseGame(); return; } updatePlay(); }
+  else if (scene === 'pause'){
+    if (pressed.left || pressed.right || pressed.down){ pauseSel = 1 - pauseSel; Sound.talk(); }
+    if (pressed.pause || pressed.b){ resumeGame(); }
+    else if (pressed.a){
+      if (pauseSel === 0) resumeGame();
+      else { Sound.stop(); scene = 'title'; titleT = 0; stageNo = 1; }
+    }
+  }
   else if (scene === 'over'){
     overT++;
     if (overT > 40){
@@ -2953,6 +2977,9 @@ function drawResult(){
 }
 function draw(){
   ctx.imageSmoothingEnabled = false;
+  const pb = !(scene === 'play' || scene === 'pause'), pt = scene === 'pause' ? '▶ つづける' : '⏸ 一時停止';
+  if (pauseBtn.hidden !== pb) pauseBtn.hidden = pb;
+  if (pauseBtn.textContent !== pt) pauseBtn.textContent = pt;
   if (scene === 'loading'){ ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); drawText('よみこみ中…', 192, 156, '#ece3cf', 16, 'center', false); return; }
   if (scene === 'title'){ drawTitle(); return; }
   if (scene === 'select'){ drawSelect(); return; }
@@ -2961,6 +2988,18 @@ function draw(){
   drawWorld(); drawHUD();
   if (scene === 'talk') drawTalk();
   if (scene === 'over') drawOver();
+  if (scene === 'pause') drawPause();
+}
+function drawPause(){
+  ctx.fillStyle = 'rgba(6,6,18,.62)'; ctx.fillRect(0, 0, W, H);
+  drawWindow(92, 96, 200, 132);
+  drawText('一時停止中', 192, 110, '#ffd36a', 22, 'center');
+  ['つづける', 'タイトルにもどる'].forEach((t, i) => {
+    const y = 156 + i * 30, sel = pauseSel === i;
+    drawText(t, 192, y, sel ? '#f4eee0' : '#8f8672', 18, 'center');
+    if (sel && (frame >> 4) % 2 === 0) drawText('▶', 110, y, '#ffd36a', 18);
+  });
+  drawText(isTouch ? 'タップで選んで決定' : 'P・Esc でもどる', 192, 244, '#ece3cf', 12, 'center');
 }
 
 /* ---------- ループ ---------- */
