@@ -2069,6 +2069,8 @@ function drawPortraits(){
   const speaker = talk.lines[talk.i][0];
   for (const who of PORTRAIT_ORDER){
     if (!cast.has(who)) continue;
+    // セリフの後で退場する人（exit：この行より後は出さない）
+    if (talk.lines.exit && talk.lines.exit[who] !== undefined && talk.i > talk.lines.exit[who]) continue;
     const key = who === '福丸' ? face : PORTRAIT_POS[who].key;
     const on = who === speaker;
     const img = on ? PIMG[key] : PDIM[key];
@@ -2104,6 +2106,7 @@ const TALK2 = {
 TALK.boss.cast = ['福丸'];
 TALK2.intro.cast = ['福丸', '灯真', '宝条吉利'];
 TALK2.intro.pos = {'灯真': 318};
+TALK2.intro.exit = {'宝条吉利': 0};
 TALK2.boss.cast = ['福丸'];
 TALK2.ending.cast = ['福丸'];
 const T = () => stageNo === 2 ? TALK2 : TALK;
