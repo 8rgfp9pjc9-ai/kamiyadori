@@ -168,6 +168,15 @@
   .pv-item span{display:block;padding:8px 10px;line-height:1.6}
   .pv-item:hover img,.pv-item.on img{opacity:1}
   .pv-item.on{border-color:var(--brass);color:var(--brass)}
+  /* 横向き全画面（iPhone向け：動画を90度回して画面いっぱいに映す） */
+  .pv-wide{display:none;margin:14px auto 0;font:inherit;font-size:13px;letter-spacing:.15em;color:var(--brass);background:none;border:1px solid var(--line);padding:8px 18px;cursor:pointer}
+  @media (pointer:coarse){.pv-wide{display:block}}
+  #wide{position:fixed;inset:0;z-index:999;background:#000;display:none;overflow:hidden;touch-action:none}
+  #wide.on{display:block}
+  #wide-box{position:absolute;left:50%;top:50%;transform-origin:center}
+  #wide-box video{width:100%;height:100%;display:block;background:#000}
+  #wide-x{position:absolute;top:8px;right:8px;z-index:2;width:40px;height:40px;border-radius:50%;border:1px solid #fff6;background:#0008;color:#fff;font-size:20px;line-height:38px;text-align:center;cursor:pointer}
+  html.wide-open,html.wide-open body{overflow:hidden}
   .pv-note{text-align:center;font-size:12px;color:var(--paper-dim);margin-top:16px;letter-spacing:.2em}
 
   /* ---------- あらすじ ---------- */
@@ -350,6 +359,7 @@
         <div class="placeholder"><div><b>PV 公開準備中</b>動画を読み込めませんでした</div></div>
       </div>
     </div>
+    <button class="pv-wide reveal" type="button" id="pv-wide">⤢ 横向き全画面で見る</button>
     <p class="pv-note reveal" id="pv-note">第一部 PV</p>
     <!-- PVの一覧：増やす時はボタンを1つ足す（data-src・data-poster・data-title） -->
     <div class="pv-list reveal" role="list">
@@ -502,6 +512,33 @@
     document.addEventListener('fullscreenchange',function(){ if(document.fullscreenElement===v) fsOn(); else if(!document.fullscreenElement) fsOff(); });
     document.addEventListener('webkitfullscreenchange',function(){ if(document.webkitFullscreenElement===v) fsOn(); else if(!document.webkitFullscreenElement) fsOff(); });
     v.addEventListener('webkitbeginfullscreen',fsOn); v.addEventListener('webkitendfullscreen',fsOff);
+    // 横向き全画面：縦持ちなら動画を90度回す。端末の向きを変えても合わせ直す
+    var wide=document.createElement('div'); wide.id='wide';
+    wide.innerHTML='<div id="wide-box"></div><button id="wide-x" type="button" aria-label="閉じる">×</button>';
+    document.body.appendChild(wide);
+    var box=wide.querySelector('#wide-box'), xb=wide.querySelector('#wide-x'), home=v.parentNode, next=v.nextSibling;
+    function layout(){
+      var W=innerWidth,H=innerHeight,port=H>W;
+      var bw=port?H:W, bh=port?W:H;
+      // 16:9 に収める
+      var vw=Math.min(bw,bh*16/9), vh=vw*9/16;
+      box.style.width=vw+'px'; box.style.height=vh+'px';
+      box.style.transform='translate(-50%,-50%)'+(port?' rotate(90deg)':'');
+      xb.style.transform=port?'rotate(90deg)':'';
+      xb.style.top=port?'auto':'8px'; xb.style.bottom=port?'8px':'auto';
+    }
+    function openWide(){
+      box.appendChild(v); wide.classList.add('on'); document.documentElement.classList.add('wide-open');
+      layout(); var p=v.play(); if(p&&p.catch) p.catch(function(){});
+    }
+    function closeWide(){
+      var t=v.currentTime, playing=!v.paused;
+      home.insertBefore(v,next); wide.classList.remove('on'); document.documentElement.classList.remove('wide-open');
+      v.currentTime=t; if(playing){var p=v.play(); if(p&&p.catch) p.catch(function(){});}
+    }
+    document.getElementById('pv-wide').addEventListener('click',openWide);
+    xb.addEventListener('click',closeWide);
+    addEventListener('resize',function(){ if(wide.classList.contains('on')) layout(); });
     document.querySelectorAll('.pv-item').forEach(function(b){
       b.addEventListener('click',function(){
         if(b.classList.contains('on')) return;
