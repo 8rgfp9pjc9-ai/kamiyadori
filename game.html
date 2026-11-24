@@ -48,6 +48,24 @@
   #grid1 div.j{background:#3a1c1a;border-color:#e0705f99}
   #grid1 div.s{background:#18284a;border-color:#7fa8e899}
   #grid1 div.on{background:#c9a35a;color:#14121c}
+  /* スライド操作：指を置いた所が中心。すべらせた向きに動く／上でジャンプ／下でしゃがむ／トンと叩くと湯鉄砲 */
+  #pad2{display:none;width:100%;padding:4px 10px 18px;gap:10px;align-items:flex-end;justify-content:flex-end}
+  .touch.slide #pad, .touch.slide #pad1{display:none}
+  .touch.slide #pad2{display:flex}
+  #zone2{position:relative;width:min(70vw,300px);height:210px;border-radius:22px;border:2px dashed #c9a35a55;background:rgba(26,26,40,.6);touch-action:none;overflow:hidden}
+  #zone2 .hint{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#8f8672;font-size:13px;line-height:1.7;pointer-events:none}
+  #zone2.act .hint{display:none}
+  #ring2,#knob2{position:absolute;border-radius:50%;pointer-events:none;display:none;transform:translate(-50%,-50%)}
+  #ring2{width:110px;height:110px;border:2px solid #c9a35a88}
+  #knob2{width:46px;height:46px;background:#c9a35a;opacity:.85}
+  #zone2.act #ring2,#zone2.act #knob2{display:block}
+  #shot2{width:74px;height:74px;border-radius:50%;border:2px solid #7fa8e8;background:#203a6b;color:#ece3cf;display:grid;place-items:center;font-size:18px;touch-action:none;margin-bottom:68px}
+  #shot2.on{background:#7fa8e8;color:#14121c}
+  @media (orientation:landscape) and (max-height:520px){
+    .touch.slide #pad2{position:fixed;left:0;right:0;bottom:0;padding:0 14px 8px;pointer-events:none}
+    .touch.slide #zone2,.touch.slide #shot2{pointer-events:auto}
+    #zone2{height:170px;width:230px}
+  }
   #hand{display:none}
   .touch #bar{font-size:12px;gap:4px}
   .touch #bar a,.touch #bar button{padding:4px 7px}
@@ -86,6 +104,7 @@
     <div data-k="left">◀</div><div class="s" data-k="b">湯</div><div data-k="right">▶</div>
     <div class="s" data-k="b,left">◀<br>湯</div><div data-k="down">▼</div><div class="s" data-k="b,right">湯<br>▶</div>
   </div></div>
+  <div id="pad2"><div id="shot2">湯</div><div id="zone2"><div class="hint">ここに指を置いてすべらせる<br>←→ 移動　↑ ジャンプ　↓ しゃがむ<br>トンと叩く 湯鉄砲</div><div id="ring2"></div><div id="knob2"></div></div></div>
   <p id="help">←→ 移動　↓ しゃがむ　Z/スペース ジャンプ・会話送り　X 湯鉄砲・会話スキップ　P/Esc 一時停止</p>
 </div>
 
@@ -1956,13 +1975,13 @@ try { handMode = localStorage.getItem('fukumaru_hand') || 'two'; } catch(e){}
 const handBtn = document.getElementById('hand');
 function applyHand(){
   const r = document.documentElement.classList;
-  r.toggle('one', handMode !== 'two'); r.toggle('lefty', handMode === 'left');
-  handBtn.textContent = {two: '両手', right: '片手・右', left: '片手・左'}[handMode];
+  r.toggle('one', handMode === 'right' || handMode === 'left'); r.toggle('lefty', handMode === 'left'); r.toggle('slide', handMode === 'slide');
+  handBtn.textContent = {two: '両手', right: '片手・右', left: '片手・左', slide: 'スライド'}[handMode] || '両手';
   fit();
 }
 handBtn.addEventListener('click', e => {
   e.currentTarget.blur();
-  handMode = {two: 'right', right: 'left', left: 'two'}[handMode];
+  handMode = {two: 'right', right: 'left', left: 'slide', slide: 'two'}[handMode] || 'two';
   try { localStorage.setItem('fukumaru_hand', handMode); } catch(e){}
   for (const k in key) key[k] = false; applyHand();
 });
@@ -1985,7 +2004,7 @@ handBtn.addEventListener('click', e => {
 // iPhoneのSafariは「拡大しない」指定を無視するため、ダブルタップ・ピンチでの拡大を直接止める
 (function(){
   const stop = e => e.preventDefault();
-  for (const el of [document.getElementById('pad'), document.getElementById('pad1'), cv]){
+  for (const el of [document.getElementById('pad'), document.getElementById('pad1'), document.getElementById('pad2'), cv]){
     el.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, {passive: false});
     el.addEventListener('touchend', stop, {passive: false});
     el.addEventListener('dblclick', stop);
@@ -1993,6 +2012,47 @@ handBtn.addEventListener('click', e => {
   let lastEnd = 0;
   document.addEventListener('touchend', e => { const t = Date.now(); if (t - lastEnd < 350) e.preventDefault(); lastEnd = t; }, {passive: false});
   for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(ev, stop, {passive: false});
+})();
+// スライド操作
+(function(){
+  const zone = document.getElementById('zone2'), ring = document.getElementById('ring2'), knob = document.getElementById('knob2'), shot = document.getElementById('shot2');
+  let id = null, ox = 0, oy = 0, t0 = 0, moved = false;
+  const DEAD = 14, UP = 26, DOWN = 30;
+  function apply(dx, dy){
+    const horiz = Math.abs(dx) > DEAD;
+    setKey('left', horiz && dx < 0); setKey('right', horiz && dx > 0);
+    setKey('a', dy < -UP);
+    setKey('down', dy > DOWN && Math.abs(dx) < dy);
+  }
+  zone.addEventListener('pointerdown', e => {
+    e.preventDefault(); Sound.unlock(); if (id !== null) return;
+    id = e.pointerId; zone.setPointerCapture(e.pointerId);
+    const r = zone.getBoundingClientRect(); ox = e.clientX; oy = e.clientY; t0 = performance.now(); moved = false;
+    ring.style.left = knob.style.left = (ox - r.left) + 'px'; ring.style.top = knob.style.top = (oy - r.top) + 'px';
+    zone.classList.add('act');
+  });
+  zone.addEventListener('pointermove', e => {
+    if (e.pointerId !== id) return;
+    let dx = e.clientX - ox, dy = e.clientY - oy;
+    if (Math.hypot(dx, dy) > 10) moved = true;
+    const d = Math.hypot(dx, dy), m = 50;
+    const kx = d > m ? dx / d * m : dx, ky = d > m ? dy / d * m : dy;
+    const r = zone.getBoundingClientRect();
+    knob.style.left = (ox - r.left + kx) + 'px'; knob.style.top = (oy - r.top + ky) + 'px';
+    apply(dx, dy);
+  });
+  const end = e => {
+    if (e.pointerId !== id) return;
+    id = null; zone.classList.remove('act'); apply(0, 0);
+    // 動かさずにトンと叩いたら湯鉄砲
+    if (!moved && performance.now() - t0 < 250){ setKey('b', true); setTimeout(() => setKey('b', false), 60); }
+  };
+  zone.addEventListener('pointerup', end); zone.addEventListener('pointercancel', end); zone.addEventListener('lostpointercapture', end);
+  // 湯ボタン（押しっぱなしで連射）
+  shot.addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlock(); shot.setPointerCapture(e.pointerId); shot.classList.add('on'); setKey('b', true); });
+  const sOff = () => { shot.classList.remove('on'); setKey('b', false); };
+  shot.addEventListener('pointerup', sOff); shot.addEventListener('pointercancel', sOff); shot.addEventListener('lostpointercapture', sOff);
+  for (const el of [zone, shot]) el.addEventListener('contextmenu', e => e.preventDefault());
 })();
 let skipTap = false;
 cv.addEventListener('pointerdown', e => {
