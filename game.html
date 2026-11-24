@@ -32,9 +32,31 @@
   @media (orientation:landscape) and (max-height:520px){
     .touch #pad{position:fixed;left:0;right:0;bottom:0;max-width:none;padding:0 16px 14px;pointer-events:none}
     .touch #pad .btn{pointer-events:auto;opacity:.75}
-    #bar{position:fixed;top:0;z-index:2}
+    #bar{position:fixed;top:0;z-index:2;align-items:flex-start;pointer-events:none}
+    #bar a,#bar button{pointer-events:auto}
+    #bar span{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+    #bar span button{margin:0}
   }
   #pause{margin-right:6px}
+  /* 片手モード：親指1本で届く3×3のボタン。指をすべらせて押し替えられる */
+  #pad1{display:none;width:100%;padding:4px 10px 18px;justify-content:flex-end}
+  .touch.one #pad{display:none}
+  .touch.one #pad1{display:flex}
+  .touch.one.lefty #pad1{justify-content:flex-start}
+  #grid1{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,58px);gap:6px;touch-action:none;user-select:none;-webkit-user-select:none}
+  #grid1 div{border-radius:14px;border:2px solid #c9a35a66;background:#1a1a28;color:#ece3cf;display:grid;place-items:center;font-size:15px;line-height:1.1;text-align:center}
+  #grid1 div.j{background:#3a1c1a;border-color:#e0705f99}
+  #grid1 div.s{background:#18284a;border-color:#7fa8e899}
+  #grid1 div.on{background:#c9a35a;color:#14121c}
+  #hand{display:none}
+  .touch #bar{font-size:12px;gap:4px}
+  .touch #bar a,.touch #bar button{padding:4px 7px}
+  .touch #bar span{white-space:nowrap}
+  .touch #hand{display:inline-block}
+  @media (orientation:landscape) and (max-height:520px){
+    .touch.one #pad1{position:fixed;left:0;right:0;bottom:0;padding:0 14px 10px;pointer-events:none}
+    .touch.one #grid1{pointer-events:auto;opacity:.8}
+  }
   #help{font-size:12px;color:#8f8672;text-align:center;padding-bottom:10px}
   .touch #help{display:none}
 </style>
@@ -43,7 +65,8 @@
 <div id="wrap">
   <div id="bar">
     <a href="index.html">← 公式サイトへ</a>
-    <span><button id="pause" type="button" hidden>⏸ 一時停止</button>
+    <span><button id="hand" type="button">両手</button>
+    <button id="pause" type="button" hidden>⏸ 一時停止</button>
     <button id="mute" type="button">♪ 音：オン</button></span>
   </div>
   <div id="stage"><canvas id="cv" width="384" height="336"></canvas></div>
@@ -58,6 +81,11 @@
       <button class="btn a" data-k="a" type="button">跳</button>
     </div>
   </div>
+  <div id="pad1"><div id="grid1">
+    <div class="j" data-k="a,left">↖<br>跳</div><div class="j" data-k="a">跳</div><div class="j" data-k="a,right">↗<br>跳</div>
+    <div data-k="left">◀</div><div class="s" data-k="b">湯</div><div data-k="right">▶</div>
+    <div class="s" data-k="b,left">◀<br>湯</div><div data-k="down">▼</div><div class="s" data-k="b,right">湯<br>▶</div>
+  </div></div>
   <p id="help">←→ 移動　↓ しゃがむ　Z/スペース ジャンプ・会話送り　X 湯鉄砲・会話スキップ　P/Esc 一時停止</p>
 </div>
 
@@ -1922,6 +1950,38 @@ document.querySelectorAll('#pad .btn').forEach(btn => {
   btn.addEventListener('pointerup', off); btn.addEventListener('pointercancel', off); btn.addEventListener('lostpointercapture', off);
   btn.addEventListener('contextmenu', e => e.preventDefault());
 });
+// 片手モード（両手 → 片手・右 → 片手・左 の順に切り替え）
+let handMode = 'two';
+try { handMode = localStorage.getItem('fukumaru_hand') || 'two'; } catch(e){}
+const handBtn = document.getElementById('hand');
+function applyHand(){
+  const r = document.documentElement.classList;
+  r.toggle('one', handMode !== 'two'); r.toggle('lefty', handMode === 'left');
+  handBtn.textContent = {two: '両手', right: '片手・右', left: '片手・左'}[handMode];
+  fit();
+}
+handBtn.addEventListener('click', e => {
+  e.currentTarget.blur();
+  handMode = {two: 'right', right: 'left', left: 'two'}[handMode];
+  try { localStorage.setItem('fukumaru_hand', handMode); } catch(e){}
+  for (const k in key) key[k] = false; applyHand();
+});
+(function(){
+  const grid = document.getElementById('grid1'), cells = [...grid.children];
+  const ptr = new Map();   // 指ごとに、いま触れているマス
+  const cellAt = (x, y) => { const el = document.elementFromPoint(x, y); return el && el.parentNode === grid ? el : null; };
+  function sync(){
+    const want = new Set();
+    for (const c of ptr.values()) if (c) c.dataset.k.split(',').forEach(k => want.add(k));
+    for (const k of ['left', 'right', 'down', 'a', 'b']) setKey(k, want.has(k));
+    cells.forEach(c => c.classList.toggle('on', [...ptr.values()].includes(c)));
+  }
+  grid.addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlock(); ptr.set(e.pointerId, cellAt(e.clientX, e.clientY)); sync(); });
+  grid.addEventListener('pointermove', e => { if (!ptr.has(e.pointerId)) return; const c = cellAt(e.clientX, e.clientY); if (c !== ptr.get(e.pointerId)){ ptr.set(e.pointerId, c); sync(); } });
+  const up = e => { if (ptr.delete(e.pointerId)) sync(); };
+  addEventListener('pointerup', up); addEventListener('pointercancel', up);
+  grid.addEventListener('contextmenu', e => e.preventDefault());
+})();
 let skipTap = false;
 cv.addEventListener('pointerdown', e => {
   if (scene === 'play') return;
@@ -2356,7 +2416,7 @@ function updatePlay(){
   // 湯鉄砲（しゃがみ中は撃てない）
   if (P.cool > 0) P.cool--;
   if (P.shootT > 0) P.shootT--;
-  if (pressed.b && P.cool === 0 && shots.length < 3 && !P.crouch && P.inv <= 60){
+  if ((pressed.b || (handMode !== 'two' && isTouch && key.b)) && P.cool === 0 && shots.length < 3 && !P.crouch && P.inv <= 60){
     P.shootT = 14;
     const d = playerDrawPos('attack');
     const sx = P.face > 0 ? d.x + 23 : d.x + 26 - 23 - 9;
@@ -3021,7 +3081,7 @@ window.__game = {get scene(){ return scene; }, get P(){ return P; }, get boss(){
   get stage(){ return stageNo; }, setStage(n){ stageNo = n; }, unlockAll(){ SAVE.cleared = [1, 2]; saveNow(); }, get vents(){ return vents; }, get logs(){ return logs; },
   warp(x, y = 9){ P.x = x * TS; P.y = y * TS; P.vy = 0; camX = Math.max(0, P.x - 150); }};
 
-fit();
+applyHand();
 Promise.race([document.fonts.load('16px "DotGothic16"'), new Promise(r => setTimeout(r, 2500))]).finally(() => {
   scene = 'title'; fit(); requestAnimationFrame(loop);
 });
