@@ -496,6 +496,12 @@
     var v=document.getElementById('pv-video'),w=document.getElementById('vw'),note=document.getElementById('pv-note');
     function miss(){w.classList.add('missing')}
     v.addEventListener('error',miss,true);
+    // 全画面にしたら横向きに固定（対応する端末のみ。Androidなど）。全画面を出たら元に戻す
+    function fsOn(){ var o=screen.orientation; if(o&&o.lock){ o.lock('landscape').catch(function(){}); } }
+    function fsOff(){ var o=screen.orientation; if(o&&o.unlock){ try{o.unlock()}catch(e){} } }
+    document.addEventListener('fullscreenchange',function(){ if(document.fullscreenElement===v) fsOn(); else if(!document.fullscreenElement) fsOff(); });
+    document.addEventListener('webkitfullscreenchange',function(){ if(document.webkitFullscreenElement===v) fsOn(); else if(!document.webkitFullscreenElement) fsOff(); });
+    v.addEventListener('webkitbeginfullscreen',fsOn); v.addEventListener('webkitendfullscreen',fsOff);
     document.querySelectorAll('.pv-item').forEach(function(b){
       b.addEventListener('click',function(){
         if(b.classList.contains('on')) return;
