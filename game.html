@@ -86,8 +86,8 @@
       <button class="btn a" data-k="a" type="button">跳</button>
     </div>
   </div>
-  <div id="pad2"><div id="zone2"><div class="hint">ここに指を置いてすべらせる<br>←→ 移動　↑ ジャンプ　↓ しゃがむ<br>トンと叩く 湯鉄砲</div><div id="ring2"></div><div id="knob2"></div></div></div>
-  <p id="help">←→ 移動　↓ しゃがむ　Z/スペース ジャンプ・会話送り　X 湯鉄砲・会話スキップ　P/Esc 一時停止</p>
+  <div id="pad2"><div id="zone2"><div class="hint">ここに指を置いてすべらせる<br>←→ 移動　↑ ジャンプ　↓ しゃがむ<br>トンと叩く 湯鉄砲／止めて長押し 大技</div><div id="ring2"></div><div id="knob2"></div></div></div>
+  <p id="help">←→ 移動　↓ しゃがむ　Z/スペース ジャンプ・会話送り　X 湯鉄砲・会話スキップ（札5枚でX長押し→離すと大技）　P/Esc 一時停止</p>
 </div>
 
 <!-- 福丸（26×40）・泥田坊（96×72）・棟梁 源八（112×128）のドット絵：竜田揚げ 提供 -->
@@ -1300,6 +1300,27 @@ IMG.onibi1_W = whiteOf(IMG.onibi1);
 // 湯鉄砲の弾（9×4）
 const WATER = ["......UU.", ".V.UUVVVU", "UUUUUUVVQ", "..QQQQQQ."];
 IMG.water = makeSprite(WATER, {Q: '#227aaa', U: '#4bc6eb', V: '#c1faff'}, false);
+// 大技「破魔の大湯玉」（28×18）
+const BIGW = (() => {
+  const W = 28, H = 18, out = [];
+  for (let y = 0; y < H; y++){
+    let r = '';
+    for (let x = 0; x < W; x++){
+      const nx = (x - 17) / 11, ny = (y - 8.5) / 8.5, d = nx * nx + ny * ny;
+      const tail = x < 12 && Math.abs(y - 8.5) < (x + 2) * .45 && ((x + y * 3) % 5 !== 0);
+      if (d < .35) r += (nx > .1 && ny < -.1) ? 'F' : 'V';
+      else if (d < .75) r += 'U';
+      else if (d < 1) r += 'Q';
+      else if (tail) r += x < 5 ? 'Q' : 'U';
+      else r += '.';
+    }
+    out.push(r);
+  }
+  return out;
+})();
+const BIGW_PAL = {Q: '#227aaa', U: '#4bc6eb', V: '#c1faff', F: '#ffffff'};
+IMG.bigw = makeSprite(BIGW, BIGW_PAL, false); IMG.bigw_L = makeSprite(BIGW, BIGW_PAL, true);
+const BIGW_L = BIGW.map(r => [...r].reverse().join(''));
 IMG.water_L = makeSprite(WATER, {Q: '#227aaa', U: '#4bc6eb', V: '#c1faff'}, true);
 
 // 2面のザコ：黒蛇に憑かれた茶運びからくり人形（左向き 20×26）
@@ -1715,7 +1736,7 @@ handBtn.addEventListener('click', e => {
 // スライド操作
 (function(){
   const zone = document.getElementById('zone2'), ring = document.getElementById('ring2'), knob = document.getElementById('knob2');
-  let id = null, ox = 0, oy = 0, t0 = 0, moved = false;
+  let id = null, ox = 0, oy = 0, t0 = 0, moved = false, holdTimer = 0, holding = false;
   const DEAD = 14, UP = 26, DOWN = 30;
   function apply(dx, dy){
     const horiz = Math.abs(dx) > DEAD;
@@ -1729,6 +1750,9 @@ handBtn.addEventListener('click', e => {
     const r = zone.getBoundingClientRect(); ox = e.clientX; oy = e.clientY; t0 = performance.now(); moved = false;
     ring.style.left = knob.style.left = (ox - r.left) + 'px'; ring.style.top = knob.style.top = (oy - r.top) + 'px';
     zone.classList.add('act');
+    // 指を止めたまま押し続けたら溜め（そのあと指をすべらせて動いてもよい。離すと大技）
+    clearTimeout(holdTimer); holding = false;
+    holdTimer = setTimeout(() => { if (id !== null && !moved){ holding = true; setKey('b', true); } }, 250);
   });
   zone.addEventListener('pointermove', e => {
     if (e.pointerId !== id) return;
@@ -1742,7 +1766,8 @@ handBtn.addEventListener('click', e => {
   });
   const end = e => {
     if (e.pointerId !== id) return;
-    id = null; zone.classList.remove('act'); apply(0, 0);
+    id = null; zone.classList.remove('act'); apply(0, 0); clearTimeout(holdTimer);
+    if (holding){ holding = false; setKey('b', false); return; }
     // 動かさずにトンと叩いたら湯鉄砲
     if (!moved && performance.now() - t0 < 250){ setKey('b', true); setTimeout(() => setKey('b', false), 60); }
   };
@@ -1964,6 +1989,8 @@ const NAMECOL = {'椿': '#f08c8c', '灯真': '#8fb4ff', '福丸': '#ffd36a', '�
 const FRAME_MS = 1000 / 60;
 let scene = 'loading';
 let talk = null, talkNext = null;
+let fudaStock = 0, toldBig = false;   // 大技に使える札（5枚で1回）
+const BIG_COST = 5, CHARGE_FULL = 120, CHARGE_SHOW = 15;
 let P, shots, enemies, parts, boss, mud, camX, shake, timer, score, fudaGot, fudaTotal, bossReached, frame = 0, lockCam = false, lookX = 24;
 let overT = 0, resultT = 0, titleT = 0, thanksT = 0, overSel = 0, thanksKind = 'quit';
 let selT = 0, selIdx = 0, lockMsgT = 0, newlyOpened = false;
@@ -1995,7 +2022,7 @@ function startGame(fromBoss){
   buildLevel();
   shots = []; enemies = []; parts = []; mud = []; boss = null; shake = 0; lockCam = false; lookX = 24;
   fudaTotal = items.filter(i => i.type === 'fuda').length;
-  if (!fromBoss){ timer = 0; score = 0; fudaGot = 0; bossReached = false; }
+  if (!fromBoss){ timer = 0; score = 0; fudaGot = 0; fudaStock = 0; bossReached = false; }
   firstPorterDone = false; logs = [];
   for (const s of spawns) spawnEnemy(s);
   if (fromBoss){
@@ -2200,6 +2227,24 @@ function updatePlay(){
     shots.push({x: sx, y: d.y + 20, w: 9, h: 4, vx: 4.6 * P.face, vy: 0, life: 70});
     P.cool = 14; Sound.shot();
   }
+  // --- 溜め：湯を押し続けると溜まり、離すと大技（札5枚） ---
+  if (key.b && !P.crouch && P.inv <= 60){
+    P.chargeT = (P.chargeT || 0) + 1;
+    if (fudaStock < BIG_COST && P.chargeT === CHARGE_FULL){ popText(P.x - 30, P.y - 22, '札が5枚いるよ'); }
+    if (fudaStock >= BIG_COST && P.chargeT === CHARGE_FULL){ Sound.item(); burst(P.x + 7, P.y + 18, 10, ['#fff6c0', '#ffd36a']); }
+  } else {
+    if (P.chargeT >= CHARGE_FULL && fudaStock >= BIG_COST && !P.crouch && P.inv <= 60){
+      fudaStock -= BIG_COST;
+      const d = playerDrawPos('attack');
+      const sx = P.face > 0 ? d.x + 20 : d.x + 6 - 28;
+      shots.push({x: sx, y: d.y + 12, w: 28, h: 18, vx: 4.2 * P.face, vy: 0, life: 140, big: true, rows: P.face > 0 ? BIGW : BIGW_L});
+      P.shootT = 22; P.poseName = 'attack'; P.poseT = 110; P.cool = 20;
+      shake = 8; Sound.roar(); Sound.shot();
+      burst(P.x + 7 + P.face * 16, P.y + 16, 16, ['#ffffff', '#c1faff', '#4bc6eb', '#ffd36a']);
+      popText(P.x - 22, P.y - 24, '破魔の大湯玉！');
+    }
+    P.chargeT = 0;
+  }
   tickPose();
   // --- 弾 ---
   for (const s of shots){
@@ -2236,7 +2281,7 @@ function updatePlay(){
     // 敵の当たり判定は絵の頭の先まで広げる
     const hb = {x: e.x - 1, y: e.y - 5, w: e.w + 2, h: e.h + 5};
     for (const s of shots) if (!s.dead && overlap(s, hb)){
-      s.dead = true; e.hp--; e.flash = 8; Sound.hit(); burst(s.x, s.y, 5, ['#9fd8ff', '#fff']);
+      if (s.big) e.hp = 0; else { s.dead = true; e.hp--; } e.flash = 8; Sound.hit(); burst(s.x, s.y, 5, ['#9fd8ff', '#fff']);
       if (e.hp <= 0){
         e.dead = 1; score += e.type === 'porter' ? 400 : (e.type === 'doro' || e.type === 'server') ? 200 : 300; Sound.kill(); steam(e.x + e.w / 2, e.y + e.h, 12);
         const cols = {doro: ['#84513c', '#bd8040', '#341717'], server: ['#2a1840', '#5a3c82', '#d89549', '#fff4df'], porter: ['#2a1840', '#5a3c82', '#d89549', '#915438'], hebi: ['#2a1840', '#5a3c82', '#0e0818']}[e.type] || ['#7fd8ff', '#e8fbff'];
@@ -2264,7 +2309,7 @@ function updatePlay(){
     if (L.ground) L.vx = L.vx > 0 ? 1.2 : -1.2;
     if (L.y > H + 30) L.dead = true;
     if (P.inv <= 0 && overlap(P, {x: L.x + 1, y: L.y + 1, w: 11, h: 11})){ hurtPlayer(L.x + 6); L.dead = true; burst(L.x + 6, L.y + 6, 8, ['#d89549', '#915438']); }
-    for (const s of shots) if (!s.dead && overlap(s, L)){ s.dead = true; L.dead = true; splash(s); burst(L.x + 6, L.y + 6, 8, ['#d89549', '#915438', '#412526']); score += 50; }
+    for (const s of shots) if (!s.dead && overlap(s, L)){ if (!s.big) s.dead = true; L.dead = true; splash(s); burst(L.x + 6, L.y + 6, 8, ['#d89549', '#915438', '#412526']); score += 50; }
   }
   logs = logs.filter(L => !L.dead);
   // --- 蒸気パイプ ---
@@ -2283,7 +2328,8 @@ function updatePlay(){
   for (const it of items){
     if (!it.got && overlap(P, it)){
       it.got = true;
-      if (it.type === 'fuda'){ fudaGot++; score += 100; Sound.item(); burst(it.x + 6, it.y + 9, 8, ['#f2e6c4', '#c8342a']); }
+      if (it.type === 'fuda'){ fudaGot++; fudaStock++; score += 100;
+        if (fudaStock >= BIG_COST && !toldBig){ toldBig = true; popText(P.x - 50, P.y - 26, isTouch ? '札5枚！指を止めて長押しで大技' : '札5枚！X長押しで大技'); } Sound.item(); burst(it.x + 6, it.y + 9, 8, ['#f2e6c4', '#c8342a']); }
       if (it.type === 'chawan'){ if (P.hp < 3) P.hp++; score += 50; Sound.heal(); steam(it.x + 9, it.y, 10); }
     }
   }
@@ -2432,17 +2478,20 @@ function updateBoss(){
   for (const m of mud){
     m.x += m.vx;
     if (P.inv <= 0 && pixelHit(Dorotabo.mudShot.rows, m.x, m.y, prow, d.x, d.y, 'QUVF')){ m.dead = true; hurtPlayer(m.x); burst(m.x + 4, m.y + 3, 10, ['#84513c', '#bd8040', '#542d38']); }
-    for (const s of shots) if (!s.dead && overlap(s, {x: m.x, y: m.y, w: 9, h: 7})){ s.dead = true; m.dead = true; splash(s); burst(m.x + 4, m.y + 3, 8, ['#84513c', '#bd8040']); score += 50; }
+    for (const s of shots) if (!s.dead && overlap(s, {x: m.x, y: m.y, w: 9, h: 7})){ if (!s.big) s.dead = true; m.dead = true; splash(s); burst(m.x + 4, m.y + 3, 8, ['#84513c', '#bd8040']); score += 50; }
     if (m.x < ARENA_L() - 20 || m.x > ARENA_R() + 10) m.dead = true;
   }
   mud = mud.filter(m => !m.dead);
   // 湯鉄砲が当たった（舌が垂れている間だけ効く）
   for (const s of shots){
     if (s.dead) continue;
-    const wr = s.vx > 0 ? WATER : WATER.map(r => [...r].reverse().join(''));
+    const wr = s.rows || (s.vx > 0 ? WATER : WATER.map(r => [...r].reverse().join('')));
     if (pixelHit(wr, s.x, s.y, rows, b.x, b.y)){
       s.dead = true;
-      if (pose === 'spitRest'){
+      if (s.big){
+        b.hp = Math.max(0, b.hp - 3); b.flash = 16; Sound.hit(); shake = 10; score += 1000;
+        burst(s.x + 14, s.y + 9, 24, ['#ffffff', '#c1faff', '#4bc6eb', '#ffd36a']); steam(bcx, b.y + 30, 10); popText(s.x - 10, s.y - 18, '大技が効いた！');
+      } else if (pose === 'spitRest'){
         // 隙を突いた：大きく効く
         b.hp = Math.max(0, b.hp - 2); b.flash = 12; Sound.hit(); shake = 6; score += 500;
         burst(s.x + 4, s.y, 14, ['#9fd8ff', '#fff', '#ee8544']); steam(bcx, b.y + 30, 6); popText(s.x - 6, s.y - 16, '効いた！');
@@ -2531,10 +2580,13 @@ function updateGenpachi(){
   // 湯鉄砲
   for (const s of shots){
     if (s.dead) continue;
-    const wr = s.vx > 0 ? WATER : WATER.map(r => [...r].reverse().join(''));
+    const wr = s.rows || (s.vx > 0 ? WATER : WATER.map(r => [...r].reverse().join('')));
     if (!pixelHit(wr, s.x, s.y, rows, st.x, st.y)) continue;
     s.dead = true;
-    if (st.vulnerable){
+    if (s.big){
+      b.hp -= 3; b.flash = 16; shake = 10; score += 1000; Sound.hit();
+      burst(s.x + 14, s.y + 9, 24, ['#ffffff', '#c1faff', '#4bc6eb', '#5a3c82']); snakeOut(s.x + 14, s.y, 10); popText(s.x - 10, s.y - 18, '大技が効いた！');
+    } else if (st.vulnerable){
       if (b.bigHit !== st.attackId){
         // 鉋がけの隙を突いた：一撃目が大きく効く
         b.bigHit = st.attackId; b.hp -= 2; b.flash = 12; shake = 6; score += 500; Sound.hit();
@@ -2629,7 +2681,10 @@ function wrapJa(text, maxChars){
 function drawHUD(){
   for (let i = 0; i < 3; i++) drawSprite(IMG[i < P.hp ? 'tama' : 'tama_empty'], 10 + i * 16, 10);
   drawSprite(IMG.fuda, 70, 7);
-  drawText('×' + fudaGot, 85, 8, '#f2e6c4');
+  const canBig = fudaStock >= BIG_COST;
+  if (canBig && (frame >> 4) % 2){ ctx.fillStyle = 'rgba(255,214,106,.35)'; ctx.fillRect(67, 5, 16, 24); }
+  drawText('×' + fudaStock, 85, 8, canBig ? '#ffd36a' : '#f2e6c4');
+  if (canBig) drawText('大技OK', 112, 11, '#ffd36a', 11);
   drawText(String(score).padStart(6, '0'), 372, 8, '#ffd36a', 16, 'right');
   if (boss && !boss.dead){
     drawText(boss.kind === 'gen' ? '源八' : '大泥田坊', 10, 32, boss.kind === 'gen' ? '#e0a060' : '#d8a868', 14);
@@ -2711,12 +2766,28 @@ function drawWorld(){
   }
   for (const m of mud) drawSprite(IMG.mud, m.x - cx, m.y);
   for (const L of logs) drawSprite(IMG['dl_log' + (Math.floor(L.t / 5) % 4) + (L.vx > 0 ? '_R' : '')], L.x - cx, L.y);
+  // 溜めのオーラ（札が5枚あるときは金、足りないときは淡い青）
+  if (P.chargeT > CHARGE_SHOW){
+    const k = Math.min(1, (P.chargeT - CHARGE_SHOW) / (CHARGE_FULL - CHARGE_SHOW)), full = P.chargeT >= CHARGE_FULL, ok = fudaStock >= BIG_COST;
+    const ax = Math.round(P.x + P.w / 2 - cx), ay = Math.round(P.y + P.h / 2);
+    const rx = 12 + k * 8 + (full ? Math.sin(frame / 3) * 2 : 0), ry = 22 + k * 6;
+    const col = !ok ? 'rgba(160,200,255,' : full ? ((frame >> 2) % 2 ? 'rgba(255,255,255,' : 'rgba(255,214,106,') : 'rgba(255,214,106,';
+    ctx.fillStyle = col + (ok ? .18 + k * .22 : .12) + ')';
+    for (let y = -ry; y <= ry; y++){ const w = Math.round(rx * Math.sqrt(1 - (y / ry) ** 2)); ctx.fillRect(ax - w, ay + y, w * 2, 1); }
+    if (ok && frame % (full ? 2 : 5) === 0){
+      const a = Math.random() * Math.PI * 2;
+      parts.push({x: P.x + P.w / 2 + Math.cos(a) * rx, y: P.y + P.h / 2 + Math.sin(a) * ry, vx: 0, vy: -.8 - k, life: 18, col: full ? '#ffffff' : '#ffd36a', g: 0, size: full ? 2 : 1});
+    }
+  }
   // 福丸
   if (!(P.inv > 0 && P.inv <= 60 && (P.inv & 4))){
     const pose = playerPose(), d = playerDrawPos(pose);
     drawSprite(IMG['fk_' + pose + playerFrame(pose) + (P.face > 0 ? '' : '_L')], d.x - cx, d.y);
   }
-  for (const s of shots) drawSprite(s.vx > 0 ? IMG.water : IMG.water_L, s.x - cx, s.y);
+  for (const s of shots){
+    if (s.big){ drawSprite(s.vx > 0 ? IMG.bigw : IMG.bigw_L, s.x - cx, s.y); if (frame % 2 === 0) parts.push({x: s.x + (s.vx > 0 ? 2 : 26), y: s.y + 4 + Math.random() * 10, vx: -s.vx * .2, vy: -.3, life: 16, col: Math.random() < .5 ? '#c1faff' : '#ffffff', g: 0, size: 2}); }
+    else drawSprite(s.vx > 0 ? IMG.water : IMG.water_L, s.x - cx, s.y);
+  }
   for (const p of parts){ ctx.fillStyle = p.col; const s = p.size || 1; ctx.fillRect(Math.round(p.x - cx), Math.round(p.y), s, s); }
   for (const p of popups){ drawText(p.t, Math.round(p.x - cx), Math.round(p.y - (40 - p.life) * .4), '#ffe0a0', 12); p.life--; }
   for (let i = popups.length - 1; i >= 0; i--) if (popups[i].life <= 0) popups.splice(i, 1);
@@ -2853,7 +2924,7 @@ function loop(t){
 }
 // 自動テスト用
 window.__game = {get scene(){ return scene; }, get P(){ return P; }, get boss(){ return boss; }, key, pressed, setKey,
-  get score(){ return score; }, get fuda(){ return fudaGot; }, get camX(){ return camX; }, get mud(){ return mud; },
+  get score(){ return score; }, get fuda(){ return fudaGot; }, get stock(){ return fudaStock; }, set stock(v){ fudaStock = v; }, get camX(){ return camX; }, get mud(){ return mud; },
   solid: (x, y) => isSolid(tileAt(x, y)), plank: (x, y) => tileAt(x, y) === '=', TS,
   get enemies(){ return enemies; }, clearEnemies(){ enemies.length = 0; }, spawnDoro(px){ spawnEnemy({type: 'doro', x: px}); const e = enemies[enemies.length - 1]; e.vx = 0; e.dir = 0; e.still = true; return e; },
   get stage(){ return stageNo; }, setStage(n){ stageNo = n; }, unlockAll(){ SAVE.cleared = [1, 2]; saveNow(); }, get vents(){ return vents; }, get logs(){ return logs; },
