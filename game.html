@@ -91,320 +91,12 @@
 </div>
 
 <!-- 福丸（26×40）・泥田坊（96×72）・棟梁 源八（112×128）のドット絵：竜田揚げ 提供 -->
-<script>/**
- * 福丸の26×40ドット絵
- * 1文字が1ドット。「.」は透明。ポーズは front / side / run / crouch / attack / hurt。
- *
- * <canvas id="sprite" width="26" height="40"></canvas>
- * <script src="fukumaru.js"><\/script>
- * <script>
- *   const ctx = document.getElementById("sprite").getContext("2d");
- *   Fukumaru.draw(ctx, "front");
- * <\/script>
- */
-(() => {
+<script>(() => {
   "use strict";
-
-  const width = 26;
-  const height = 40;
-
-  const palette = Object.freeze({
-    K: "#361411",  // 輪郭
-    E: "#2d100f",  // 黒目・口元
-    D: "#6c291a",  // 髪の影
-    H: "#b14c29",  // 髪
-    M: "#65281b",  // 狸面の目の模様
-    A: "#e9933c",  // 狸面の縁
-    C: "#feeab8",  // 狸面の生成り
-    S: "#feca96",  // 肌
-    s: "#fa8c50",  // 肌の影
-    R: "#fc725d",  // 頬・舌
-    m: "#7b2420",  // 口の中
-    Y: "#fdcf63",  // 羽織
-    y: "#f9af42",  // 羽織の影
-    B: "#3b3990",  // 藍色の着物・面紐
-    I: "#241627",  // 袴のひだ・鼻緒
-    b: "#3f409c",  // 羽織の青い紋
-    W: "#fdfcfd",  // 白い襟
-    O: "#d3732f",  // 帯・草履
-    Q: "#227aaa",  // 水の影
-    U: "#4bc6eb",  // 水色
-    V: "#aef3ff",  // 水の光
-    F: "#efffff"   // 水の白いきらめき
-  });
-
-  const poses = Object.freeze({
-    // 正面
-    front: Object.freeze([
-      "..........................",
-      "..............KKK.........",
-      "........KKKK.KAAAKKKK.....",
-      ".......KKHHHKKARAKKKKK....",
-      ".....KKKKHHHHKARAACyRK....",
-      "....KKKHHHHHHKKACMMCCK....",
-      "...KKHHHHHHHKKKACMCMCKK...",
-      "..KKHHHHHHKKKBBBCMMMCCKK..",
-      "..KKKKHHHKKHHKKKyCCCCKCK..",
-      "...KKHHKKKHHHHDKKACCCCCK..",
-      "...KHHKKDHHHHHDKKKyAAAK...",
-      "..KHHKKHHHHKDHKSKKKKKKK...",
-      "..KKKKHHHDKKDKKSSKHKKKK...",
-      "..KKKKKHHKKSKKSSSKHHKKK...",
-      "...KKKKHKKESKSSESSKKKKK...",
-      "...KKKKKSSESSSSESSKKK.....",
-      "....KKSKSSESSSSESSKSK.....",
-      "....KKSSSRSMSSMSRSSSK.....",
-      "......KKSSSSEESSSSKK......",
-      ".......KKSSSSSSSSKK.......",
-      "........KKKKssKKKK........",
-      ".......KYYKWsKWKYYK.......",
-      "......KYYYKBWWBKYYK.......",
-      ".....KKYYYKBBBBKYYYK......",
-      ".....KYYbYKBIBBKYbYYK.....",
-      "....KYbbbYKKKKKKYbbYYK....",
-      "...KYYbbYYKOOOOKYYbYYKK...",
-      "...KKYYYYYKOOOOKYYYYYKK...",
-      "....KKKYYYKKKKKKYYYKKK....",
-      "....KSSKYYKBIBBKYYKSKK....",
-      "....KSSKKKKBIBBKYKKSSK....",
-      ".....KKKKIBBIBBBKKKKK.....",
-      "......KIBIBBIBBBIBIK......",
-      "......KBBIBBIBBBIBBK......",
-      "......KBBIBBKBBBIBBK......",
-      ".......KKKKKKKKKKKK.......",
-      "........KSsK..KSSK........",
-      ".......KSIIK..KIISK.......",
-      ".......KKOOK.KKOOKK.......",
-      "........KKKK..KKKK........"
-    ]),
-
-    // 右向き
-    side: Object.freeze([
-      "..........................",
-      "..............KKK.........",
-      ".........KKKKKKAAKKK......",
-      "........KHHHHKARRAKKK.....",
-      "......KKKKHHHKARAACCKK....",
-      ".....KKHHHHHHKKAAMMCCK....",
-      "....KKHHHHHHKKBBCMCMMKK...",
-      "...KKHHHHHHKKBBBCMMMCCKK..",
-      "...KKKKHHHKHHKKKyCCCCKCK..",
-      "....KKHHHKHHHHKKKACCCCCK..",
-      "....KHHHKHHHHKHHKKKKyKK...",
-      "...KHHHKKHHHKHHDKKSKKKK...",
-      "...KKKKKHHDKHHDDKSSSKDK...",
-      "...KKKKHHHKKHKKKSSSSKK....",
-      "....KKHHHDKKKKKSSESSK.....",
-      "...KKHHHKKKKSKKSSESSK.....",
-      "...KKKKKDDKSsSKSSESSK.....",
-      ".....KKDDDKSSSSSRSSSSK....",
-      ".....KKKKDDKKsSSSSSSK.....",
-      ".......KKKKKKKKSSSSK......",
-      "..........KKKWKsKKK.......",
-      "..........KYYKWWK.........",
-      ".........KYYYYKWK.........",
-      "........KKYYYYKBWK........",
-      "........KYYYYYKBBK........",
-      "........KYbbbYKKKK........",
-      ".......KYYbbYYKOOKK.......",
-      ".......KYYYbYYKKOKK.......",
-      ".......KYYYYYYKKKKK.......",
-      ".......KKKKKKYKBBKK.......",
-      "........KKSSSKKBBKK.......",
-      "........KKSSSKIBBKK.......",
-      "........KBIKKBIBBKK.......",
-      "........KBIBIBIBBKK.......",
-      "........KBIBIBIBBKK.......",
-      "........KKKKKKKKKK........",
-      "..........KsSSKKK.........",
-      "..........KSSIKSKK........",
-      "..........KOOOOOKK........",
-      "..........KKKKKKK........."
-    ]),
-
-    // 走り
-    run: Object.freeze([
-      "..........................",
-      "................KKK.......",
-      "................KAAK......",
-      "...........KKKKKARAKKKK...",
-      "........KKKKHHKKARAAAKKK..",
-      "........KKKKHHHKKAAMMCCK..",
-      ".......KKHHHHHHDKACMCMCKK.",
-      ".....KKHHHHHHHKBBBCMMMCCKK",
-      "......KKKHHKKKKKKKACCCCKCK",
-      ".....KKKKHHHHKHHHKKyCCCCCK",
-      "....KKHHHHHHKHHHKHKKAAAAK.",
-      "...KKHHHHHHKHHHHHHKSKKKK..",
-      "....KKKHHKKHHHHKHKKSSKHK..",
-      ".....KKKKHKHHHKDHKSKSKHK..",
-      ".....KKKHHHDKKKDKSSESKKK..",
-      "....KKHHHHDKKKKKSSSESKK...",
-      ".....KKKDKKKSsSKSSSESK....",
-      ".......KKKDKSsSSSRSSSSK...",
-      ".........KKDKSSSSSSmmSK...",
-      ".....KKKKKKKKKKSSSSRRK....",
-      "...KKKYYYYKKKKKKsSSSK.KK..",
-      "..KKSKYYYYYYYYKWsKKK.KSSK.",
-      "..KSSSYYbYYYYYKWKKK.KKSSK.",
-      "..KSSKKYbbbYYYKBKYYKKKsSK.",
-      "...KKKKYYbYYYKBIKYYYYKKK..",
-      ".....KyyyKKYKKBIKYYYYKK...",
-      "...KKKKKKYYYKKKKKyYYYDK...",
-      "..KYYYYYYYYKHOOOKyyyKK....",
-      ".KYYYYYYYKKKKKKKKKKK......",
-      "KYYYKKYYKKBBBKIBBBBK......",
-      "KKKKKKKKKBBBBKBBBBBBK.....",
-      ".....KBBBBBBBBBBIBBKK..K..",
-      "...K.KBBBBBBKKBBIBKsKKKKK.",
-      "..KOIYKIIBBKK.KBBKsSKISSK.",
-      "..KOISsKBBKK...KKKsSSIOOK.",
-      "..KAISK.KKK.......KSSOOK..",
-      "..KOIK.............KOOK...",
-      "..KOSK.............KKK....",
-      "...KK.....................",
-      ".........................."
-    ]),
-
-    // しゃがみ
-    crouch: Object.freeze([
-      "..........................",
-      "..........................",
-      "..........................",
-      "..........................",
-      "..........................",
-      "..........................",
-      "..........................",
-      "..........................",
-      "..........................",
-      "...............KKK........",
-      "..........KKKKKAAAK.......",
-      ".........KKKKKKARAKKKK....",
-      "........KKHHHKKARAAAARK...",
-      "......KKKKHHHHKAACMMCCK...",
-      ".....KKHHHHHHKKKACMCMCKK..",
-      "....KHHHHHHKKKBBBCMMMCCKK.",
-      "....KKKHHHKHHHKKKAMCCCKCK.",
-      ".....KHHHKKHHHHKKKACCCCCK.",
-      ".....KHHKKHHHHHHHKKAAAAK..",
-      "....KHHKKHHHHHHHHKKKKKKK..",
-      "....KDKKKHHHHHHHKKSSKHKK..",
-      "....KKKKHHHKHHKHKSSSSKK...",
-      ".....KKHHHKKHKKKSSESSK....",
-      "....KKDDDKKKKKKKSSESSK....",
-      "....KKKDDDKKSsSKSSESSK....",
-      "......KDDDDKSSSSSRSSSKK...",
-      "......KKKDDKKSSSSSSSSK....",
-      ".......KKKKKKKKsSSSSK.....",
-      ".......KKKKKKKKsSSKK......",
-      ".....KKYYKYYKBWWKKK.......",
-      ".....KYYbYKYYYKBKKK.......",
-      "....KYYbbYKYYYYKSSKK......",
-      "....KYbYYYKOKKYYKSSsK.....",
-      "...KYYYYKKKKIKKKKKBBBK....",
-      "....KIBBBBBBBBBIIBBBK.....",
-      "....KIBBBBBIIIIBBBBK......",
-      "....KKIIBBIKKK.KIBK.......",
-      "....KSsIKKK...KKSSIK......",
-      "....KSOOOOK...KOOISOK.....",
-      ".....KKKKK....KKKKKKK....."
-    ]),
-
-    // 湯鉄砲
-    attack: Object.freeze([
-      "..........................",
-      "............KK............",
-      "......KKKKKKAAKK..........",
-      ".....KKHHKKKRRAKKKK.......",
-      "...KKKKHHHKKAMAAAARK......",
-      "...KHHHHHHHKAAMMCCCK......",
-      ".KHHHHHHHKKKBCMCMMCKK.....",
-      ".KHHHHHHKKKBBCMMMCCKKK....",
-      ".KKHHHKHHHHKKACCCCKCKK....",
-      "..KHHKKHHHHHKKACCCCCKK....",
-      ".KHHKKKHHHHHHHKKAAAAK.....",
-      "KHHDKKHHHHHHHHKSKKKK......",
-      "KDKKKHHHHHHHHKSSSKHK......",
-      ".KKKKHHKHHKKKSSSSKK.......",
-      ".KKKHHKKKKKKKSSESK........",
-      "KKDDDKKKKSKKKSSESK........",
-      ".KKDDDDKSssKKSSESKK.......",
-      "...KDDDKSSSSSSRSSMK.......",
-      "...KKKDDKKsSSSSmRSK.......",
-      ".....KKKKKKKSSSSKK......U.",
-      ".....KKKKKKKKKKK..........",
-      ".....KYKYYKWBKK...KSK..VUU",
-      "....KKYKbbYYYYYYKSSSFVUUQ.",
-      "....KYYKYbbYYYYYKSsSUQQ..V",
-      "...KKYYKYbyyYYYKKSSK....U.",
-      "...KKYKKIBBIIKKKKKK.......",
-      "...KKSKKOOOOOK............",
-      "...KKSYKOOOIIK............",
-      "..KKyYYYKIKKKK............",
-      "..KKYKKKKKKKBK............",
-      "....KKKBBBIIBBK...........",
-      ".....KBBBBIIBBBK..........",
-      "....KKBBBIIBIBBK..........",
-      "....KBBBIKKKBBBBK.........",
-      "...KBBBBK...KBBBK.........",
-      "...KBBBI....KKIBK.........",
-      "...KKIIK.....KKKK.........",
-      "...KsSK......KSSIKK.......",
-      "..KOOOOK.....KOOOOKK......",
-      "...KKKK.......KKKK........"
-    ]),
-
-    // やられ
-    hurt: Object.freeze([
-      "..........................",
-      "...........KKK............",
-      ".....KKKK.KAAAKKKK........",
-      "....KKHHHKKARAKKKKK.......",
-      "..KKKKHHHHKARAACyRK.......",
-      ".KKKHHHHHHKKACMMCCK.......",
-      "KKHHHHHHHKKKACMCMCKK......",
-      "KKHHHHHHKKKBBBCMMMCCKK....",
-      "KKKKHHHKKHHKKKyCCCCKCK....",
-      ".KKHHKKKHHHHDKKACCCCCK....",
-      ".KHHKKDHHHHHDKKKyAAAK.....",
-      "KHHKKHHHHKDHKSKKKKKKK.....",
-      "KKKKHHHDKKDKKSSKHKKKK.....",
-      ".KKKKKHHKKSKKSSSKHHKKK....",
-      "..KKKKHKMESSSSSEMSKKKK....",
-      "..KKKKKSSSESSSESSSKK......",
-      "...KKSKSMESSSSSEMSSK......",
-      "...KKSSSRSSSmmmSSRSK......",
-      "......KKSSSmWWWmSSKK......",
-      ".......KKSSMmsSmSKK.......",
-      "......KKYYKKssKKYYK.......",
-      ".....KYYYKWssWKSSKYK......",
-      "....KYYYbKBWWKSSsKYK......",
-      "....KYbbYYKKSKKKYYYK......",
-      "....KYYbYYKSSSsKYYK.......",
-      ".....KYYYYYyKSSKYYK.......",
-      "......KKYYyKKKKKyyK.......",
-      "......KYYKKOOOOKYKK.......",
-      "......KYYKOOOOOKYYK.......",
-      "......KYYKBBIBBKYYKKKK....",
-      "......KKKIBBIBBBKKIBBBK...",
-      "......KIBBBIBBBBIIBBBBK...",
-      "......KBBBIBBBBKIBBBKK....",
-      "......KBBIBBBKK.KIIIKSK...",
-      "......KBBIBBK....KKKSISK..",
-      "......KBBIBBK.....KSOOOK..",
-      "......KKBBIKK......KKKK...",
-      ".......KSSIK..............",
-      "......KSIOSK..............",
-      "......KKOOKK.............."
-    ])
-  });
-
-  /**
-   * Canvas 2Dの指定位置に1ポーズを描く。x、yは左上の座標で、scaleは整数倍率。
-   * 透明部分は描き飛ばす。同じ位置でポーズを切り替えるときは、
-   * 呼び出し側で前の絵を消すか、背景を描き直す。
-   */
-  function draw(ctx, pose = "front", x = 0, y = 0, scale = 1) {
+  const {pal:palette, clips} = {"pal":{"K":"#36202a","E":"#2d100f","D":"#74362e","H":"#ae5134","M":"#65281b","A":"#e9933c","C":"#feeab8","S":"#ffc995","s":"#fa8c50","R":"#fc725d","m":"#7b2420","Y":"#edb950","y":"#cd883f","B":"#474686","I":"#241627","b":"#3f409c","W":"#fdfcfd","O":"#d3732f","Q":"#227aaa","U":"#4bc6eb","V":"#aef3ff","F":"#efffff","a":"#e18549","c":"#77392e","d":"#fae097","e":"#c48441","f":"#64669f","g":"#32315e","h":"#eaa075","i":"#ffdcad","j":"#fff5d6","k":"#dbb78a","l":"#ad662f"},"clips":{"front":{"frames":[["..........................","..............KKK.........","........KKKK.KAAAKKKK.....",".......KKaacKKARAKKKKK....",".....KKKKHHHcKARAAkyRK....","....KKKaaHHHcKKAkMMkkK....","...KKaaHHHccKKKAkMkMkKK...","..KKccHHHcKKKgggkMMMCkKK..","..KKKKHccKKacKKKykjjkKkK..","...KKacKKKaHHcDKKAkkkkkK..","...KacKKDaHcccDKKKyAAAK...","..KccKKaaccKDcKhKKKKKKK...","..KKKKcHcDKKDKKShKcKKKK...","..KKKKKHcKKhKKhSSKccKKK...","...KKKKcKKESKhSEShKKKKK...","...KKKKKhhEShSSESSKKK.....","....KKhKSSESSSSESSKhK.....","....KKhhSRiMSSMiRShhK.....","......KKhSSSEEiSShKK......",".......KKhhhSShhhKK.......","........KKKKssKKKK........",".......KdeKWsKWKdeK.......","......KddeKgWWgKdeK.......",".....KKdeeKfgBgKdeeK......",".....KeebeKgIggKebeeK.....","....KebbbeKKKKKKebbYeK....","...KeebbdeKOOOlKdebdeKK...","...KKeeddeKllllKdYYeeKK...","....KKKeYeKKKKKKdYeKKK....","....KhhKeeKgIfgKdeKhKK....","....KhhKKKKgIfgKeKKhhK....",".....KKKKIfgIfBgKKKKK.....","......KIgIfgIfBgIgIK......","......KfgIfgIfBgIfgK......","......KggIggKgggIggK......",".......KKKKKKKKKKKK.......","........KhsK..KhhK........",".......KhIIK..KIIhK.......",".......KKllK.KKllKK.......","........KKKK..KKKK........"],["..........................","..........................","..............KKK.........","........KKKK.KAAAKKKK.....",".......KKaacKKARAKKKKK....",".....KKKKHHHcKARAAkyRK....","....KKKaaHHHcKKAkMMkkK....","...KKaaHHHccKKKAkMkMkKK...","..KKccHHHcKKKgggkMMMCkKK..","..KKKKHccKKacKKKykjjkKkK..","...KKacKKKaHHcDKKAkkkkkK..","...KacKKDaHcccDKKKyAAAK...","..KccKKaaccKDcKhKKKKKKK...","..KKKKcHcDKKDKKShKcKKKK...","..KKKKKHcKKhKKhSSKccKKK...","...KKKKcKKESKhSEShKKKKK...","...KKKKKhhEShSSESSKKK.....","....KKhKSSESSSSESSKhK.....","....KKhhSRiMSSMiRShhK.....","......KKhSSSEEiSShKK......",".......KKhhhSShhhKK.......","........KKKKssKKKK........",".......KdeKWsKWKdeK.......","......KddeKgWWgKdeK.......",".....KKdeeKfgBgKdeeK......",".....KeebeKgIggKebeeK.....","....KebbbeKKKKKKebbYeK....","...KKeeddeKllllKdYYeeKK...","....KKKeYeKKKKKKdYeKKK....","....KhhKeeKgIfgKdeKhKK....","....KhhKKKKgIfgKeKKhhK....",".....KKKKIfgIfBgKKKKK.....","......KIgIfgIfBgIgIK......","......KfgIfgIfBgIfgK......","......KggIggKgggIggK......",".......KKKKKKKKKKKK.......","........KhsK..KhhK........",".......KhIIK..KIIhK.......",".......KKllK.KKllKK.......","........KKKK..KKKK........"],["..........................","..........................","..............KKK.........","........KKKK.KAAAKKKK.....",".......KKaacKKARAKKKKK....",".....KKKKHHHcKARAAkyRK....","....KKKaaHHHcKKAkMMkkK....","...KKaaHHHccKKKAkMkMkKK...","..KKccHHHcKKKgggkMMMCkKK..","..KKKKHccKKacKKKykjjkKkK..","...KKacKKKaHHcDKKAkkkkkK..","...KacKKDaHcccDKKKyAAAK...","..KccKKaaccKDcKhKKKKKKK...","..KKKKcHcDKKDKKShKcKKKK...","..KKKKKHcKKhKKhSSKccKKK...","...KKKKcKKSSKhSSShKKKKK...","...KKKKKhhEShSSESSKKK.....","....KKhKSSSSSSSSSSKhK.....","....KKhhSRiMSSMiRShhK.....","......KKhSSSEEiSShKK......",".......KKhhhSShhhKK.......","........KKKKssKKKK........",".......KdeKWsKWKdeK.......","......KddeKgWWgKdeK.......",".....KKdeeKfgBgKdeeK......",".....KeebeKgIggKebeeK.....","....KebbbeKKKKKKebbYeK....","...KKeeddeKllllKdYYeeKK...","....KKKeYeKKKKKKdYeKKK....","....KhhKeeKgIfgKdeKhKK....","....KhhKKKKgIfgKeKKhhK....",".....KKKKIfgIfBgKKKKK.....","......KIgIfgIfBgIgIK......","......KfgIfgIfBgIfgK......","......KggIggKgggIggK......",".......KKKKKKKKKKKK.......","........KhsK..KhhK........",".......KhIIK..KIIhK.......",".......KKllK.KKllKK.......","........KKKK..KKKK........"],["..........................","..........................","..............KKK.........","........KKKK.KAAAKKKK.....",".......KKaacKKARAKKKKK....",".....KKKKHHHcKARAAkyRK....","....KKKaaHHHcKKAkMMkkK....","...KKaaHHHccKKKAkMkMkKK...","..KKccHHHcKKKgggkMMMCkKK..","..KKKKHccKKacKKKykjjkKkK..","...KKacKKKaHHcDKKAkkkkkK..","...KacKKDaHcccDKKKyAAAK...","..KccKKaaccKDcKhKKKKKKK...","..KKKKcHcDKKDKKShKcKKKK...","..KKKKKHcKKhKKhSSKccKKK...","...KKKKcKKESKhSEShKKKKK...","...KKKKKhhEShSSESSKKK.....","....KKhKSSESSSSESSKhK.....","....KKhhSRiMSSMiRShhK.....","......KKhSSSEEiSShKK......",".......KKhhhSShhhKK.......","........KKKKssKKKK........",".......KdeKWsKWKdeK.......","......KddeKgWWgKdeK.......",".....KKdeeKfgBgKdeeK......",".....KeebeKgIggKebeeK.....","....KebbbeKKKKKKebbYeK....","...KKeeddeKllllKdYYeeKK...","....KKKeYeKKKKKKdYeKKK....","....KhhKeeKgIfgKdeKhKK....","....KhhKKKKgIfgKeKKhhK....",".....KKKKIfgIfBgKKKKK.....","......KIgIfgIfBgIgIK......","......KfgIfgIfBgIfgK......","......KggIggKgggIggK......",".......KKKKKKKKKKKK.......","........KhsK..KhhK........",".......KhIIK..KIIhK.......",".......KKllK.KKllKK.......","........KKKK..KKKK........"],["..........................","..............KKK.........","........KKKK.KAAAKKKK.....",".......KKaacKKARAKKKKK....",".....KKKKHHHcKARAAkyRK....","....KKKaaHHHcKKAkMMkkK....","...KKaaHHHccKKKAkMkMkKK...","..KKccHHHcKKKgggkMMMCkKK..","..KKKKHccKKacKKKykjjkKkK..","...KKacKKKaHHcDKKAkkkkkK..","...KacKKDaHcccDKKKyAAAK...","..KccKKaaccKDcKhKKKKKKK...","..KKKKcHcDKKDKKShKcKKKK...","..KKKKKHcKKhKKhSSKccKKK...","...KKKKcKKESKhSEShKKKKK...","...KKKKKhhEShSSESSKKK.....","....KKhKSSESSSSESSKhK.....","....KKhhSRiMSSMiRShhK.....","......KKhSSSEEiSShKK......",".......KKhhhSShhhKK.......","........KKKKssKKKK........",".......KdeKWsKWKdeK.......","......KddeKgWWgKdeK.......",".....KKdeeKfgBgKdeeK......",".....KeebeKgIggKebeeK.....","....KebbbeKKKKKKebbYeK....","...KeebbdeKOOOlKdebdeKK...","...KKeeddeKllllKdYYeeKK...","....KKKeYeKKKKKKdYeKKK....","....KhhKeeKgIfgKdeKhKK....","....KhhKKKKgIfgKeKKhhK....",".....KKKKIfgIfBgKKKKK.....","......KIgIfgIfBgIgIK......","......KfgIfgIfBgIfgK......","......KggIggKgggIggK......",".......KKKKKKKKKKKK.......","........KhsK..KhhK........",".......KhIIK..KIIhK.......",".......KKllK.KKllKK.......","........KKKK..KKKK........"]],"times":[720,420,85,280,240],"loop":true},"side":{"frames":[["..........................","..............KKK.........",".........KKKKKKAAKKK......","........KcaacKARRAKKK.....","......KKKKHHcKARAAkkKK....",".....KKaaaHHcKKAAMMkkK....","....KKaHHHHcKKfgkMkMMKK...","...KKccHHHcKKgggkMMMjkKK..","...KKKKHHcKacKKKykjjkKkK..","....KKaHcKaHHcKKKAkkkkkK..","....KaHcKaHHcKacKKKKyKK...","...KcccKKHccKacDKKhKKKK...","...KKKKKacDKacDDKhShKDK...","...KKKKaHcKKcKKKhSSSKK....","....KKaHcDKKKKKhSESSK.....","...KKcccKKKKhKKSSESSK.....","...KKKKKDDKhshKSSESSK.....",".....KKDDDKhhShSRiSShK....",".....KKKKDDKKshSSSShK.....",".......KKKKKKKKShhhK......","..........KKKWKsKKK.......","..........KdeKWWK.........",".........KddYeKWK.........","........KKdYYeKgWK........","........KdeeeeKggK........","........KebbbeKKKK........",".......KdebbdeKllKK.......",".......KdYebdeKKlKK.......",".......KeeeeeeKKKKK.......",".......KKKKKKeKfgKK.......","........KKhhhKKfgKK.......","........KKShhKIfgKK.......","........KgIKKgIfgKK.......","........KgIgIgIfgKK.......","........KgIgIgIggKK.......","........KKKKKKKKKK........","..........KshhKKK.........","..........KiSIKhKK........","..........KlllllKK........","..........KKKKKKK........."],["..........................","..........................","..............KKK.........",".........KKKKKKAAKKK......","........KcaacKARRAKKK.....","......KKKKHHcKARAAkkKK....",".....KKaaaHHcKKAAMMkkK....","....KKaHHHHcKKfgkMkMMKK...","...KKccHHHcKKgggkMMMjkKK..","...KKKKHHcKacKKKykjjkKkK..","....KKaHcKaHHcKKKAkkkkkK..","....KaHcKaHHcKacKKKKyKK...","...KcccKKHccKacDKKhKKKK...","...KKKKKacDKacDDKhShKDK...","...KKKKaHcKKcKKKhSSSKK....","....KKaHcDKKKKKhSESSK.....","...KKcccKKKKhKKSSESSK.....","...KKKKKDDKhshKSSESSK.....",".....KKDDDKhhShSRiSShK....",".....KKKKDDKKshSSSShK.....",".......KKKKKKKKShhhK......","..........KKKWKsKKK.......","..........KdeKWWK.........",".........KddYeKWK.........","........KKdYYeKgWK........","........KdeeeeKggK........","........KebbbeKKKK........",".......KdYebdeKKlKK.......",".......KeeeeeeKKKKK.......",".......KKKKKKeKfgKK.......","........KKhhhKKfgKK.......","........KKShhKIfgKK.......","........KgIKKgIfgKK.......","........KgIgIgIfgKK.......","........KgIgIgIggKK.......","........KKKKKKKKKK........","..........KshhKKK.........","..........KiSIKhKK........","..........KlllllKK........","..........KKKKKKK........."],["..........................","..........................","..............KKK.........",".........KKKKKKAAKKK......","........KcaacKARRAKKK.....","......KKKKHHcKARAAkkKK....",".....KKaaaHHcKKAAMMkkK....","....KKaHHHHcKKfgkMkMMKK...","...KKccHHHcKKgggkMMMjkKK..","...KKKKHHcKacKKKykjjkKkK..","....KKaHcKaHHcKKKAkkkkkK..","....KaHcKaHHcKacKKKKyKK...","...KcccKKHccKacDKKhKKKK...","...KKKKKacDKacDDKhShKDK...","...KKKKaHcKKcKKKhSSSKK....","....KKaHcDKKKKKhSSSSK.....","...KKcccKKKKhKKSSESSK.....","...KKKKKDDKhshKSSSSSK.....",".....KKDDDKhhShSRiSShK....",".....KKKKDDKKshSSSShK.....",".......KKKKKKKKShhhK......","..........KKKWKsKKK.......","..........KdeKWWK.........",".........KddYeKWK.........","........KKdYYeKgWK........","........KdeeeeKggK........","........KebbbeKKKK........",".......KdYebdeKKlKK.......",".......KeeeeeeKKKKK.......",".......KKKKKKeKfgKK.......","........KKhhhKKfgKK.......","........KKShhKIfgKK.......","........KgIKKgIfgKK.......","........KgIgIgIfgKK.......","........KgIgIgIggKK.......","........KKKKKKKKKK........","..........KshhKKK.........","..........KiSIKhKK........","..........KlllllKK........","..........KKKKKKK........."],["..........................","..........................","..............KKK.........",".........KKKKKKAAKKK......","........KcaacKARRAKKK.....","......KKKKHHcKARAAkkKK....",".....KKaaaHHcKKAAMMkkK....","....KKaHHHHcKKfgkMkMMKK...","...KKccHHHcKKgggkMMMjkKK..","...KKKKHHcKacKKKykjjkKkK..","....KKaHcKaHHcKKKAkkkkkK..","....KaHcKaHHcKacKKKKyKK...","...KcccKKHccKacDKKhKKKK...","...KKKKKacDKacDDKhShKDK...","...KKKKaHcKKcKKKhSSSKK....","....KKaHcDKKKKKhSESSK.....","...KKcccKKKKhKKSSESSK.....","...KKKKKDDKhshKSSESSK.....",".....KKDDDKhhShSRiSShK....",".....KKKKDDKKshSSSShK.....",".......KKKKKKKKShhhK......","..........KKKWKsKKK.......","..........KdeKWWK.........",".........KddYeKWK.........","........KKdYYeKgWK........","........KdeeeeKggK........","........KebbbeKKKK........",".......KdYebdeKKlKK.......",".......KeeeeeeKKKKK.......",".......KKKKKKeKfgKK.......","........KKhhhKKfgKK.......","........KKShhKIfgKK.......","........KgIKKgIfgKK.......","........KgIgIgIfgKK.......","........KgIgIgIggKK.......","........KKKKKKKKKK........","..........KshhKKK.........","..........KiSIKhKK........","..........KlllllKK........","..........KKKKKKK........."],["..........................","..............KKK.........",".........KKKKKKAAKKK......","........KcaacKARRAKKK.....","......KKKKHHcKARAAkkKK....",".....KKaaaHHcKKAAMMkkK....","....KKaHHHHcKKfgkMkMMKK...","...KKccHHHcKKgggkMMMjkKK..","...KKKKHHcKacKKKykjjkKkK..","....KKaHcKaHHcKKKAkkkkkK..","....KaHcKaHHcKacKKKKyKK...","...KcccKKHccKacDKKhKKKK...","...KKKKKacDKacDDKhShKDK...","...KKKKaHcKKcKKKhSSSKK....","....KKaHcDKKKKKhSESSK.....","...KKcccKKKKhKKSSESSK.....","...KKKKKDDKhshKSSESSK.....",".....KKDDDKhhShSRiSShK....",".....KKKKDDKKshSSSShK.....",".......KKKKKKKKShhhK......","..........KKKWKsKKK.......","..........KdeKWWK.........",".........KddYeKWK.........","........KKdYYeKgWK........","........KdeeeeKggK........","........KebbbeKKKK........",".......KdebbdeKllKK.......",".......KdYebdeKKlKK.......",".......KeeeeeeKKKKK.......",".......KKKKKKeKfgKK.......","........KKhhhKKfgKK.......","........KKShhKIfgKK.......","........KgIKKgIfgKK.......","........KgIgIgIfgKK.......","........KgIgIgIggKK.......","........KKKKKKKKKK........","..........KshhKKK.........","..........KiSIKhKK........","..........KlllllKK........","..........KKKKKKK........."]],"times":[720,420,85,280,240],"loop":true},"run":{"frames":[["..........................","................KKK.......","................KAAK......","...........KKKKKARAKKKK...","........KKKKacKKARAAAKKK..","........KKKKHHcKKAAMMkkK..",".......KKaaaHHcDKAkMkMkKK.",".....KKccHHcccKgggkMMMCkKK","......KKKHcKKKKKKKAkjjkKkK",".....KKKKHHHcKaacKKykkkkkK","....KKaaaHHcKaHcKcKKAAAAK.","...KKccHHccKaHHcHcKhKKKK..","....KKKccKKaHHcKcKKhhKcK..",".....KKKKcKcccKDcKhKSKcK..",".....KKKaHcDKKKDKhSESKKK..","....KKccccDKKKKKhSSESKK...",".....KKKDKKKhshKSSSESK....",".......KKKDKhsShSRSSShK...",".........KKDKhhSSSSmmhK...",".....KKKKKKKKKKhSSSRRK....","...KKKdddeKKKKKKshhhK.KK..","..KKhKdYeYYddeKWsKKK.KhhK.","..KhSheebeeYYeKWKKK.KKSSK.","..KhhKKebbbYYeKgKdeKKKshK.","...KKKKeebedeKgIKdYYeKKK..",".....KyyyKKeKKgIKeYYeKK...","...KKKKKKddeKKKKKyeeeDK...","..KddddddeeKclllKyyyKK....",".KddeeYYeKKKKKKKKKKK......","KeeeKKeeKgBKfffBBBK.......","KKKKKKKKKBBKBfffBBBK......","..KSSSSKKBBgKBfffBBBK.....","..KOOOOOOBgggKBfffBBB.....","...KKKKKKgggK.KBBBBBBBB...",".......KgggK...KBBBBBBBB..",".................BBKKKKKK.","...................KSSSSKK","...................KOOOOOO","....................KKKKKK",".........................."],["..........................","..........................","................KKK.......","................KAAK......","...........KKKKKARAKKKK...","........KKKKacKKARAAAKKK..","........KKKKHHcKKAAMMkkK..",".......KKaaaHHcDKAkMkMkKK.",".....KKccHHcccKgggkMMMCkKK","......KKKHcKKKKKKKAkjjkKkK",".....KKKKHHHcKaacKKykkkkkK","....KKaaaHHcKaHcKcKKAAAAK.","...KKccHHccKaHHcHcKhKKKK..","....KKKccKKaHHcKcKKhhKcK..",".....KKKKcKcccKDcKhKSKcK..",".....KKKaHcDKKKDKhSESKKK..","....KKccccDKKKKKhSSESKK...",".....KKKDKKKhshKSSSESK....",".......KKKDKhsShSRSSShK...",".........KKDKhhSSSSmmhK...",".....KKKKKKKKKKhSSSRRK....","...KKKdddeKKKKKKshhhK.KK..","..KKhKdYeYYddeKWsKKK.KhhK.","..KhSheebeeYYeKWKKK.KKSSK.","..KKKKKebbbYYeKgKdeKKKshK.",".....KyeebedeKgIKdYYeKKK..","...KKKKyyKKeKKgIKeYYeKK...","..KddddKKddeKKKKKyeeeDK...",".KddeeYddeeKclllKyyyKK....","KeeeKKeYeKKKKKKKKKKK......","KKKKKKKeKOOKfffBBBK.......",".....KKKKKKKBfffBBK.......",".........gggKfffBBBK......","..........KgKBfffBBK......",".............KBBBBBB......","..............BBBBBBK.....","..............KKKKKKK.....","...............KSSSSKK....","...............KOOOOOO....","................KKKKKK...."],["..........................","..........................","................KKK.......","................KAAK......","...........KKKKKARAKKKK...","........KKKKacKKARAAAKKK..","........KKKKHHcKKAAMMkkK..",".......KKaaaHHcDKAkMkMkKK.",".....KKccHHcccKgggkMMMCkKK","......KKKHcKKKKKKKAkjjkKkK",".....KKKKHHHcKaacKKykkkkkK","....KKaaaHHcKaHcKcKKAAAAK.","...KKccHHccKaHHcHcKhKKKK..","....KKKccKKaHHcKcKKhhKcK..",".....KKKKcKcccKDcKhKSKcK..",".....KKKaHcDKKKDKhSESKKK..","....KKccccDKKKKKhSSESKK...",".....KKKDKKKhshKSSSESK....",".......KKKDKhsShSRSSShK...",".........KKDKhhSSSSmmhK...",".....KKKKKKKKKKhSSSRRK....","...KKKdddeKKKKKKshhhK.KK..","..KKhKdYeYYddeKWsKKK.KhhK.","..KhSheebeeYYeKWKKK.KKSSK.","..KhhKKebbbYYeKgKdeKKKshK.","...KKKKeebedeKgIKdYYeKKK..",".....KyyyKKeKKgIKeYYeKK...","...KKKKKKddeKKKKKyeeeDK...","..KddddddeeKclllKyyyKK....",".KddeeYYeKKKKKKKKKKK......","KeeeKKeeKKKKfffBBKgK......","KKKKKKKKKKKKfffBBKgK......","..........KBfffBBKK.......","..........KfffBBBK........","..........BfffBBK.........",".........KKKKKKBK.........","..........KSSSSKK.........","..........KOOOOOO.........","...........KKKKKK.........",".........................."],["..........................","................KKK.......","................KAAK......","...........KKKKKARAKKKK...","........KKKKacKKARAAAKKK..","........KKKKHHcKKAAMMkkK..",".......KKaaaHHcDKAkMkMkKK.",".....KKccHHcccKgggkMMMCkKK","......KKKHcKKKKKKKAkjjkKkK",".....KKKKHHHcKaacKKykkkkkK","....KKaaaHHcKaHcKcKKAAAAK.","...KKccHHccKaHHcHcKhKKKK..","....KKKccKKaHHcKcKKhhKcK..",".....KKKKcKcccKDcKhKSKcK..",".....KKKaHcDKKKDKhSESKKK..","....KKccccDKKKKKhSSESKK...",".....KKKDKKKhshKSSSESK....",".......KKKDKhsShSRSSShK...",".........KKDKhhSSSSmmhK...",".....KKKKKKKKKKhSSSRRK....","...KKKdddeKKKKKKshhh......","..KKhKdYeYYddeKWsKKKK.KK..","..KhSheebeeYYeKWKKK..KhhK.","..KhhKKebbbYYeKgKdeKKKSSK.","...KKKKeebedeKgIKdYYKKshK.",".....KyyyKKeKKgIKeYYeKKK..","...KKKKKKddeKKKKKyeeeDK...","..KddddddeeKclllKyyyKK....",".KddeeYYeKKKKKKKKKKK......","KeeeKKeeKKKBfffBBKggK.....","KKKKKKKKKKBfffBBBKgggK....","........KBfffBBBKBBggK....","....BBBBBfffBBBKKKKKKK....","...KKKKKKffBBBKKKSSSSKK...","....KSSSSKKBBK..KOOOOOO...","....KOOOOOOBK....KKKKKK...",".....KKKKKK...............","..........................","..........................",".........................."],["................KKK.......","................KAAK......","...........KKKKKARAKKKK...","........KKKKacKKARAAAKKK..","........KKKKHHcKKAAMMkkK..",".......KKaaaHHcDKAkMkMkKK.",".....KKccHHcccKgggkMMMCkKK","......KKKHcKKKKKKKAkjjkKkK",".....KKKKHHHcKaacKKykkkkkK","....KKaaaHHcKaHcKcKKAAAAK.","...KKccHHccKaHHcHcKhKKKK..","....KKKccKKaHHcKcKKhhKcK..",".....KKKKcKcccKDcKhKSKcK..",".....KKKaHcDKKKDKhSESKKK..","....KKccccDKKKKKhSSESKK...",".....KKKDKKKhshKSSSESK....",".......KKKDKhsShSRSSShK...",".........KKDKhhSSSSmmhK...",".....KKKKKKKKKKhSSSRRK....","...KKKdddeKKKKKKshhh......","..KKhKdYeYYddeKWsKKKK.KK..","..KhSheebeeYYeKWKKK..KhhK.","..KhhKKebbbYYeKgKdeKKKSSK.","...KKKKeebedeKgIKdYYKKshK.",".....KyyyKKeKKgIKeYYeKKK..","...KKKKKKddeKKKKKyeeeDK...","..KddddddeeKclllKyyyKK....",".KddeeYYeKKKKKKKKKKK......","KeeeKKeeKKBBfffBBK........","KKKKKKKKKBBfffBBBKK.......",".KKKKKKBBffffBBBKggK......","..KSSSSKKffBBBBKBgggK.....","..KOOOOOOfBBBBKBBBggg.....","...KKKKKKBBBK.Kgggggggg...",".......KBBBK...Kgggggggg..",".................ggKKKKKK.","...................KSSSSKK","...................KOOOOOO","....................KKKKKK",".........................."],["................KKK.......","................KAAK......","...........KKKKKARAKKKK...","........KKKKacKKARAAAKKK..","........KKKKHHcKKAAMMkkK..",".......KKaaaHHcDKAkMkMkKK.",".....KKccHHcccKgggkMMMCkKK","......KKKHcKKKKKKKAkjjkKkK",".....KKKKHHHcKaacKKykkkkkK","....KKaaaHHcKaHcKcKKAAAAK.","...KKccHHccKaHHcHcKhKKKK..","....KKKccKKaHHcKcKKhhKcK..",".....KKKKcKcccKDcKhKSKcK..",".....KKKaHcDKKKDKhSESKKK..","....KKccccDKKKKKhSSESKK...",".....KKKDKKKhshKSSSESK....",".......KKKDKhsShSRSSShK...",".........KKDKhhSSSSmmhK...",".....KKKKKKKKKKhSSSRRK....","...KKKdddeKKKKKKshhh......","..KKhKdYeYYddeKWsKKKK.KK..","..KhSheebeeYYeKWKKK..KhhK.","..KKKKKebbbYYeKgKdeKKKSSK.",".....KyeebedeKgIKdYYKKshK.","...KKKKyyKKeKKgIKeYYeKKK..","..KddddKKddeKKKKKyeeeDK...",".KddeeYddeeKclllKyyyKK....","KeeeKKeYeKKKKKKKKKKK......","KKKKKKKeKBBBfffBBK........","....KSSKKKKfffBBBK........","....KOOOOOOfffBBKK........",".....KKKKKKffBBBKgK.......",".........BBBBBBKgggK......","..........KBBBKBBggK......",".............Kgggggg......","..............ggggggK.....","..............KKKKKKK.....","...............KSSSSKK....","...............KOOOOOO....","................KKKKKK...."],["................KKK.......","................KAAK......","...........KKKKKARAKKKK...","........KKKKacKKARAAAKKK..","........KKKKHHcKKAAMMkkK..",".......KKaaaHHcDKAkMkMkKK.",".....KKccHHcccKgggkMMMCkKK","......KKKHcKKKKKKKAkjjkKkK",".....KKKKHHHcKaacKKykkkkkK","....KKaaaHHcKaHcKcKKAAAAK.","...KKccHHccKaHHcHcKhKKKK..","....KKKccKKaHHcKcKKhhKcK..",".....KKKKcKcccKDcKhKSKcK..",".....KKKaHcDKKKDKhSESKKK..","....KKccccDKKKKKhSSESKK...",".....KKKDKKKhshKSSSESK....",".......KKKDKhsShSRSSShK...",".........KKDKhhSSSSmmhK...",".....KKKKKKKKKKhSSSRRK....","...KKKdddeKKKKKKshhh......","..KKhKdYeYYddeKWsKKKK.KK..","..KhSheebeeYYeKWKKK..KhhK.","..KhhKKebbbYYeKgKdeKKKSSK.","...KKKKeebedeKgIKdYYKKshK.",".....KyyyKKeKKgIKeYYeKKK..","...KKKKKKddeKKKKKyeeeDK...","..KddddddeeKclllKyyyKK....",".KddeeYYeKKKKKKKKKKK......","KeeeKKeeKKBKfffBBBK.......","KKKKKKKKKKBBBfffBBBK......",".........KKKKKKffBBK......",".........KKSSSSKKBBK......","..........KOOOOOOBK.......","..........KKKKKKK.........","..........gBBBggK.........",".........KKKKKKgK.........","..........KSSSSKK.........","..........KOOOOOO.........","...........KKKKKK.........",".........................."],["..........................","................KKK.......","................KAAK......","...........KKKKKARAKKKK...","........KKKKacKKARAAAKKK..","........KKKKHHcKKAAMMkkK..",".......KKaaaHHcDKAkMkMkKK.",".....KKccHHcccKgggkMMMCkKK","......KKKHcKKKKKKKAkjjkKkK",".....KKKKHHHcKaacKKykkkkkK","....KKaaaHHcKaHcKcKKAAAAK.","...KKccHHccKaHHcHcKhKKKK..","....KKKccKKaHHcKcKKhhKcK..",".....KKKKcKcccKDcKhKSKcK..",".....KKKaHcDKKKDKhSESKKK..","....KKccccDKKKKKhSSESKK...",".....KKKDKKKhshKSSSESK....",".......KKKDKhsShSRSSShK...",".........KKDKhhSSSSmmhK...",".....KKKKKKKKKKhSSSRRK....","...KKKdddeKKKKKKshhhK.KK..","..KKhKdYeYYddeKWsKKK.KhhK.","..KhSheebeeYYeKWKKK.KKSSK.","..KhhKKebbbYYeKgKdeKKKshK.","...KKKKeebedeKgIKdYYeKKK..",".....KyyyKKeKKgIKeYYeKK...","...KKKKKKddeKKKKKyeeeDK...","..KddddddeeKclllKyyyKK....",".KddeeYYeKKKKKKKKKKK......","KeeeKKeeKKBKfffBBBBBK.....","KKKKKKKKKgBKBffffBBBBK....","........KBBBKBBffffBBK....","....gggggBBBgKBBKKKKKK....","...KKKKKKBBgggKKKSSSSKK...","....KSSSSKKggK..KOOOOOO...","....KOOOOOOgK....KKKKKK...",".....KKKKKK...............","..........................","..........................",".........................."]],"times":[75,75,70,65,75,75,70,65],"loop":true},"crouch":{"frames":[["..........................","..........................","..........................","..........................","..........................","...............KKK........","..........KKKKKAAAK.......",".........KKKKKKARAKKKK....","........KKaacKKARAAAARK...","..........................","......KKKKHHHcKAAkMMkkK...",".....KKaaaHccKKKAkMkMkKK..","....KccHHHcKKKgggkMMMCkKK.","....KKKHHcKaHcKKKAMjjkKkK.",".....KaHcKKHHHcKKKAkkkkkK.",".....KHcKKaHHHHHcKKAAAAK..","....KccKKaHHHHHHcKKKKKKK..","....KDKKKHHcHHccKKhhKcKK..","..........................","....KKKKaHcKHcKcKhSShKK...",".....KKcccKKcKKKhSESSK....","....KKDDDKKKKKKKSSESSK....","....KKKDDDKKhshKSSESSK....","......KDDDDKhSShSRiSSKK...","......KKKDDKKhhSSSSShK....",".......KKKKKKKKsSShhK.....","..........................",".......KKKKKKKKshhKK......",".....KKdeKeeKgWWKKK.......",".....KdebeKYYeKgKKK.......","....KdebbeKeeeeKhhKK......","....KebYeeKlKKeeKhhsK.....","...KeeeeKKKKIKKKKKfBgK....","....KIfBBBBggggIIfBgK.....","....KIggBBgIIIIggBgK......","..........................","....KKIIggIKKK.KIgK.......","....KhsIKKK...KKiSIK......","....KhllllK...KllIhlK.....",".....KKKKK....KKKKKKK....."],["..........................","..........................","..........................","..........................","..........................","..........................","..........................","...............KKK........","..........KKKKKAAAK.......",".........KKKKKKARAKKKK....","........KKaacKKARAAAARK...","......KKKKHHHcKAAkMMkkK...",".....KKaaaHccKKKAkMkMkKK..","....KccHHHcKKKgggkMMMCkKK.","....KKKHHcKaHcKKKAMjjkKkK.","..........................",".....KaHcKKHHHcKKKAkkkkkK.",".....KHcKKaHHHHHcKKAAAAK..","....KccKKaHHHHHHcKKKKKKK..","....KDKKKHHcHHccKKhhKcKK..","....KKKKaHcKHcKcKhSShKK...",".....KKcccKKcKKKhSESSK....","....KKDDDKKKKKKKSSESSK....","....KKKDDDKKhshKSSESSK....","......KDDDDKhSShSRiSSKK...","......KKKDDKKhhSSSSShK....",".......KKKKKKKKsSShhK.....",".......KKKKKKKKshhKK......",".....KKdeKeeKgWWKKK.......",".....KdebeKYYeKgKKK.......","....KdebbeKeeeeKhhKK......","..........................","....KebYeeKlKKeeKhhsK.....","...KeeeeKKKKIKKKKKfBgK....","....KIfBBBBggggIIfBgK.....","....KIggBBgIIIIggBgK......","....KKIIggIKKK.KIgK.......","....KhsIKKK...KKiSIK......","....KhllllK...KllIhlK.....",".....KKKKK....KKKKKKK....."],["..........................","..........................","..........................","..........................","..........................","..........................","..........................","..........................","..........................","...............KKK........","..........KKKKKAAAK.......",".........KKKKKKARAKKKK....","........KKaacKKARAAAARK...","......KKKKHHHcKAAkMMkkK...",".....KKaaaHccKKKAkMkMkKK..","....KccHHHcKKKgggkMMMCkKK.","....KKKHHcKaHcKKKAMjjkKkK.",".....KaHcKKHHHcKKKAkkkkkK.",".....KHcKKaHHHHHcKKAAAAK..","....KccKKaHHHHHHcKKKKKKK..","....KDKKKHHcHHccKKhhKcKK..","....KKKKaHcKHcKcKhSShKK...",".....KKcccKKcKKKhSESSK....","....KKDDDKKKKKKKSSESSK....","....KKKDDDKKhshKSSESSK....","......KDDDDKhSShSRiSSKK...","......KKKDDKKhhSSSSShK....",".......KKKKKKKKsSShhK.....",".......KKKKKKKKshhKK......",".....KKdeKeeKgWWKKK.......",".....KdebeKYYeKgKKK.......","....KdebbeKeeeeKhhKK......","....KebYeeKlKKeeKhhsK.....","...KeeeeKKKKIKKKKKfBgK....","....KIfBBBBggggIIfBgK.....","....KIggBBgIIIIggBgK......","....KKIIggIKKK.KIgK.......","....KhsIKKK...KKiSIK......","....KhllllK...KllIhlK.....",".....KKKKK....KKKKKKK....."]],"times":[55,65,150],"loop":false},"attack":{"frames":[["..........................","............KK............","......KKKKKKAAKK..........",".....KKacKKKRRAKKKK.......","...KKKKHHcKKAMAAAARK......","...KaaaHHccKAAMMkkkK......",".KaaHHHHcKKKgkMkMMkKK.....",".KcHHHccKKKggkMMMjkKKK....",".KKHHcKHHHcKKAkjjkKkKK....","..KHcKKHHHHcKKAkkkkkKK....",".KacKKKHHHHHHcKKAAAAK.....","KccDKKaHHHHHHcKhKKKK......","KDKKKaHcHHcccKhShKcK......",".KKKKHcKccKKKhSSSKK.......",".KKKccKKKKKKKSSESK........","KKDDDKKKKhKKKSSESK........",".KKDDDDKhssKKSSESKK.......","...KDDDKhhShhSRiSMK.......","...KKKDDKKshSSSmRhK.......",".....KKKKKKKhhhhKK........",".....KKKKKK...............",".....KeKeeKKKK............","....KKeKbbegK.KK..........","....KdeKebbddKhS..........","...KKdeKebyYYKsh..........","...KKeKKIggeeKhK..........","...KKiKKOOOllKK...........","...KKSeKlllIIK............","..KKyeeeKIKKKK............","..KKeKKKKKKKgK............","....KKKfBgIIfgK...........",".....KfBBgIIgBgK..........","....KKfBgIIgIfgK..........","....KfBgIKKKgBBgK.........","...KfBBgK...KgggK.........","...KgggI....KKIgK.........","...KKIIK.....KKKK.........","...KsiK......KhhIKK.......","..KllllK.....KllllKK......","...KKKK.......KKKK........"],["..........................","............KK............","......KKKKKKAAKK..........",".....KKacKKKRRAKKKK.......","...KKKKHHcKKAMAAAARK......","...KaaaHHccKAAMMkkkK......",".KaaHHHHcKKKgkMkMMkKK.....",".KcHHHccKKKggkMMMjkKKK....",".KKHHcKHHHcKKAkjjkKkKK....","..KHcKKHHHHcKKAkkkkkKK....",".KacKKKHHHHHHcKKAAAAK.....","KccDKKaHHHHHHcKhKKKK......","KDKKKaHcHHcccKhShKcK......",".KKKKHcKccKKKhSSSKK.......",".KKKccKKKKKKKSSESK........","KKDDDKKKKhKKKSSESK........",".KKDDDDKhssKKSSESKK.......","...KDDDKhhShhSRiSMK.......","...KKKDDKKshSSSmRhK.......",".....KKKKKKKhhhhKK........",".....KKKKKKKKKK...........",".....KeKeeKWKK..KK........","....KKeKbbedddeihS........","....KdeKebbeYYeSsh........","...KKdeKebyyeeKhhK........","...KKeKKIggIKKKKK.........","...KKiKKOOOllK............","...KKSeKlllIIK............","..KKyeeeKIKKKK............","..KKeKKKKKKKgK............","....KKKfBgIIfgK...........",".....KfBBgIIgBgK..........","....KKfBgIIgIfgK..........","....KfBgIKKKgBBgK.........","...KfBBgK...KgggK.........","...KgggI....KKIgK.........","...KKIIK.....KKKK.........","...KsiK......KhhIKK.......","..KllllK.....KllllKK......","...KKKK.......KKKK........"],["..........................","............KK............","......KKKKKKAAKK..........",".....KKacKKKRRAKKKK.......","...KKKKHHcKKAMAAAARK......","...KaaaHHccKAAMMkkkK......",".KaaHHHHcKKKgkMkMMkKK.....",".KcHHHccKKKggkMMMjkKKK....",".KKHHcKHHHcKKAkjjkKkKK....","..KHcKKHHHHcKKAkkkkkKK....",".KacKKKHHHHHHcKKAAAAK.....","KccDKKaHHHHHHcKhKKKK......","KDKKKaHcHHcccKhShKcK......",".KKKKHcKccKKKhSSSKK.......",".KKKccKKKKKKKSSESK........","KKDDDKKKKhKKKSSESK........",".KKDDDDKhssKKSSESKK.......","...KDDDKhhShhSRiSMK.......","...KKKDDKKshSSSmRhK.......",".....KKKKKKKhhhhKK......U.",".....KKKKKKKKKKK..........",".....KeKeeKWgKK...KiK...UU","....KKeKbbeddddeKihSFV.UQ.","....KdeKebbeYYYeKSshU.Q..V","...KKdeKebyyeeeKKhhK....U.","...KKeKKIggIIKKKKKK.......","...KKiKKOOOllK............","...KKSeKlllIIK............","..KKyeeeKIKKKK............","..KKeKKKKKKKgK............","....KKKfBgIIfgK...........",".....KfBBgIIgBgK..........","....KKfBgIIgIfgK..........","....KfBgIKKKgBBgK.........","...KfBBgK...KgggK.........","...KgggI....KKIgK.........","...KKIIK.....KKKK.........","...KsiK......KhhIKK.......","..KllllK.....KllllKK......","...KKKK.......KKKK........"],["..........................","............KK............","......KKKKKKAAKK..........",".....KKacKKKRRAKKKK.......","...KKKKHHcKKAMAAAARK......","...KaaaHHccKAAMMkkkK......",".KaaHHHHcKKKgkMkMMkKK.....",".KcHHHccKKKggkMMMjkKKK....",".KKHHcKHHHcKKAkjjkKkKK....","..KHcKKHHHHcKKAkkkkkKK....",".KacKKKHHHHHHcKKAAAAK.....","KccDKKaHHHHHHcKhKKKK......","KDKKKaHcHHcccKhShKcK......",".KKKKHcKccKKKhSSSKK.......",".KKKccKKKKKKKSSESK........","KKDDDKKKKhKKKSSESK........",".KKDDDDKhssKKSSESKK.......","...KDDDKhhShhSRiSMK.......","...KKKDDKKshSSSmRhK.......",".....KKKKKKKhhhhKK........",".....KKKKKKKKKKK..........",".....KeKeeKWgKK...KiK.....","....KKeKbbeddddeKihSF.UVUU","....KdeKebbeYYYeKSsh.QQUQ.","...KKdeKebyyeeeKKhhK......","...KKeKKIggIIKKKKKK.......","...KKiKKOOOllK............","...KKSeKlllIIK............","..KKyeeeKIKKKK............","..KKeKKKKKKKgK............","....KKKfBgIIfgK...........",".....KfBBgIIgBgK..........","....KKfBgIIgIfgK..........","....KfBgIKKKgBBgK.........","...KfBBgK...KgggK.........","...KgggI....KKIgK.........","...KKIIK.....KKKK.........","...KsiK......KhhIKK.......","..KllllK.....KllllKK......","...KKKK.......KKKK........"],["..........................","............KK............","......KKKKKKAAKK..........",".....KKacKKKRRAKKKK.......","...KKKKHHcKKAMAAAARK......","...KaaaHHccKAAMMkkkK......",".KaaHHHHcKKKgkMkMMkKK.....",".KcHHHccKKKggkMMMjkKKK....",".KKHHcKHHHcKKAkjjkKkKK....","..KHcKKHHHHcKKAkkkkkKK....",".KacKKKHHHHHHcKKAAAAK.....","KccDKKaHHHHHHcKhKKKK......","KDKKKaHcHHcccKhShKcK......",".KKKKHcKccKKKhSSSKK.......",".KKKccKKKKKKKSSESK........","KKDDDKKKKhKKKSSESK........",".KKDDDDKhssKKSSESKK.......","...KDDDKhhShhSRiSMK.......","...KKKDDKKshSSSmRhK.......",".....KKKKKKKhhhhKK........",".....KKKKKKKKKK...........",".....KeKeeKWgKK..KiK......","....KKeKbbedddeKihS.......","....KdeKebbeYYeKSsh.......","...KKdeKebyyeeKKhhK.......","...KKeKKIggIIKKKKK........","...KKiKKOOOllK............","...KKSeKlllIIK............","..KKyeeeKIKKKK............","..KKeKKKKKKKgK............","....KKKfBgIIfgK...........",".....KfBBgIIgBgK..........","....KKfBgIIgIfgK..........","....KfBgIKKKgBBgK.........","...KfBBgK...KgggK.........","...KgggI....KKIgK.........","...KKIIK.....KKKK.........","...KsiK......KhhIKK.......","..KllllK.....KllllKK......","...KKKK.......KKKK........"],["..........................","............KK............","......KKKKKKAAKK..........",".....KKacKKKRRAKKKK.......","...KKKKHHcKKAMAAAARK......","...KaaaHHccKAAMMkkkK......",".KaaHHHHcKKKgkMkMMkKK.....",".KcHHHccKKKggkMMMjkKKK....",".KKHHcKHHHcKKAkjjkKkKK....","..KHcKKHHHHcKKAkkkkkKK....",".KacKKKHHHHHHcKKAAAAK.....","KccDKKaHHHHHHcKhKKKK......","KDKKKaHcHHcccKhShKcK......",".KKKKHcKccKKKhSSSKK.......",".KKKccKKKKKKKSSESK........","KKDDDKKKKhKKKSSESK........",".KKDDDDKhssKKSSESKK.......","...KDDDKhhShhSRiSMK.......","...KKKDDKKshSSSmRhK.......",".....KKKKKKKhhhhKK........",".....KKKKKK...............",".....KeKeeKKKK............","....KKeKbbeWKK.KK.........","....KdeKebbddeKhS.........","...KKdeKebyeYeKsh.........","...KKeKKIggyeKKhK.........","...KKiKKOOOllKKK..........","...KKSeKlllIIK............","..KKyeeeKIKKKK............","..KKeKKKKKKKgK............","....KKKfBgIIfgK...........",".....KfBBgIIgBgK..........","....KKfBgIIgIfgK..........","....KfBgIKKKgBBgK.........","...KfBBgK...KgggK.........","...KgggI....KKIgK.........","...KKIIK.....KKKK.........","...KsiK......KhhIKK.......","..KllllK.....KllllKK......","...KKKK.......KKKK........"]],"times":[55,55,95,85,60,75],"loop":false},"hurt":{"frames":[["..........................","...........KKK............",".....KKKK.KAAAKKKK........","....KKaacKKARAKKKKK.......","..KKKKHHHcKARAAkyRK.......",".KKKaaHHHcKKAkMMkkK.......","KKaaHHHHcKKKAkMkMkKK......","KKccHHHcKKKgggkMMMjkKK....","KKKKHccKKacKKKykjjkKkK....",".KKacKKKaHHcDKKAkkkkkK....",".KacKKDaHcccDKKKyAAAK.....","KccKKaaccKDcKhKKKKKKK.....","KKKKcccDKKDKKShKcKKKK.....",".KKKKKHcKKiKKSShKccKKK....","..KKKKcKMEShhSSEMiKKKK....","..KKKKKhSSESSSEiSSKK......","...KKhKSMEiSSSSEMShK......","...KKShhRiSSmmmiSRhK......","......KKhSSmWWWmShKK......",".......KKShMmshmSKK.......","......KKdeKKssKKeeK.......",".....KddeKWssWKhSKeK......","....KdeebKgWWKhhsKeK......","....KebbYeKKiKKKddeK......","....KeebdeKhhhsKdeK.......",".....KeedYeyKhhKeeK.......","......KKYeyKKKKKyyK.......","......KdeKKOOOlKeKK.......","......KdeKlllllKdeK.......","......KeeKfgIfgKeeKKKK....","......KKKIfgIfBgKKIfBgK...","......KIfBgIfBBgIIfBggK...","......KfBgIfBggKIgggKK....","......KfgIfBgKK.KIIIKhK...","......KfgIfgK....KKKhIhK..","......KggIggK.....KhlllK..","......KKggIKK......KKKK...",".......KiSIK..............","......KhIlhK..............","......KKllKK.............."],["..........................","..........KKK.............","....KKKK.KAAAKKKK.........","...KKaacKKARAKKKKK........",".KKKKHHHcKARAAkyRK........","KKKaaHHHcKKAkMMkkK........","KaaHHHHcKKKAkMkMkKK.......","KccHHHcKKKgggkMMMjkKK.....","KKKHccKKacKKKykjjkKkK.....","KKacKKKaHHcDKKAkkkkkK.....",".KacKKDaHcccDKKKyAAAK.....","KccKKaaccKDcKhKKKKKKK.....","KKKKcccDKKDKKShKcKKKK.....",".KKKKKHcKKiKKSShKccKKK....","..KKKKcKMEShhSSEMiKKKK....","..KKKKKhSSESSSEiSSKK......","...KKhKSMEiSSSSEMShK......","...KKShhRiSSmmmiSRhK......","......KKhSSmWWWmShKK......",".......KKShMmshmSKK.......","......KKdeKKssKKeeK.......",".....KddeKWssWKhSKeK......","....KdeebKgWWKhhsKeK......","....KebbYeKKiKKKddeK......","....KeebdeKhhhsKdeK.......",".....KeedYeyKhhKeeK.......","......KKYeyKKKKKyyK.......","......KdeKKOOOlKeKK.......","......KdeKlllllKdeK.......","......KeeKfgIfgKeeKKKK....","......KKKIfgIfBgKKIfBgK...","......KIfBgIfBBgIIfBggK...","......KfBgIfBggKIgggKK....","......KfgIfBgKK.KIIIKhK...","......KfgIfgK....KKKhIhK..","......KggIggK.....KhlllK..","......KKggIKK......KKKK...",".......KiSIK..............","......KhIlhK..............","......KKllKK.............."],["..........................","..........................","..........KKK.............","....KKKK.KAAAKKKK.........","...KKaacKKARAKKKKK........",".KKKKHHHcKARAAkyRK........","KKKaaHHHcKKAkMMkkK........","KaaHHHHcKKKAkMkMkKK.......","KccHHHcKKKgggkMMMjkKK.....","KKKHccKKacKKKykjjkKkK.....","KKacKKKaHHcDKKAkkkkkK.....","KacKKDaHcccDKKKyAAAK......","ccKKaaccKDcKhKKKKKKK......","KKKcccDKKDKKShKcKKKK......","KKKKKHcKKiKKSShKccKKK.....",".KKKKcKMEShhSSEMiKKKK.....",".KKKKKhSSESSSEiSSKK.......","..KKhKSMEiSSSSEMShK.......","..KKShhRiSSmmmiSRhK.......",".....KKhSSmWWWmShKK.......","......KKShMmshmSKK........",".....KKdeKKssKKeeK........","....KddeKWssWKhSKeK.......","...KebbYeKKiKKKddeK.......","...KeebdeKhhhsKdeK........",".....KeedYeyKhhKeeK.......","......KKYeyKKKKKyyK.......","......KdeKKOOOlKeKK.......","......KdeKlllllKdeK.......","......KeeKfgIfgKeeKKKK....","......KKKIfgIfBgKKIfBgK...","......KIfBgIfBBgIIfBggK...","......KfBgIfBggKIgggKK....","......KfgIfBgKK.KIIIKhK...","......KfgIfgK....KKKhIhK..","......KggIggK.....KhlllK..","......KKggIKK......KKKK...",".......KiSIK..............","......KhIlhK..............","......KKllKK.............."],["..........................","..........KKK.............","....KKKK.KAAAKKKK.........","...KKaacKKARAKKKKK........",".KKKKHHHcKARAAkyRK........","KKKaaHHHcKKAkMMkkK........","KaaHHHHcKKKAkMkMkKK.......","KccHHHcKKKgggkMMMjkKK.....","KKKHccKKacKKKykjjkKkK.....","KKacKKKaHHcDKKAkkkkkK.....",".KacKKDaHcccDKKKyAAAK.....","KccKKaaccKDcKhKKKKKKK.....","KKKKcccDKKDKKShKcKKKK.....",".KKKKKHcKKiKKSShKccKKK....","..KKKKcKMEShhSSEMiKKKK....","..KKKKKhSSESSSEiSSKK......","...KKhKSMEiSSSSEMShK......","...KKShhRiSSmmmiSRhK......","......KKhSSmWWWmShKK......",".......KKShMmshmSKK.......","......KKdeKKssKKeeK.......",".....KddeKWssWKhSKeK......","....KdeebKgWWKhhsKeK......","....KebbYeKKiKKKddeK......","....KeebdeKhhhsKdeK.......",".....KeedYeyKhhKeeK.......","......KKYeyKKKKKyyK.......","......KdeKKOOOlKeKK.......","......KdeKlllllKdeK.......","......KeeKfgIfgKeeKKKK....","......KKKIfgIfBgKKIfBgK...","......KIfBgIfBBgIIfBggK...","......KfBgIfBggKIgggKK....","......KfgIfBgKK.KIIIKhK...","......KfgIfgK....KKKhIhK..","......KggIggK.....KhlllK..","......KKggIKK......KKKK...",".......KiSIK..............","......KhIlhK..............","......KKllKK.............."],["..........................","...........KKK............",".....KKKK.KAAAKKKK........","....KKaacKKARAKKKKK.......","..KKKKHHHcKARAAkyRK.......",".KKKaaHHHcKKAkMMkkK.......","KKaaHHHHcKKKAkMkMkKK......","KKccHHHcKKKgggkMMMjkKK....","KKKKHccKKacKKKykjjkKkK....",".KKacKKKaHHcDKKAkkkkkK....",".KacKKDaHcccDKKKyAAAK.....","KccKKaaccKDcKhKKKKKKK.....","KKKKcccDKKDKKShKcKKKK.....",".KKKKKHcKKiKKSShKccKKK....","..KKKKcKMEShhSSEMiKKKK....","..KKKKKhSSESSSEiSSKK......","...KKhKSMEiSSSSEMShK......","...KKShhRiSSmmmiSRhK......","......KKhSSmWWWmShKK......",".......KKShMmshmSKK.......","......KKdeKKssKKeeK.......",".....KddeKWssWKhSKeK......","....KdeebKgWWKhhsKeK......","....KebbYeKKiKKKddeK......","....KeebdeKhhhsKdeK.......",".....KeedYeyKhhKeeK.......","......KKYeyKKKKKyyK.......","......KdeKKOOOlKeKK.......","......KdeKlllllKdeK.......","......KeeKfgIfgKeeKKKK....","......KKKIfgIfBgKKIfBgK...","......KIfBgIfBBgIIfBggK...","......KfBgIfBggKIgggKK....","......KfgIfBgKK.KIIIKhK...","......KfgIfgK....KKKhIhK..","......KggIggK.....KhlllK..","......KKggIKK......KKKK...",".......KiSIK..............","......KhIlhK..............","......KKllKK.............."]],"times":[50,70,110,75,100],"loop":false}}};
+  const width = 26, height = 40;
+  const poses = Object.fromEntries(Object.entries(clips).map(([k,v]) => [k,v.frames[k==="attack"||k==="crouch"?2:0]]));
+  function draw(ctx, pose = "front", x = 0, y = 0, scale = 1, frameRows) {
     if (!Object.prototype.hasOwnProperty.call(poses, pose)) {
       throw new RangeError("pose は front、side、run、crouch、attack、hurt のいずれかを指定してください。");
     }
@@ -413,7 +105,7 @@
       throw new RangeError("x と y は整数、scale は1以上の整数で指定してください。");
     }
 
-    const rows = poses[pose];
+    const rows = frameRows || poses[pose];
     const previousFill = ctx.fillStyle;
     try {
       for (let row = 0; row < height; row++) {
@@ -429,7 +121,24 @@
     }
   }
 
-  globalThis.Fukumaru = Object.freeze({ width, height, palette, poses, draw });
+
+  function drawAnimated(ctx, pose, elapsedMs, x=0, y=0, scale=1, flipX=false) {
+    if (pose === "yudeppo") pose = "attack";
+    const clip = clips[pose];
+    if (!clip || !Number.isFinite(elapsedMs)) throw new RangeError("Invalid pose or time");
+    const duration = clip.times.reduce((a,b)=>a+b,0);
+    let t = Math.max(0, elapsedMs);
+    t = clip.loop ? t % duration : Math.min(t,duration-1);
+    let i = 0;
+    while (t >= clip.times[i]) t -= clip.times[i++];
+    ctx.save();
+    try {
+      if (flipX) { ctx.translate(2*x+width*scale,0); ctx.scale(-1,1); }
+      draw(ctx,pose,x,y,scale,clip.frames[i]);
+    } finally { ctx.restore(); }
+    return i;
+  }
+  globalThis.Fukumaru = Object.freeze({width,height,palette,poses,clips,draw,drawAnimated});
 })();
 </script>
 <script>/**
@@ -1553,6 +1262,28 @@ for (const p of Object.keys(FP)){
   IMG['fk_' + p] = makeSprite(FP[p], Fukumaru.palette, false);
   IMG['fk_' + p + '_L'] = makeSprite(FP[p], Fukumaru.palette, true);
 }
+// アニメーションのコマ（竜田揚げ提供 fukumaru-sfc-26x40）
+const FKC = Fukumaru.clips, FPF = {}, FPF_L = {};
+// しゃがみの1・2コマ目は途中に空き行があるので、空き行を詰めて縮んだ形にする
+function squash(rows){
+  let top = rows.findIndex(r => /[^.]/.test(r)), bot = rows.length - 1 - [...rows].reverse().findIndex(r => /[^.]/.test(r));
+  const body = rows.slice(top, bot + 1).filter(r => /[^.]/.test(r));
+  return Array(rows.length - body.length).fill('.'.repeat(rows[0].length)).concat(body);
+}
+for (const p of Object.keys(FKC)){
+  FPF[p] = FKC[p].frames.map(f => squash(f));
+  FPF_L[p] = FPF[p].map(r => r.map(l => [...l].reverse().join('')));
+  FPF[p].forEach((rows, i) => {
+    IMG['fk_' + p + i] = makeSprite(rows, Fukumaru.palette, false);
+    IMG['fk_' + p + i + '_L'] = makeSprite(rows, Fukumaru.palette, true);
+  });
+}
+function clipFrame(pose, ms){
+  const c = FKC[pose], total = c.times.reduce((a, b) => a + b, 0);
+  let t = c.loop ? ms % total : Math.min(ms, total - 1), i = 0;
+  while (i < c.times.length - 1 && t >= c.times[i]) t -= c.times[i++];
+  return i;
+}
 // 泥田坊（ボス・左向き）
 for (const p of Object.keys(Dorotabo.poses)){
   IMG['db_' + p] = makeSprite(Dorotabo.poses[p], Dorotabo.palette, false);
@@ -1645,7 +1376,7 @@ IMG.hebi_W = makeHebi(0, false, true);
 
 /* 走り・しゃがみ等は、右向きの絵と頭（狸面の模様）の位置がずれているので、
    描く位置をずらして頭がぶれないようにする（右向き基準のずれ量） */
-const FK_SHIFT = {side: 0, front: 0, run: 2, crouch: 1, attack: -4, hurt: -6};
+const FK_SHIFT = {side: 0, front: 0, run: 2, crouch: 1, attack: -2, hurt: -3};
 
 /* ---------- タイル（24×24） ---------- */
 function tileCanvas(draw){ const c = document.createElement('canvas'); c.width = c.height = TS; draw(c.getContext('2d')); return c; }
@@ -2344,14 +2075,24 @@ function gameOver(){ scene = 'over'; Sound.stop(); overT = 0; overSel = 0; }
 
 /* 福丸の今の絵の名前と、描く左上の座標 */
 const FP_L = Object.fromEntries(Object.entries(FP).map(([k, r]) => [k, r.map(l => [...l].reverse().join(''))]));
-function playerRows(pose){ return P.face > 0 ? FP[pose] : FP_L[pose]; }
 function playerPose(){
   if (P.inv > 60) return 'hurt';
   if (P.crouch) return 'crouch';
   if (P.shootT > 0) return 'attack';
   if (!P.ground) return 'run';
-  if (Math.abs(P.vx) > .3) return (Math.floor(P.anim) % 2) ? 'run' : 'side';
+  if (Math.abs(P.vx) > .3) return 'run';
   return 'side';
+}
+// いまのポーズの何コマ目か（空中は走りの足を伸ばしたコマで止める）
+function playerFrame(pose){
+  if (pose === 'run' && !P.ground && P.inv <= 60 && !P.crouch && P.shootT <= 0) return P.vy < 0 ? 4 : 0;
+  return clipFrame(pose, P.poseName === pose ? P.poseT : 0);
+}
+function playerRows(pose){ const i = playerFrame(pose); return P.face > 0 ? FPF[pose][i] : FPF_L[pose][i]; }
+// ポーズが変わったら、そのポーズのアニメーションを最初から
+function tickPose(){
+  const pose = playerPose();
+  if (pose !== P.poseName){ P.poseName = pose; P.poseT = 0; } else P.poseT += FRAME_MS;
 }
 function playerDrawPos(pose){
   const sh = FK_SHIFT[pose] || 0;
@@ -2453,12 +2194,13 @@ function updatePlay(){
   if (P.cool > 0) P.cool--;
   if (P.shootT > 0) P.shootT--;
   if (pressed.b && P.cool === 0 && shots.length < 3 && !P.crouch && P.inv <= 60){
-    P.shootT = 14;
+    P.shootT = 22; P.poseName = 'attack'; P.poseT = 110;
     const d = playerDrawPos('attack');
     const sx = P.face > 0 ? d.x + 23 : d.x + 26 - 23 - 9;
     shots.push({x: sx, y: d.y + 20, w: 9, h: 4, vx: 4.6 * P.face, vy: 0, life: 70});
     P.cool = 14; Sound.shot();
   }
+  tickPose();
   // --- 弾 ---
   for (const s of shots){
     s.x += s.vx; s.life--;
@@ -2972,7 +2714,7 @@ function drawWorld(){
   // 福丸
   if (!(P.inv > 0 && P.inv <= 60 && (P.inv & 4))){
     const pose = playerPose(), d = playerDrawPos(pose);
-    drawSprite(IMG['fk_' + pose + (P.face > 0 ? '' : '_L')], d.x - cx, d.y);
+    drawSprite(IMG['fk_' + pose + playerFrame(pose) + (P.face > 0 ? '' : '_L')], d.x - cx, d.y);
   }
   for (const s of shots) drawSprite(s.vx > 0 ? IMG.water : IMG.water_L, s.x - cx, s.y);
   for (const p of parts){ ctx.fillStyle = p.col; const s = p.size || 1; ctx.fillRect(Math.round(p.x - cx), Math.round(p.y), s, s); }
