@@ -1642,13 +1642,13 @@ function buildLevel(){
   ground(44, 60);
   // 地面から2段で上れる橋（低い橋→高い橋）
   plank(46, 48, 10); plank(50, 54, 8); fuda(51, 7); fuda(53, 7); onibi(57, 7); doro(59);
-  ground(61, 80); gear(63, 10, 11); tea(67, 11); doro(71); doro(77);
+  ground(61, 80); gear(63, 10, 11); fuda(63, 8); tea(67, 11); doro(71); fuda(74, 9); doro(77);
   gear(83, 10); gear(84, 10); gear(86, 9); gear(87, 9);
-  ground(89, 110); onibi(92, 6); gear(97, 11); gear(98, 10, 11); gear(99, 9, 11); fuda(99, 7); onibi(102, 8); doro(105); doro(108);
+  ground(89, 110); fuda(94, 9); onibi(92, 6); gear(97, 11); gear(98, 10, 11); gear(99, 9, 11); fuda(99, 7); onibi(102, 8); doro(105); doro(108); fuda(110, 9);
   ground(114, 114); fuda(114, 9);
   ground(118, 140);
   // 高い橋の手前に踏み台を足した
-  plank(119, 120, 10); plank(122, 126, 8); fuda(122, 7); fuda(126, 7); tea(124, 7); doro(129); doro(133); onibi(137, 7);
+  plank(119, 120, 10); plank(122, 126, 8); fuda(122, 7); fuda(126, 7); tea(124, 7); doro(129); fuda(131, 9); doro(133); onibi(137, 7);
   ground(BOSS_COL, COLS - 1);
   for (let y = 0; y < 12; y++) map[y][COLS - 1] = 'G';
   // ボスの間の橋：泥田坊の頭の上を通り抜けられる高さ。左右に1本ずつ
@@ -1673,13 +1673,13 @@ function buildLevel2(){
   plank(44, 44, 10);
   ground(46, 60, 11); hebi(50, 7); fuda(48, 8); plank(53, 56, 8); fuda(54, 7); fuda(56, 7); server(58);
   plank(61, 63, 10);
-  ground(64, 82); vent(67, 12, 0); vent(71, 12, 70); vent(75, 12, 140); hebi(73, 6); tea(80, 11);
+  ground(64, 82); vent(67, 12, 0); fuda(69, 9); vent(71, 12, 70); vent(75, 12, 140); hebi(73, 6); tea(80, 11);
   gear(84, 10); gear(85, 10); gear(87, 9); gear(88, 9);
   belt(90, 100, 'c'); porter(94); server(99); fuda(92, 9); fuda(97, 8);
   ground(101, 110); vent(104, 12, 30); fuda(106, 9); hebi(108, 7);
   ground(114, 114); fuda(114, 9);
   ground(118, 140);
-  plank(119, 120, 10); plank(122, 126, 8); fuda(122, 7); fuda(126, 7); tea(124, 7); porter(129); vent(132, 12, 90); server(135); hebi(137, 7);
+  plank(119, 120, 10); plank(122, 126, 8); fuda(122, 7); fuda(126, 7); tea(124, 7); porter(129); vent(132, 12, 90); server(135); fuda(137, 9); hebi(137, 7);
   ground(BOSS_COL, COLS - 1);
   for (let y = 0; y < 12; y++) map[y][COLS - 1] = 'G';
 }
