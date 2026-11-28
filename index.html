@@ -235,6 +235,13 @@
     color:var(--shu);opacity:.13;pointer-events:none;
   }
   .item h3{font-family:"Shippori Mincho B1",serif;font-size:22px;letter-spacing:.2em;line-height:1.5;color:var(--brass)}
+  .item.wide{grid-column:1/-1}
+  .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 4px}
+  .gallery figure{margin:0;position:relative;border:1px solid var(--line);overflow:hidden;background:#000}
+  .gallery img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;transition:transform .6s}
+  .gallery figure:hover img{transform:scale(1.04)}
+  .gallery figcaption{position:absolute;left:0;bottom:0;padding:3px 10px;font-size:12px;letter-spacing:.2em;color:var(--paper);background:rgba(10,10,16,.7);border-top:1px solid var(--line);border-right:1px solid var(--line)}
+  @media (max-width:560px){.gallery{grid-template-columns:1fr;gap:6px}}
   .item p{font-size:14px;color:var(--paper-dim);line-height:1.95;margin-top:10px;position:relative}
 
 
@@ -441,10 +448,15 @@
     <div class="head reveal"><span class="en">TREASURES</span><h2>宝具</h2></div>
     <p class="sec-lead reveal">千手の宝具は、安倍晴明が千手観音から賜ったとされる宝具。</p>
     <div class="items">
-      <article class="item reveal">
+      <article class="item wide reveal">
         <span class="mark">剣</span>
         <span class="ruby">はまのつるぎ</span><h3>破魔の剣</h3>
         <p>五芒星が刻まれた黒い木刀。灯真が呼びかけると、皮が剥がれるように光り輝く刀身が現れ、焔を噴き上げる。その焔は、喰らった魂を引き剥がし、怨を祓い、魔を滅する。</p>
+        <div class="gallery">
+          <figure><img src="hogu/hama1.jpg" alt="五芒星の中に現れた、黒い木刀の破魔の剣" loading="lazy"><figcaption>木刀</figcaption></figure>
+          <figure><img src="hogu/hama2.jpg" alt="五芒星が刻まれた、光り輝く破魔の剣の刀身" loading="lazy"><figcaption>刀身</figcaption></figure>
+          <figure><img src="hogu/hama3.jpg" alt="灯真の手で青い焔を噴き上げる破魔の剣" loading="lazy"><figcaption>焔</figcaption></figure>
+        </div>
       </article>
       <article class="item reveal">
         <span class="mark">弓</span>
